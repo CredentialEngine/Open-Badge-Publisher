@@ -46,3 +46,5 @@ npm run build
 ```
 
 Then copy the contents of the resulting `build` directory to the location on your webserver where you plan to run the application.
+
+Route requests to the fallback page `200.html` for requests that don't experience an immediate "hit". See [docs](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#apache) example for Apache.
