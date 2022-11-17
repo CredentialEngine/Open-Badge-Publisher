@@ -10,6 +10,12 @@
 		{
 			"URI": "@type",
 			"ItemTexts": [
+				"credential"	
+			]
+		},
+		{
+			"URI": "ceterms:credentialType",
+			"ItemTexts": [
 				"ceterms:OpenBadge"
 			]
 		}
