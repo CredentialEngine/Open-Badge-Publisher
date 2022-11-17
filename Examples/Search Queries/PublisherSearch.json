@@ -1,3 +1,4 @@
+//Request
 {
 	"Keywords": "the text typed by the user",
 	"Filters": [
@@ -20,4 +21,33 @@
 			]
 		}
 	]
+}
+
+//Example Response
+{
+	"Valid": true,
+	"Data": {
+		"TotalResults": 275,
+		"Results": [
+			{
+				"Id": 1141,
+				"RowId": "00000000-0000-0000-0000-000000000000",
+				"Name": "21st Century Skills for Workplace Success",
+				"Description": "The 21st Century Skills for Workplace Success industry-based credential is included in NOCTI's Job Ready assessment battery.  Job Ready assessments measure \ntechnical skills at the occupational level and include items which gauge factual and theoretical knowledge.  Job Ready assessments typically over both a written and performance component and can be used at the secondary and post-secondary levels.  Job Ready assessments can be delivered in an online or paper/pencil format.\n2019-01-27",
+				"CTID": "ce-86be9b32-57c5-4429-a058-e6de44bd8fd3",
+				"Type": "ceterms:certification"
+			},
+			{
+				"Id": 1176,
+				"RowId": "00000000-0000-0000-0000-000000000000",
+				"Name": "A badge",
+				"Description": "quick test of an add",
+				"CTID": "ce-e6b2018e-217f-4ec0-8c19-8916b4ce86f5",
+				"Type": "ceterms:badge"
+			},
+			{
+				"etc": "etc"
+			}
+		]
+	}
 }
