@@ -237,7 +237,7 @@
             {#each $publisherCredentials.credentials as credential}
                 <li>
                     <span class="text-sm font-light text-gray-500 dark:text-gray-400">
-                        <span class="font-medium">{credential.Name}</span> ({credential.CTID})
+                        <a href={`${PUBLIC_PUBLISHER_API_BASEURL}/credential/${credential.Id}`} target="new" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">{credential.Name}</a> ({credential.CTID})
                     </span><br />
                     <span class="text-sm font-light text-gray-500 dark:text-gray-400">{credential.Description}</span>
                 </li>
