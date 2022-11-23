@@ -9,9 +9,9 @@
 
 <div aria-label="form" class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
     <div class="md:flex items-center border-b pb-6 border-gray-200">
-        <ConfigurationStep stepNumber='02' stepName="Choose Source Type" isActive={$badgeSetupStep == 1} />
-        <ConfigurationStep stepNumber='03' stepName="Configure Source" isActive={$badgeSetupStep == 2} />
-        <ConfigurationStep stepNumber='04' stepName="Preview Data" isActive={$badgeSetupStep == 3} />
+        <ConfigurationStep stepNumber='03' stepName="Choose Source Type" isActive={$badgeSetupStep == 1} />
+        <ConfigurationStep stepNumber='04' stepName="Configure Source" isActive={$badgeSetupStep == 2} />
+        <ConfigurationStep stepNumber='05' stepName="Preview Data" isActive={$badgeSetupStep == 3} />
     </div>
 
     <!-- Step 1: Choose Source Type -->

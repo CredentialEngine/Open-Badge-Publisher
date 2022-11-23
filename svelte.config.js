@@ -1,5 +1,9 @@
-import adapter from '@sveltejs/adapter-static';
+import adapterStatic from '@sveltejs/adapter-static';
+import adapterAuto from '@sveltejs/adapter-auto';
 import preprocess from 'svelte-preprocess';
+import * as dotenv from 'dotenv';
+
+dotenv.config() 
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -10,7 +14,7 @@ const config = {
 	}),
 
 	kit: {
-		adapter: adapter({
+		adapter: adapterStatic({
 			fallback: '200.html'
 		}),
 		trailingSlash: 'always'
