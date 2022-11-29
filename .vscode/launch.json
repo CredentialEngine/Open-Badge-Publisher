@@ -1,21 +1,13 @@
 {
-    "configurations": [
-    {
-        "name": "Launch via NPM",
-        "request": "launch",
-        "runtimeArgs": [
-            "run-script",
-            "dev"
-        ],
-        "runtimeExecutable": "npm",
-        "skipFiles": [
-            "<node_internals>/**"
-        ],
-        "type": "node",
-        "resolveSourceMapLocations": [
-            "${workspaceFolder}/**",
-            "!**/node_modules/**"
-        ]
-    }
-    ]
+	"configurations": [
+		{
+			"name": "Launch via NPM",
+			"request": "launch",
+			"runtimeArgs": ["run-script", "dev"],
+			"runtimeExecutable": "npm",
+			"skipFiles": ["<node_internals>/**"],
+			"type": "node",
+			"resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]
+		}
+	]
 }

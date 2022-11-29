@@ -3,15 +3,11 @@
 	"Filters": [
 		{
 			"URI": "search:recordOwnedBy",
-			"ItemTexts": [
-				"ce-abcdef-ghijkl..."
-			]
+			"ItemTexts": ["ce-abcdef-ghijkl..."]
 		},
 		{
 			"URI": "@type",
-			"ItemTexts": [
-				"ceterms:OpenBadge"
-			]
+			"ItemTexts": ["ceterms:OpenBadge"]
 		}
 	]
 }
