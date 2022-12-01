@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Alert from '$lib/components/Alert.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 </script>
@@ -19,8 +20,7 @@
 </h2>
 
 <p
-	tabindex="0"
-	class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
+	class="text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
 >
 	A ConfigurationStep can be active or not, and it has a step number.
 </p>
@@ -34,3 +34,22 @@
 	1" stepNumber="01" isActive={true}></ConfigurationStep> <ConfigurationStep stepName="Step 2"
 	stepNumber="02" isActive={false}></ConfigurationStep> </div>
 </textarea>
+
+<h2
+	class="my-4 text-3xl font-extrabold tracking-tight leading-none text-gray-900 lg:text-4xl dark:text-white"
+>
+	Alerts
+</h2>
+
+<div class="my-4">
+	<Alert level="warning" message="This is your last warning! but it's not an error." />
+</div>
+<div class="my-4">
+	<Alert level="error" message="Now we're in an error state" heading="Error" />
+</div>
+<div class="my-4">
+	<Alert level="info" message="Helpful info" />
+</div>
+<div class="my-4">
+	<Alert level="success" message="You did it all right." heading="Success!" />
+</div>
