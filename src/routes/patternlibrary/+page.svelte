@@ -19,9 +19,7 @@
 	Configuration Step
 </h2>
 
-<p
-	class="text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
->
+<p class="text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4">
 	A ConfigurationStep can be active or not, and it has a step number.
 </p>
 <div class="md:flex items-center border-b pb-6 border-gray-200">

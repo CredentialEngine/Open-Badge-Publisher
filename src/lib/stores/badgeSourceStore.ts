@@ -1,10 +1,10 @@
 import { writable } from 'svelte/store';
 
 enum BadgeSourceTypeOptions {
-	None,
-	Canvas,
-	Credly,
-	JSON
+	None = '',
+	Canvas = 'canvas',
+	Credly = 'credly',
+	JSON = 'json'
 }
 
 interface CredlyOptions {
@@ -77,6 +77,7 @@ export const canvasAccessToken = writable<string>('');
 export const canvasAgreeTerms = writable(false);
 export const canvasSelectedRegion = writable('');
 export const canvasIssuers = writable<Array<CanvasIssuer>>();
+export const canvasSelectedIssuer = writable<CanvasIssuer>();
 
 // Credly Options
 export const credlyOptions = writable<CredlyOptions>({ apiKey: '' });

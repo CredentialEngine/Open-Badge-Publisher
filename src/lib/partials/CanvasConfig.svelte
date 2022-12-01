@@ -4,44 +4,50 @@
 		canvasAccessToken,
 		canvasAgreeTerms,
 		canvasSelectedRegion,
-		canvasIssuers
+		canvasIssuers,
+		canvasSelectedIssuer
 	} from '$lib/stores/badgeSourceStore.js';
-	import {
-		PUBLIC_UI_API_BASEURL
-	} from '$env/static/public'
+	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import Alert from '$lib/components/Alert.svelte';
 	import OpenEye from '$lib/icons/eye.svelte';
 	import ClosedEye from '$lib/icons/closed-eye.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import RadioCard from '$lib/components/RadioCard.svelte';
 
 	let canvasAccessTokenHidden = true;
 	let getCanvasIssuers = async () => {
-		if (debounceRefreshIssuers || !$canvasSelectedRegion || !$canvasAgreeTerms || !$canvasAccessToken) return false;
+		if (
+			debounceRefreshIssuers ||
+			!$canvasSelectedRegion ||
+			!$canvasAgreeTerms ||
+			!$canvasAccessToken
+		)
+			return false;
 
 		const requestData = {
 			URL: `${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/v2/issuers?num=100`,
 			Method: 'GET',
 			Body: null,
-			Headers: [{
-				Name: 'Authorization',
-				Value: `Bearer ${$canvasAccessToken}`
-			}]
-		}
+			Headers: [
+				{
+					Name: 'Authorization',
+					Value: `Bearer ${$canvasAccessToken}`
+				}
+			]
+		};
 
-		const proxyResponse = await fetch(
-			`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
-				method: 'POST',
-				body: JSON.stringify(requestData)
-			}
-		);
+		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+			method: 'POST',
+			body: JSON.stringify(requestData)
+		});
 		const proxyResponseData = await proxyResponse.json();
 
-		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200') 
-			throw new Error('Error fetching issuer data.')
+		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
+			throw new Error('Error fetching issuer data.');
 
-		const issuerData = JSON.parse(proxyResponseData.Data?.Body)
-		$canvasIssuers = issuerData.result.map(i => {
+		const issuerData = JSON.parse(proxyResponseData.Data?.Body);
+		$canvasIssuers = issuerData.result.map((i) => {
 			return {
 				entityId: i.entityId,
 				openBadgeId: i.openBadgeId,
@@ -50,18 +56,18 @@
 				email: i.email,
 				description: i.description,
 				url: i.url
-			}
+			};
 		});
 
 		return true;
 	};
 
-	let debounceRefreshIssuers = false
+	let debounceRefreshIssuers = false;
 	const handleRefreshIssuers = () => {
-		getCanvasIssuers()
-		debounceRefreshIssuers = true
+		getCanvasIssuers();
+		debounceRefreshIssuers = true;
 		setTimeout(() => {
-			debounceRefreshIssuers = false
+			debounceRefreshIssuers = false;
 		}, 5000);
 	};
 </script>
@@ -157,10 +163,9 @@
 		<code>YOUREMAIL</code> with your credentials for this server.
 	</p>
 	<pre class="overflow-scroll"><code class="text-xs"
-			>curl -X POST '{canvasRegions[$canvasSelectedRegion]
+			>curl -X POST '{canvasRegions.get($canvasSelectedRegion)
 				?.apiDomain}/o/token' -d "username=YOUREMAIL&password=YOURPASSWORD"</code
-		>
-	</pre>
+		></pre>
 	<div class="mt-8 md:flex items-center">
 		<div class="flex flex-col w-full">
 			<label
@@ -222,7 +227,7 @@
 			<ConfigurationStep
 				stepNumber="5d"
 				stepName="Select issuer"
-				isActive={$canvasAgreeTerms && $canvasAccessToken && $canvasSelectedRegion}
+				isActive={!!($canvasAgreeTerms && $canvasAccessToken && $canvasSelectedRegion)}
 			/>
 		</div>
 	</div>
@@ -252,22 +257,30 @@
 		<h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8">
 			Canvas Credentials Issuers
 		</h4>
-		<ul class="space-y-1 max-w-md list-disc list-inside text-gray-500 dark:text-gray-400">
+		<ul class="space-y-1 max-w-md text-gray-500 dark:text-gray-400">
 			{#if $canvasIssuers?.length}
-				{#each $canvasIssuers as issuer}
-					<li>
-						<span class="text-sm font-light text-gray-500 dark:text-gray-400">
-							<a
-								href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${issuer.entityId}`}
-								target="new"
-								class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-								>{issuer.name}</a
-							>
-						</span><br />
-						<span class="text-sm font-light text-gray-500 dark:text-gray-400"
-							>{issuer.description}</span
+				{#each $canvasIssuers as issuer (issuer.entityId)}
+					<RadioCard
+						label={issuer.name}
+						name="canvasissuerradio"
+						groupValue={$canvasSelectedIssuer?.entityId}
+						value={issuer.entityId}
+						on:select={(e) => ($canvasSelectedIssuer = issuer)}
+						description={issuer.description}
+					>
+						<slot name="label"
+							><span class="text-sm font-light text-gray-500 dark:text-gray-400">
+								<a
+									href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${
+										issuer.entityId
+									}`}
+									target="new"
+									class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+									>{issuer.name}</a
+								>
+							</span></slot
 						>
-					</li>
+					</RadioCard>
 				{/each}
 			{/if}
 		</ul>

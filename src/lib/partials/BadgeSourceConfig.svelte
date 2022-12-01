@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { updated } from '$app/stores';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
+	import RadioCard from '$lib/components/RadioCard.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
 	import { badgeSourceType, badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
@@ -40,80 +41,35 @@
 			</p>
 
 			<ul class="mt-6 grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
-				<li>
-					<input
-						type="radio"
-						name="sourcetyperadio"
-						bind:group={$badgeSourceType}
-						value={1}
-						id="sourcetype-canvascredentials"
-						class="hidden peer"
-						required
-					/>
-					<label
-						for="sourcetype-canvascredentials"
-						class="inline-flex justify-between items-center p-5 w-full text-gray-500 bg-white rounded-lg border border-gray-200 cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
-					>
-						<div class="block">
-							<div class="w-full text-lg font-semibold">Canvas Credentials</div>
-							<div class="w-full">
-								Formerly known as Badgr, this badging tool is now part of the Instructure Learning
-								Platform.
-							</div>
-						</div>
-					</label>
-				</li>
-				<li>
-					<input
-						type="radio"
-						name="sourcetyperadio"
-						bind:group={$badgeSourceType}
-						value={2}
-						id="sourcetype-credly"
-						class="hidden peer"
-					/>
-					<label
-						for="sourcetype-credly"
-						class="inline-flex justify-between items-center p-5 w-full text-gray-500 bg-white rounded-lg border border-gray-200 cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
-					>
-						<div class="block">
-							<div class="w-full text-lg font-semibold">Credly Acclaim</div>
-							<div class="w-full">
-								A leading badge platform focused on resume-ready achievements in education,
-								workforce, and professional development.
-							</div>
-						</div>
-					</label>
-				</li>
-				<li>
-					<input
-						type="radio"
-						name="sourcetyperadio"
-						bind:group={$badgeSourceType}
-						value={3}
-						id="sourcetype-advanced"
-						class="hidden peer"
-					/>
-					<label
-						for="sourcetype-advanced"
-						class="inline-flex justify-between items-center p-5 w-full text-gray-500 bg-white rounded-lg border border-gray-200 cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
-					>
-						<div class="block">
-							<div class="w-full text-lg font-semibold">
-								JSON <span
-									class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
-									>Advanced</span
-								>
-							</div>
-							<div class="w-full">Paste an array of Open Badges achievements in JSON format.</div>
-						</div>
-					</label>
-				</li>
+				<RadioCard
+					label="Canvas Credentials"
+					name="sourcetyperadio"
+					groupValue={$badgeSourceType}
+					value="canvas"
+					on:select={(e) => ($badgeSourceType = e.detail.value)}
+					description="Formerly known as Badgr, this badging tool is now part of the Instructure Learning Platform."
+				/>
+				<RadioCard
+					label="Credly"
+					name="sourcetyperadio"
+					groupValue={$badgeSourceType}
+					value="credly"
+					on:select={(e) => ($badgeSourceType = e.detail.value)}
+					description="A leading badge platform focused on resume-ready achievements in education, workforce, and professional development."
+				/>
+				<RadioCard
+					label="JSON"
+					name="sourcetyperadio"
+					groupValue={$badgeSourceType}
+					value="json"
+					on:select={(e) => ($badgeSourceType = e.detail.value)}
+					description="Paste an array of Open Badges achievements in JSON format. (Advanced)"
+				/>
 			</ul>
 			<div class="md:flex items-center border-b pb-6 border-gray-200">
 				<NextPrevButton
 					on:click={() => badgeSetupStep.update((n) => n + 1)}
-					isActive={$badgeSourceType > 0}
+					isActive={$badgeSourceType !== ''}
 				/>
 			</div>
 		</div>
