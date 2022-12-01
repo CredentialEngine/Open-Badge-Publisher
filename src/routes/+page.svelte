@@ -33,7 +33,7 @@
 	</h2>
 	<div aria-label="form" class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
-			<ConfigurationStep stepNumber="05" stepName="Preview Data" isActive={false} />
+			<ConfigurationStep stepNumber="5" stepName="Preview Data" isActive={false} />
 		</div>
 
 		<div>
