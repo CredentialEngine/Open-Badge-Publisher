@@ -4,7 +4,11 @@
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
-	import { badgeSourceType, badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
+	import {
+		badgeSourceType,
+		badgeSetupStep,
+		badgeSetupComplete
+	} from '$lib/stores/badgeSourceStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 </script>
@@ -23,7 +27,7 @@
 			isActive={$badgeSetupStep == 1}
 		/>
 		<ConfigurationStep stepNumber="5" stepName="Configure Source" isActive={$badgeSetupStep == 2} />
-		<ConfigurationStep stepNumber="6" stepName="Preview Data" isActive={$badgeSetupStep == 3} />
+		<ConfigurationStep stepNumber="6" stepName="Badge Data Summary" isActive={$badgeSetupStep == 3} />
 	</div>
 
 	<!-- Step 1: Choose Source Type -->
@@ -72,11 +76,20 @@
 		<!-- Step 2: Configure Source -->
 	{:else if $badgeSetupStep == 2}
 		<div id="badgesetup-step2">
-			<CanvasConfig />
+			{#if $badgeSourceType == 'canvas'}
+				<CanvasConfig />
+			{:else if $badgeSourceType == 'credly'}
+			<BodyText>Credly not yet implemented...</BodyText>
+			{:else if $badgeSourceType == 'json'}
+			<BodyText>Advanced JSON not yet implemented...</BodyText>
+			{/if}
 
 			<div class="md:flex items-center border-b pb-6 border-gray-200">
 				<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
-				<NextPrevButton on:click={() => badgeSetupStep.update((n) => n + 1)} />
+				<NextPrevButton
+					on:click={() => badgeSetupStep.update((n) => n + 1)}
+					isActive={$badgeSetupComplete}
+				/>
 			</div>
 		</div>
 

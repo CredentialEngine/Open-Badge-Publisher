@@ -256,7 +256,7 @@
 				</BodyText>
 
 				<Heading><h4>{$publisherUser.user.Name}</h4></Heading>
-					
+
 				<BodyText>
 					{$publisherUser.user.Email}
 					{#if $publisherUser.user.IsSiteStaff}(staff){/if}
@@ -265,7 +265,9 @@
 					<BodyText>
 						{$publisherUser.user.Organizations.length}
 						{$publisherUser.user.Organizations.length !== 1 ? 'Organizations' : 'Organization'}:
-						<span class="font-bold">{$publisherUser.user.Organizations.map((o) => o.Name).join(', ')}</span>
+						<span class="font-bold"
+							>{$publisherUser.user.Organizations.map((o) => o.Name).join(', ')}</span
+						>
 					</BodyText>
 				{/if}
 
@@ -362,7 +364,7 @@
 					{/each}
 				</ul>
 				{#if $publisherCredentials.credentials.length > 9}
-				<BodyText>({$publisherCredentials.credentials.length - 9} more)</BodyText>
+					<BodyText>({$publisherCredentials.credentials.length - 9} more)</BodyText>
 				{/if}
 			{/await}
 

@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 
 enum BadgeSourceTypeOptions {
 	None = '',
@@ -81,3 +81,38 @@ export const canvasSelectedIssuer = writable<CanvasIssuer>();
 
 // Credly Options
 export const credlyOptions = writable<CredlyOptions>({ apiKey: '' });
+
+// Is Badge Setup Complete?
+export const badgeSetupComplete = derived(
+	[
+		badgeSourceType,
+		canvasAccessToken,
+		canvasAgreeTerms,
+		canvasSelectedRegion,
+		canvasSelectedIssuer
+	],
+	([
+		$badgeSourceType,
+		$canvasAccessToken,
+		$canvasAgreeTerms,
+		$canvasSelectedRegion,
+		$canvasSelectedIssuer
+	]) => {
+		if ($badgeSourceType == BadgeSourceTypeOptions['Canvas']) {
+			if (
+				!$canvasAccessToken ||
+				!$canvasAgreeTerms ||
+				!$canvasSelectedRegion ||
+				!$canvasSelectedIssuer
+			)
+				return false;
+			return true;
+		}
+
+		else if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) { 
+			return false;
+		}
+		
+		return false;
+	}
+);

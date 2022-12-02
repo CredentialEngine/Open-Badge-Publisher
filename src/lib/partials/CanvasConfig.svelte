@@ -14,9 +14,10 @@
 	import ClosedEye from '$lib/icons/closed-eye.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import RadioCard from '$lib/components/RadioCard.svelte';
+	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let canvasAccessTokenHidden = true;
-	let getCanvasIssuers = async () => {
+	let getCanvasIssuers = async (): Promise<boolean> => {
 		if (
 			debounceRefreshIssuers ||
 			!$canvasSelectedRegion ||
@@ -61,10 +62,15 @@
 
 		return true;
 	};
+	let canvasIssuersPromise = new Promise((resolve, reject) => {
+		resolve(true);
+	});
 
 	let debounceRefreshIssuers = false;
 	const handleRefreshIssuers = () => {
-		getCanvasIssuers();
+		if (debounceRefreshIssuers) return;
+
+		canvasIssuersPromise = getCanvasIssuers();
 		debounceRefreshIssuers = true;
 		setTimeout(() => {
 			debounceRefreshIssuers = false;
@@ -226,39 +232,28 @@
 		<div class="mt-8 mb-2">
 			<ConfigurationStep
 				stepNumber="5d"
-				stepName="Select issuer"
+				stepName="Select Canvas Credentials issuer"
 				isActive={!!($canvasAgreeTerms && $canvasAccessToken && $canvasSelectedRegion)}
 			/>
 		</div>
 	</div>
-	<p class="text-sm font-light leading-none text-gray-600 my-2">
+	<BodyText>
 		Select which issuer's badges to publish to the Registry. If you have no issuers on your Canvas
 		Credentials account, sign into an account that has staff access to the correct issuer, or create
 		a new issuer and badges within your account.
-	</p>
-	<div class="my-4">
-		<button
-			type="button"
-			class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-			on:click={handleRefreshIssuers}
-		>
-			Refresh issuers
-		</button>
-	</div>
+	</BodyText>
 
-	{#await getCanvasIssuers}
-		<h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8">
-			Canvas Credentials Issuers
-		</h4>
-		<div class="mt-2">
+	{#await canvasIssuersPromise}
+		<div
+			class="my-4 flex flex-col items-center justify-center w-full h-64 rounded-lg border-2 border-gray-300 border-dashed"
+		>
 			<LoadingSpinner />
 		</div>
 	{:then}
-		<h4 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-8">
-			Canvas Credentials Issuers
-		</h4>
-		<ul class="space-y-1 max-w-md text-gray-500 dark:text-gray-400">
-			{#if $canvasIssuers?.length}
+		{#if $canvasIssuers?.length}
+			<ul
+				class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3 text-gray-500 dark:text-gray-400"
+			>
 				{#each $canvasIssuers as issuer (issuer.entityId)}
 					<RadioCard
 						label={issuer.name}
@@ -282,8 +277,22 @@
 						>
 					</RadioCard>
 				{/each}
-			{/if}
-		</ul>
+			</ul>
+		{:else}
+			<div
+				class="my-4 flex flex-col items-center justify-center w-full h-64 rounded-lg border-2 border-gray-300 border-dashed"
+			>
+				<button
+					type="button"
+					class="text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+					class:bg-blue-700={!debounceRefreshIssuers}
+					class:bg-gray-200={debounceRefreshIssuers}
+					on:click={handleRefreshIssuers}
+				>
+					Load issuers
+				</button>
+			</div>
+		{/if}
 	{:catch error}
 		<Alert message={error.message} level="error" heading="Fetching issuers failed." />
 	{/await}

@@ -18,7 +18,7 @@
 	role="radio"
 	aria-checked={value == groupValue}
 	on:click|preventDefault={handleClick}
-	on:keypress={handleClick}
+	on:keypress|preventDefault={handleClick}
 	tabindex="0"
 	class="mb-2 md:md-0"
 >
