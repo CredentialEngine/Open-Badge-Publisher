@@ -168,12 +168,12 @@
 	<Alert level="error" message={issuerUrlValidationMessage} heading="Error validating URL:" />
 {/if}
 
-{#if $credlySelectedIssuer && !$credlyAgreeTerms}
+{#if $credlySelectedIssuer}
 	<div class="mt-8 mb-2" transition:fade>
 		<ConfigurationStep
 			stepNumber="5b"
 			stepName="Agree to terms"
-			isActive={!!$credlySelectedIssuer}
+			isActive={!!$credlySelectedIssuer && !$credlyAgreeTerms}
 		/>
 	</div>
 	<div class="mt-2" transition:fade>
