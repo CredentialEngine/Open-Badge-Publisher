@@ -8,7 +8,7 @@
 </script>
 
 <BodyText>
-	This app can helps publish new and updated Open Badges to the Credential Registry. After importing
+	This app can help publish new and updated Open Badges to the Credential Registry. After importing
 	your badges here and pushing them to the Publisher, you can continue in the Publisher to approve
 	finalize publication to the Registry.
 </BodyText>
