@@ -8,6 +8,7 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import Alert from '$lib/components/Alert.svelte';
+	import Heading from '$lib/components/typography/Heading.svelte';
 	import {
 		PUBLIC_UI_API_BASEURL,
 		PUBLIC_PUBLISHER_API_BASEURL,
@@ -24,6 +25,7 @@
 		publisherSetupStep,
 		updateOrgCredentials
 	} from '$lib/stores/publisherStore.js';
+	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let currentMessage = {
 		level: 'info',
@@ -103,11 +105,7 @@
 	};
 </script>
 
-<h2
-	class="my-4 text-3xl font-extrabold tracking-tight leading-none text-gray-900 lg:text-4xl dark:text-white"
->
-	Publisher Configuration
-</h2>
+<Heading><h2>Publisher Configuration</h2></Heading>
 
 <div
 	id="publisherConfigContent"
@@ -135,12 +133,7 @@
 	<!-- STEP 0: Automated checking if the user is already authenticated -->
 	{#if $publisherSetupStep == 0}
 		<div id="publishersetup-step0" transition:fade={{ duration: 400 }}>
-			<h3
-				aria-label="source type"
-				class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-			>
-				Connect your Publisher Account:
-			</h3>
+			<Heading><h3>Connect your Publisher Account</h3></Heading>
 			<div class="mt-2">
 				<LoadingSpinner />
 			</div>
@@ -154,16 +147,8 @@
 		<div id="registrysetup-step1" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 			{#if !$publisherUser.user}
 				<!-- auto-loading the user not possible, but they can authenticate manually -->
-				<h3
-					aria-label="source type"
-					class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-				>
-					Connect your Publisher Account:
-				</h3>
-
-				<p
-					class="focus:outline-none text-sm font-light leading-none text-gray-600 dark:text-white mt-2"
-				>
+				<Heading><h3>Connect your Publisher Account</h3></Heading>
+				<BodyText>
 					Connect to the
 					<a
 						href={PUBLIC_PUBLISHER_API_BASEURL}
@@ -172,10 +157,8 @@
 						Credential Engine Publisher {PUBLIC_PUBLISHER_API_ENV_LABEL}
 					</a>
 					({publisherUrl.hostname}).
-				</p>
-				<p
-					class="focus:outline-none text-sm font-light leading-none text-gray-600 dark:text-white mt-2"
-				>
+				</BodyText>
+				<BodyText>
 					Authenticate with the publisher using the organization API key in your
 					<a
 						href={accountSettingsUrl}
@@ -185,7 +168,7 @@
 						Account Settings
 					</a>
 					({publisherUrl.hostname}) and your email and password.
-				</p>
+				</BodyText>
 				<div class="mt-8 md:flex items-center">
 					<div class="flex flex-col">
 						<label
@@ -236,29 +219,21 @@
 
 				<div class="mt-8">
 					<div class="py-4 flex items-center">
-						<div
-							class="bg-white dark:bg-gray-800 border rounded-sm border-gray-400 dark:border-gray-700 w-4 h-4 flex flex-shrink-0 justify-center items-center relative"
-						>
-							<input
-								aria-labelledby="agree"
-								bind:checked={registryAgreeTerms}
-								type="checkbox"
-								class="focus:outline-none focus:ring-2 focus:ring-gray-700 checkbox focus:opacity-100 opacity-0 absolute cursor-pointer w-full h-full"
-							/>
-							<div class="check-icon hidden bg-blue-500 text-white rounded-sm">
-								<img
-									src="https://tuk-cdn.s3.amazonaws.com/can-uploader/form_layout-svg1.svg"
-									alt="check-icon"
-								/>
-							</div>
-						</div>
-						<p id="agree" class="focus:outline-none text-sm leading-none ml-2">
-							I agree with the <a
+						<input
+							bind:checked={registryAgreeTerms}
+							id="registryAgreeTerms"
+							type="checkbox"
+							value=""
+							class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+						/>
+						<label
+							for="registryAgreeTerms"
+							class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+							>I agree with the Credential Engine <a
 								href="http://credentialengine.org/terms/"
-								class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-								target="new">terms of service</a
+								class="text-indigo-700 dark:text-superaqua">terms of service</a
 							>
-						</p>
+						</label>
 					</div>
 				</div>
 
@@ -275,38 +250,23 @@
 				</div>
 			{:else}
 				<!-- User is authenticated -->
-				<h3
-					aria-label="source type"
-					class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-				>
-					Authenticated User:
-				</h3>
-				<p
-					class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-				>
+				<Heading><h3>Authenticated User</h3></Heading>
+				<BodyText>
 					Your API Key will be used to interact with the publisher and upload credentials.
-				</p>
+				</BodyText>
 
-				<h4
-					aria-label="source type"
-					class="focus:outline-none text-xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-				>
-					{$publisherUser.user.Name}
-				</h4>
-				<p
-					class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-				>
+				<Heading><h4>{$publisherUser.user.Name}</h4></Heading>
+					
+				<BodyText>
 					{$publisherUser.user.Email}
 					{#if $publisherUser.user.IsSiteStaff}(staff){/if}
-				</p>
+				</BodyText>
 				{#if $publisherUser.user.Organizations?.length}
-					<p
-						class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-					>
+					<BodyText>
 						{$publisherUser.user.Organizations.length}
 						{$publisherUser.user.Organizations.length !== 1 ? 'Organizations' : 'Organization'}:
-						{$publisherUser.user.Organizations.map((o) => o.Name).join(', ')}
-					</p>
+						<span class="font-bold">{$publisherUser.user.Organizations.map((o) => o.Name).join(', ')}</span>
+					</BodyText>
 				{/if}
 
 				<div class="md:flex items-center border-b pb-6 border-gray-200">
@@ -328,18 +288,11 @@
 		<!-- STEP 2: Choose which of a user's organizations to use -->
 	{:else if $publisherSetupStep == 2}
 		<div id="registrysetup-step2" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
-			<h3
-				aria-label="source type"
-				class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-			>
-				Choose Organization:
-			</h3>
-			<p
-				class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-			>
-				Credentials will be saved to this organization in the publisher, where you can finalize
+			<Heading><h3>Choose Organization</h3></Heading>
+			<BodyText>
+				Credentials will be saved to this organization in the Publisher, where you can finalize
 				them.
-			</p>
+			</BodyText>
 
 			{#if $publisherUser.user?.Organizations?.length}
 				{#each $publisherUser.user?.Organizations as org}
@@ -374,60 +327,43 @@
 		<!-- Preview Org Data and Credentials -->
 	{:else if $publisherSetupStep == 3}
 		<div id="registrysetup-step3" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
-			<h3
-				aria-label="source type"
-				class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-			>
-				Selected Organization:
-			</h3>
-			<p
-				class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-			>
+			<Heading><h3>Selected Organization</h3></Heading>
+			<BodyText>
 				Credentials will be saved to this organization in the publisher, where you can finalize
 				them.
-			</p>
+			</BodyText>
 
-			<h4
-				aria-label="source type"
-				class="focus:outline-none text-xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-			>
-				{$publisherOrganization.org?.Name}
-			</h4>
-			<p
-				class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-			>
+			<Heading><h4>{$publisherOrganization.org?.Name}</h4></Heading>
+			<BodyText>
 				{$publisherOrganization.org?.CTID}
-			</p>
+			</BodyText>
 
-			<h4
-				aria-label="source type"
-				class="focus:outline-none text-xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-			>
-				Credentials
-			</h4>
+			<Heading><h4>Credentials ({$publisherCredentials.credentials.length})</h4></Heading>
 			{#await credentialsLoading}
 				<div class="mt-2">
 					<LoadingSpinner />
 				</div>
 			{:then value}
-				<ul class="space-y-1 max-w-md list-disc list-inside text-gray-500 dark:text-gray-400">
-					{#each $publisherCredentials.credentials as credential}
-						<li>
-							<span class="text-sm font-light text-gray-500 dark:text-gray-400">
+				<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
+					{#each $publisherCredentials.credentials.slice(0, 9) as credential}
+						<li class="mb-2 md:md-0 border border-gray-200 dark:border-gray-700 p-2">
+							<BodyText>
 								<a
 									href={`${PUBLIC_PUBLISHER_API_BASEURL}/credential/${credential.Id}`}
 									target="new"
-									class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+									class="font-bold text-blue-600 dark:text-blue-500 hover:underline"
 									>{credential.Name}</a
 								>
 								({credential.CTID})
-							</span><br />
-							<span class="text-sm font-light text-gray-500 dark:text-gray-400"
-								>{credential.Description}</span
-							>
+								<br />
+								{credential.Description}
+							</BodyText>
 						</li>
 					{/each}
 				</ul>
+				{#if $publisherCredentials.credentials.length > 9}
+				<BodyText>({$publisherCredentials.credentials.length - 9} more)</BodyText>
+				{/if}
 			{/await}
 
 			<div class="md:flex items-center border-b pb-6 border-gray-200">

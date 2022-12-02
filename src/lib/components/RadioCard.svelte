@@ -20,6 +20,7 @@
 	on:click|preventDefault={handleClick}
 	on:keypress={handleClick}
 	tabindex="0"
+	class="mb-2 md:md-0"
 >
 	<input
 		tabindex="-1"

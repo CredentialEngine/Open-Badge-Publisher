@@ -5,6 +5,8 @@
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
 	import { badgeSourceType, badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
+	import Heading from '$lib/components/typography/Heading.svelte';
+	import BodyText from '$lib/components/typography/BodyText.svelte';
 </script>
 
 <h2
@@ -27,20 +29,13 @@
 	<!-- Step 1: Choose Source Type -->
 	{#if $badgeSetupStep == 1}
 		<div id="badgesetup-step1">
-			<h3
-				aria-label="source type"
-				class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-12"
-			>
-				Choose Source Type
-			</h3>
-			<p
-				class="focus:outline-none text-sm font-light leading-tight text-gray-600 dark:text-gray-400 mt-4"
-			>
+			<Heading><h3>Choose Source Type</h3></Heading>
+			<BodyText>
 				Common badge platforms are supported directly, or you can paste Open Badges data in JSON
 				directly.
-			</p>
+			</BodyText>
 
-			<ul class="mt-6 grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
+			<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 				<RadioCard
 					label="Canvas Credentials"
 					name="sourcetyperadio"

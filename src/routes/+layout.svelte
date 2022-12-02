@@ -7,62 +7,39 @@
 	import FiChevronDown from 'svelte-icons-pack/fi/FiChevronDown';
 </script>
 
-<div class="flex flex-no-wrap">
-	<div class="bg-lightgray dark:bg-gray-900 container mx-auto py-10 md:w-4/5 w-11/12 px-6">
+<div class="rainbow" />
+<div class="bg-gold drop-shadow-md">
+	<div class="max-w-5xl conatiner mx-auto p-6">
+		<h1 class="text-midnight text-xl md:text-3xl font-extrabold lg:text-4xl dark:text-white">
+			Publish Badges to the Credential Registry
+		</h1>
+	</div>
+</div>
+<div class="dark:bg-gray-900">
+	<div class="max-w-5xl container mx-auto p-6">
 		<main class="w-full h-full">
 			<slot />
 		</main>
 	</div>
-
-	<!-- SIDEBAR CHECKLIST -->
-	<aside
-		class="w-64 absolute sm:relative bg-lightgray dark:bg-midnight shadow md:h-full flex-col justify-between hidden sm:flex"
-		id="steps-checklist"
-	>
-		<h2 class="m-2 text-2xl font-extrabold text-gray-900 lg:text-3xl dark:text-white">
-			Publishing Steps
-		</h2>
-		<ul class="space-y-2">
-			<li>
-				<p
-					class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-				>
-					<Icon src={FiChevronRight} />
-					<span class="ml-3">Connect to Registry</span>
-				</p>
-			</li>
-			<li>
-				<p
-					class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-				>
-					<Icon src={FiChevronRight} />
-					<span class="ml-3">Choose Badge Source</span>
-				</p>
-			</li>
-			<li>
-				<p
-					class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-				>
-					<Icon src={FiChevronRight} />
-					<span class="ml-3">Configure Badge Source</span>
-				</p>
-			</li>
-			<li>
-				<p
-					class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-				>
-					<Icon src={FiChevronRight} />
-					<span class="ml-3">Populate Badge Source Data</span>
-				</p>
-			</li>
-			<li>
-				<p
-					class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-				>
-					<Icon src={FiChevronRight} />
-					<span class="ml-3">Preview Data</span>
-				</p>
-			</li>
-		</ul>
-	</aside>
 </div>
+
+<style>
+	.rainbow {
+		height: 10px;
+		background-image: linear-gradient(
+			60deg,
+			#342a3f 14%,
+			#2d2c59 14.1%,
+			#2d2c59 28%,
+			#0f3e63 28.1%,
+			#0f3e63 42%,
+			#235c5d 42.1%,
+			#235c5d 56%,
+			#45a085 56.1%,
+			#45a085 70%,
+			#badca3 70.1%,
+			#badca3 84%,
+			#97b753 84.1%
+		);
+	}
+</style>

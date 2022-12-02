@@ -11,7 +11,9 @@ module.exports = {
 				supermint: '#d3f8f7',
 				midgray: '#8494a0',
 				leather: '#996c48',
-				lightgray: '#e6eaec'
+				gold: '#c2b280',
+				lightgray: '#e6eaec',
+				darkestgray: '#3d4443'
 			},
 			fontFamily: {
 				sans: [
