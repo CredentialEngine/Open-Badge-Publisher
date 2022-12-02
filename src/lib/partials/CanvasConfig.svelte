@@ -15,6 +15,7 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import Heading from '$lib/components/typography/Heading.svelte';
 
 	let canvasAccessTokenHidden = true;
 	let getCanvasIssuers = async (): Promise<boolean> => {
@@ -78,30 +79,25 @@
 	};
 </script>
 
-<h3
-	aria-label="source type"
-	class="focus:outline-none text-3xl font-bold text-gray-800 dark:text-gray-100 mt-8"
->
-	Configure Canvas Credentials connection
-</h3>
+<Heading><h3>Configure Canvas Credentials connection</h3></Heading>
 
-<p class="focus:outline-none text-sm font-light leading-none text-gray-600 my-2">
+<BodyText>
 	<a
 		href="https://www.instructure.com/higher-education/products/canvas/canvas-credentials-digital-badges"
 		target="new">Canvas Credentials</a
 	>, formerly known as Badgr, is an Open Badges issuing platform offering LMS integration, skills
 	alignment, learning pathways, social sharing and analytics. Client environments are hosted in four
 	regions internationally.
-</p>
+</BodyText>
 <div class="mt-8 mb-2">
 	<ConfigurationStep stepNumber="5a" stepName="Choose region" isActive={!$canvasSelectedRegion} />
 </div>
-<p class="focus:outline-none text-sm font-light leading-none text-gray-600 my-2">
+<BodyText>
 	Select the region that matches where your organization's data is held by Canvas Credentials. If
 	you aren't sure, check the domain where you sign into Canvas Credentials. If it is <code
 		>badgr.com</code
 	>, choose United States.
-</p>
+</BodyText>
 <div class="mt-8">
 	{#each [...canvasRegions] as [regionId, region]}
 		<div class="flex items-center mb-4">
@@ -161,13 +157,13 @@
 			/>
 		</div>
 	</div>
-	<p class="text-sm font-light leading-none text-gray-600 my-2">
+	<BodyText>
 		Obtain an access token by requesting one from the Badgr API. You can obtain a token with your
 		email address and password using <code>cUrl</code> with the code below, or another tool. Replace
 		<code>YOUREMAIL</code>
 		and
 		<code>YOUREMAIL</code> with your credentials for this server.
-	</p>
+	</BodyText>
 	<pre class="overflow-scroll"><code class="text-xs"
 			>curl -X POST '{canvasRegions.get($canvasSelectedRegion)
 				?.apiDomain}/o/token' -d "username=YOUREMAIL&password=YOURPASSWORD"</code

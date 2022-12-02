@@ -15,7 +15,7 @@
 	}
 
 	.ce-heading h3 {
-		@apply text-2xl font-bold text-gray-800 mt-12;
+		@apply text-2xl font-bold text-gray-800 mt-4;
 	}
 
 	.ce-heading h4 {

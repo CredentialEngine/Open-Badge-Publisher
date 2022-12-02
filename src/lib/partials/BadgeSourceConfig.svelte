@@ -4,6 +4,7 @@
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
+	import CredlyConfig from '$lib/partials/CredlyConfig.svelte';
 	import {
 		badgeSourceType,
 		badgeSetupStep,
@@ -27,7 +28,11 @@
 			isActive={$badgeSetupStep == 1}
 		/>
 		<ConfigurationStep stepNumber="5" stepName="Configure Source" isActive={$badgeSetupStep == 2} />
-		<ConfigurationStep stepNumber="6" stepName="Badge Data Summary" isActive={$badgeSetupStep == 3} />
+		<ConfigurationStep
+			stepNumber="6"
+			stepName="Badge Data Summary"
+			isActive={$badgeSetupStep == 3}
+		/>
 	</div>
 
 	<!-- Step 1: Choose Source Type -->
@@ -79,9 +84,9 @@
 			{#if $badgeSourceType == 'canvas'}
 				<CanvasConfig />
 			{:else if $badgeSourceType == 'credly'}
-			<BodyText>Credly not yet implemented...</BodyText>
+				<CredlyConfig />
 			{:else if $badgeSourceType == 'json'}
-			<BodyText>Advanced JSON not yet implemented...</BodyText>
+				<BodyText>Advanced JSON not yet implemented...</BodyText>
 			{/if}
 
 			<div class="md:flex items-center border-b pb-6 border-gray-200">

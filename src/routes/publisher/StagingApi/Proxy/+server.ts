@@ -7,7 +7,8 @@ const ORIGIN_WHITELIST = [
 	'https://api.badgr.io',
 	'https://api.eu.badgr.io',
 	'https://api.ca.badgr.io',
-	'https://api.test.badgr.com'
+	'https://api.test.badgr.com',
+	'https://www.credly.com'
 ];
 
 export const POST: RequestHandler = async ({ request }) => {

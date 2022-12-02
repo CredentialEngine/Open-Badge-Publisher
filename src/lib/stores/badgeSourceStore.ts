@@ -7,10 +7,6 @@ enum BadgeSourceTypeOptions {
 	JSON = 'json'
 }
 
-interface CredlyOptions {
-	apiKey: string;
-}
-
 export const badgeSourceType = writable(BadgeSourceTypeOptions['None']);
 export const badgeSetupStep = writable(1);
 
@@ -80,7 +76,29 @@ export const canvasIssuers = writable<Array<CanvasIssuer>>();
 export const canvasSelectedIssuer = writable<CanvasIssuer>();
 
 // Credly Options
-export const credlyOptions = writable<CredlyOptions>({ apiKey: '' });
+interface CredlyIssuerBasic {
+	id: string;
+	name: string;
+	vanity_url: string;
+	badge_count: number;
+}
+export interface CredlyBadgeBasic {
+	id: string;
+	name: string;
+	description: string;
+	image_url: string;
+	alignments: Array<{
+		id: string;
+		name: string;
+		description: string;
+		url: string;
+	}>
+}
+
+export const credlySelectedIssuer = writable<string>('');
+export const credlyAgreeTerms = writable<boolean>(false);
+export const credlyIssuerData = writable<CredlyIssuerBasic | undefined>();
+export const credlyIssuerBadges = writable<Array<CredlyBadgeBasic>>([]);
 
 // Is Badge Setup Complete?
 export const badgeSetupComplete = derived(
@@ -89,30 +107,40 @@ export const badgeSetupComplete = derived(
 		canvasAccessToken,
 		canvasAgreeTerms,
 		canvasSelectedRegion,
-		canvasSelectedIssuer
+		canvasSelectedIssuer,
+		credlySelectedIssuer,
+		credlyAgreeTerms,
+		credlyIssuerData,
+		credlyIssuerBadges
 	],
 	([
 		$badgeSourceType,
 		$canvasAccessToken,
 		$canvasAgreeTerms,
 		$canvasSelectedRegion,
-		$canvasSelectedIssuer
+		$canvasSelectedIssuer,
+		$credlySelectedIssuer,
+		$credlyAgreeTerms,
+		$credlyIssuerData,
+		$credlyIssuerBadges
 	]) => {
 		if ($badgeSourceType == BadgeSourceTypeOptions['Canvas']) {
-			if (
-				!$canvasAccessToken ||
-				!$canvasAgreeTerms ||
-				!$canvasSelectedRegion ||
-				!$canvasSelectedIssuer
+			return (
+				!!$canvasAccessToken &&
+				!!$canvasAgreeTerms &&
+				!!$canvasSelectedRegion &&
+				!!$canvasSelectedIssuer
 			)
-				return false;
-			return true;
+		} else if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) {
+			return (
+				!!$credlySelectedIssuer &&
+				!!$credlyAgreeTerms &&
+				!!$credlyIssuerData &&
+				!!$credlyIssuerBadges.length
+			)
 		}
 
-		else if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) { 
-			return false;
-		}
-		
+		// JSON not implemented
 		return false;
 	}
 );
