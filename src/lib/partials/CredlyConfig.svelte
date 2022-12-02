@@ -32,7 +32,6 @@
 			.then((value) => {
 				const match = credlyIssuerUrl.match(credlyUrlPattern);
 				$credlySelectedIssuer = match?.groups?.orgslug || '';
-				console.log('SELECTED AN ISSUER: ' + $credlySelectedIssuer);
 			})
 			.catch((err) => {
 				issuerUrlValidationMessage = `URL doesn't match expected format. Try adjusting your URL to look like https://www.credly.com/organizations/ibm/badges`;
