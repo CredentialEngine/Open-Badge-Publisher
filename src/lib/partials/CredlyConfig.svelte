@@ -43,16 +43,14 @@
 		$credlyIssuerData = undefined;
 	};
 
-	let debounceLoadIssuer = false
+	let debounceLoadIssuer = false;
 	let credlyLoadMessage = '';
 
 	const loadCredlyIssuer = async (): Promise<boolean> => {
-		if (debounceLoadIssuer) 
-			return false;
+		if (debounceLoadIssuer) return false;
 
 		debounceLoadIssuer = true;
-		setTimeout(() => debounceLoadIssuer = false, 5000);
-
+		setTimeout(() => (debounceLoadIssuer = false), 5000);
 
 		const requestData = {
 			URL: `https://www.credly.com/organizations/${$credlySelectedIssuer}/badges?sort=most_popular&page=1`,
@@ -71,7 +69,7 @@
 			throw new Error('Error fetching issuer data.');
 
 		const responseCredlyData = JSON.parse(proxyResponseData.Data?.Body);
-		
+
 		try {
 			const iss = responseCredlyData.data[0].issuer.entities[0].entity;
 			$credlyIssuerData = {
@@ -79,33 +77,37 @@
 				name: iss.name,
 				vanity_url: iss.vanity_url,
 				badge_count: responseCredlyData.metadata.total_count
-			}
-			$credlyIssuerBadges = responseCredlyData.data.map((b:CredlyBadgeBasic) => {
+			};
+			$credlyIssuerBadges = responseCredlyData.data.map((b: CredlyBadgeBasic) => {
 				return {
 					id: b.id,
 					name: b.name,
 					description: b.description,
 					image_url: b.image_url,
 					alignments: b.alignments
-				}
-			})
-		}
-		catch (err) {
-			credlyLoadMessage = 'Issuer & badges not found with this URL. Please check the URL and try again.';
+				};
+			});
+		} catch (err) {
+			credlyLoadMessage =
+				'Issuer & badges not found with this URL. Please check the URL and try again.';
 			return false;
 		}
-		
 
 		return true;
-	}
-	let loadIssuerPromise: Promise<boolean> = new Promise((resolve, reject) => {resolve(true)});
-
+	};
+	let loadIssuerPromise: Promise<boolean> = new Promise((resolve, reject) => {
+		resolve(true);
+	});
 </script>
 
 <Heading><h3>Configure Credly connection</h3></Heading>
 
 <div class="mt-8 mb-2">
-	<ConfigurationStep stepNumber="5a" stepName="Choose Credly issuer" isActive={!$credlySelectedIssuer} />
+	<ConfigurationStep
+		stepNumber="5a"
+		stepName="Choose Credly issuer"
+		isActive={!$credlySelectedIssuer}
+	/>
 </div>
 <BodyText>
 	Enter the URL of your Credly issuer. For an example, see
@@ -184,9 +186,12 @@
 				type="checkbox"
 				class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
 			/>
-			<label for="credlyAgreeTerms" class="ml-2 max-w-prose text-sm font-medium text-gray-900 dark:text-gray-300" >
-				I certify that I am a representative of the listed organization and authorized to publish this data to
-				the Credential Registry.
+			<label
+				for="credlyAgreeTerms"
+				class="ml-2 max-w-prose text-sm font-medium text-gray-900 dark:text-gray-300"
+			>
+				I certify that I am a representative of the listed organization and authorized to publish
+				this data to the Credential Registry.
 			</label>
 		</div>
 	</div>
@@ -194,29 +199,37 @@
 
 {#if $credlySelectedIssuer && $credlyAgreeTerms}
 	<div class="mt-8 mb-2" transition:fade>
-		<ConfigurationStep stepNumber="5c" stepName="Preview issuer data" isActive={!!$credlySelectedIssuer} />
+		<ConfigurationStep
+			stepNumber="5c"
+			stepName="Preview issuer data"
+			isActive={!!$credlySelectedIssuer}
+		/>
 	</div>
 	{#await loadIssuerPromise}
 		<div role="status" class="max-w-sm animate-pulse mt-8" transition:fade>
-			<div class="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
-			<div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px] mb-2.5"></div>
-			<div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5"></div>
-			<div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[330px] mb-2.5"></div>
+			<div class="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4" />
+			<div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[360px] mb-2.5" />
+			<div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 mb-2.5" />
+			<div class="h-2 bg-gray-200 rounded-full dark:bg-gray-700 max-w-[330px] mb-2.5" />
 			<span class="sr-only">Loading...</span>
 		</div>
 	{:then}
 		{#if $credlyIssuerData}
-		<div class="max-w-sm mt-8" transition:fade>
-			<Heading><h4>{$credlyIssuerData.name}</h4></Heading>
-			<BodyText>
-				The issuer {$credlyIssuerData.name} has {$credlyIssuerData.badge_count} badges defined on Credly.
-			</BodyText>
-			<BodyText>
-				<a class="font-medium text-blue-600 dark:text-blue-500 hover:underline" href={$credlyIssuerData.vanity_url} target="new">
-					View details on Credly
-				</a>
-			</BodyText>
-		</div>
+			<div class="max-w-sm mt-8" transition:fade>
+				<Heading><h4>{$credlyIssuerData.name}</h4></Heading>
+				<BodyText>
+					The issuer {$credlyIssuerData.name} has {$credlyIssuerData.badge_count} badges defined on Credly.
+				</BodyText>
+				<BodyText>
+					<a
+						class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+						href={$credlyIssuerData.vanity_url}
+						target="new"
+					>
+						View details on Credly
+					</a>
+				</BodyText>
+			</div>
 		{:else}
 			<div
 				class="my-4 flex flex-col items-center justify-center w-full h-64 rounded-lg border-2 border-gray-300 border-dashed"
