@@ -14,11 +14,12 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 </script>
 
-<h2
-	class="mb-4 text-3xl font-extrabold tracking-tight leading-none text-gray-900 lg:text-4xl dark:text-white"
->
-	Badge Source Data
-</h2>
+<Heading>
+	<h2>
+		{#if $badgeSetupStep == 3}☑ {/if}
+		Badge Source Data
+	</h2>
+</Heading>
 
 <div aria-label="form" class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
 	<div class="md:flex items-center border-b pb-6 border-gray-200">

@@ -36,12 +36,10 @@
 		(currentMessage = { level, message, heading });
 	const resetAlert = () => (currentMessage = { level: 'info', message: '', heading: '' });
 
-	let registryApiKey = '';
 	let registryEmailAddress = '';
 	let registryPassword = '';
 	let registryAgreeTerms = false;
 	const registryFormSchema = yup.object().shape({
-		apiKey: yup.string().required(),
 		email: yup.string().email().required(),
 		password: yup.string().required()
 	});
@@ -52,7 +50,6 @@
 		}
 		resetAlert();
 		const formData = {
-			apiKey: registryApiKey,
 			email: registryEmailAddress,
 			password: registryPassword
 		};
@@ -75,7 +72,6 @@
 				}
 
 				// reset form and save user
-				let registryApiKey = '';
 				let registryEmailAddress = '';
 				let registryPassword = '';
 				let registryAgreeTerms = false;
@@ -103,14 +99,23 @@
 		credentialsLoading = updateOrgCredentials(); // eventually resolves to true once loaded
 		publisherSetupStep.set(3);
 	};
+
+	let panelIsHidden = false;
 </script>
 
-<Heading><h2>Publisher Configuration</h2></Heading>
+<Heading>
+	<h2>
+		{#if $publisherSetupStep == 3}☑ {/if}
+		Publisher Configuration
+	</h2>
+</Heading>
 
+{#if !panelIsHidden}
 <div
 	id="publisherConfigContent"
 	aria-label="form"
 	class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+	transition:slide
 >
 	<div class="md:flex items-center border-b pb-6 border-gray-200">
 		<ConfigurationStep
@@ -158,34 +163,7 @@
 					</a>
 					({publisherUrl.hostname}).
 				</BodyText>
-				<BodyText>
-					Authenticate with the publisher using the organization API key in your
-					<a
-						href={accountSettingsUrl}
-						class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-						target="new"
-					>
-						Account Settings
-					</a>
-					({publisherUrl.hostname}) and your email and password.
-				</BodyText>
-				<div class="mt-8 md:flex items-center">
-					<div class="flex flex-col">
-						<label
-							for="input_registryapikey"
-							class="mb-3 text-sm leading-none text-gray-800 dark:text-white"
-							>Organization API Key</label
-						>
-						<input
-							id="input_registryapikey"
-							type="password"
-							autocomplete="off"
-							aria-label="Enter Organization API Key"
-							class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
-							bind:value={registryApiKey}
-						/>
-					</div>
-				</div>
+				
 				<div class="mt-8 md:flex items-center">
 					<div class="flex flex-col">
 						<label
@@ -376,10 +354,40 @@
 					}}
 					isNext={false}
 				/>
+				<NextPrevButton
+					on:click={() => { panelIsHidden = true; }}
+					isNext={true}
+					isActive={!!selectedOrg}
+					label="Finish Publisher Setup"
+				/>
 			</div>
 		</div>
 	{/if}
 </div>
+{:else}
+<!-- Panel is hidden, meaning the user has completed the publisher setup and has moved on. -->
+<div
+	id="publisherConfigContent"
+	aria-label="form"
+	class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+	transition:slide
+>
+	<div class="flex items-end flex-col justify-between md:flex-row">
+		<BodyText>
+			Publisher setup complete. <br />
+			<span class="font-bold">Selected Organization:</span>
+			{$publisherOrganization.org?.Name} ({$publisherCredentials.credentials.length} {$publisherCredentials.credentials.length == 1 ? 'credential' : 'credentials'})
+		</BodyText>
+		<button
+				type="button"
+				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+				on:click={() => { panelIsHidden = false; }}
+			>
+				Edit
+		</button>
+	</div>
+</div>
+{/if}
 
 <style lang="postcss">
 	#publisherConfigContent {
