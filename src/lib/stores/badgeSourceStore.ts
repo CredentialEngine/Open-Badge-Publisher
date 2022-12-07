@@ -1,5 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { array } from 'yup';
+import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 
 enum BadgeSourceTypeOptions {
 	None = '',
@@ -133,6 +134,37 @@ export const canvasSelectedRegion = writable('');
 export const canvasIssuers = writable<CanvasIssuer[]>();
 export const canvasSelectedIssuer = writable<CanvasIssuer>();
 export const canvasSelectedIssuerBadges = writable<CanvasBadge[]>([]);
+
+export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
+	if (!get(canvasSelectedRegion) || !get(canvasAgreeTerms) || !get(canvasAccessToken)) return false;
+
+	const requestData = {
+		URL: `${canvasRegions.get(get(canvasSelectedRegion))?.apiDomain}/v2/issuers/${get(canvasSelectedIssuer)?.entityId}/badgeclasses`,
+		Method: 'GET',
+		Body: null,
+		Headers: [
+			{
+				Name: 'Authorization',
+				Value: `Bearer ${get(canvasAccessToken)}`
+			}
+		]
+	};
+
+	const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+		method: 'POST',
+		body: JSON.stringify(requestData)
+	});
+	const proxyResponseData = await proxyResponse.json();
+
+	if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
+		throw new Error('Error fetching badge data from Canvas Credentials.');
+
+	const issuerBadgeData = JSON.parse(proxyResponseData.Data?.Body);
+	console.log(issuerBadgeData);
+	canvasSelectedIssuerBadges.set(issuerBadgeData.result);
+
+	return true;
+};
 
 // Credly Options
 interface CredlyIssuerBasic {

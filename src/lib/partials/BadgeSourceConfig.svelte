@@ -11,12 +11,19 @@
 		badgeSourceType,
 		badgeSetupStep,
 		badgeSetupComplete,
-		checkedBadges
+		checkedBadges,
+		fetchCanvasIssuerBadges
 	} from '$lib/stores/badgeSourceStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let panelIsHidden = false;
+
+	const handleAdvanceToBadgeSelection = () => {
+		if ($badgeSourceType == 'canvas')
+			fetchCanvasIssuerBadges();
+		$badgeSetupStep = 3;
+	}
 </script>
 
 <Heading>
@@ -99,7 +106,7 @@
 				<div class="md:flex items-center border-b pb-6 border-gray-200">
 					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
 					<NextPrevButton
-						on:click={() => badgeSetupStep.update((n) => n + 1)}
+						on:click={handleAdvanceToBadgeSelection}
 						isActive={$badgeSetupComplete}
 					/>
 				</div>
@@ -137,7 +144,7 @@
 				Badge setup complete. <br />
 				<span class="font-bold">
 					{Object.keys($checkedBadges).length}
-					{Object.keys($checkedBadges).length ? 'badge' : 'badges'} selected.
+					{Object.keys($checkedBadges).length == 1 ? 'badge' : 'badges'} selected.
 				</span>
 			</BodyText>
 			<button

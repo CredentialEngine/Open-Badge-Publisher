@@ -13,10 +13,12 @@
 	const abbreviate = (str: string, n = 60) => (str.length > n ? str.slice(0, n - 1) + '…' : str);
 
 	const handleChange = (badgeId: string) => {
-		$checkedBadges[badgeId] = !($checkedBadges[badgeId]);
+		$checkedBadges[badgeId] = !$checkedBadges[badgeId];
 		$checkedBadges = Object.fromEntries(
 			Object.entries($checkedBadges).filter(([key, value]) => value === true)
 		);
+		console.log("Updated badge selections")
+		console.log($checkedBadges)
 	};
 </script>
 
@@ -43,7 +45,7 @@
 				<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
 					<td class="py-4 px-6">
 						<input
-							checked={!!(checkedBadges[badge.id])}
+							checked={!!checkedBadges[badge.id]}
 							on:change={() => {
 								handleChange(badge.id);
 							}}
