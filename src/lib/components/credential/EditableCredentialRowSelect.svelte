@@ -7,7 +7,7 @@
 
 	export let credential: CtdlApiCredential;
 	export let fieldName = '';
-	export let fieldId: 'Name' | 'Description' | 'SubjectWebpage' | 'Image' | 'CTID';
+	export let fieldId: 'CredentialType' | 'CredentialStatusType';
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;

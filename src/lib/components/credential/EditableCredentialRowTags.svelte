@@ -108,25 +108,13 @@
 			<div class="mb-3">
 				<div class="flex flex-wrap flex-row">
 					{#each value as valueEntry (valueEntry)}
-						<div class="mr-2 mb-2">
-						<Tag>
-							<span class="text-sm">
-								{abbreviate(valueEntry, 25)}
-								<button
-									on:click={() => {
-										handleRemoveValue(valueEntry);
-									}}
-									type="button"
-									class="inline-flex items-center p-0.5 ml-2 text-sm text-gray-400 bg-transparent rounded-sm hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-300 dark:hover:text-gray-900"
-									data-dismiss-target="#badge-dismiss-dark"
-									aria-label="Remove"
-								>
-									<Close height="8" width="8" />
-									<span class="sr-only">Remove {valueEntry}</span>
-								</button>
-							</span>
-						</Tag>
-						</div>
+						<span class="inline-flex items-center py-1 px-2 mr-2 mb-2 text-sm font-medium text-gray-800 bg-gray-100 rounded dark:bg-gray-200 dark:text-gray-800">
+							{abbreviate(valueEntry, 25)}
+							<button on:click={ () => { handleRemoveValue(valueEntry);} } type="button" class="inline-flex items-center p-0.5 ml-2 text-sm text-gray-400 bg-transparent rounded-sm hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-300 dark:hover:text-gray-900" data-dismiss-target="#badge-dismiss-dark" aria-label="Remove">
+								<Close height="8" width="8" />
+								<span class="sr-only">Remove {valueEntry}</span>
+							</button>
+						</span>
 					{/each}
 				</div>
 			</div>
