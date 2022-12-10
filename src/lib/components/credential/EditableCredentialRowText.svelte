@@ -20,12 +20,13 @@
 	let validationErrorMessage = '';
 
 	const handleSaveRow = () => {
+        validationErrorMessage = '';  // reset error message.
 		// validate value
 		if (validator !== undefined) {
 			try {
 				validator.validateSync(value);
 			} catch (err) {
-				if (err instanceof yup.ValidationError) validationErrorMessage = JSON.stringify(err.errors);
+				if (err instanceof yup.ValidationError) validationErrorMessage = err.errors.join(', ');
 				return;
 			}
 		}

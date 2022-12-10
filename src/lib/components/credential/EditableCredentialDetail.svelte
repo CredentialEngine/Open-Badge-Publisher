@@ -59,7 +59,7 @@
 					validator={yup.string().required()}
 				/>
 
-				<!-- <EditableCredentialRowSelect
+				<EditableCredentialRowSelect
 					{credential}
 					editable={true}
 					fieldId="CredentialType"
@@ -69,7 +69,7 @@
 					options={$credentialTypesStore.map(typ => typ.URI)}
 				>
 					<Tag>{credential.Credential.CredentialType}</Tag>
-				</EditableCredentialRowSelect> -->
+				</EditableCredentialRowSelect>
 
 				<EditableCredentialRowText 
 					{credential}
@@ -109,7 +109,7 @@
 					</a>
 				</EditableCredentialRowText>
 				
-				<!-- <EditableCredentialRowSelect
+				<EditableCredentialRowSelect
 					{credential}
 					editable={true}
 					fieldId="CredentialStatusType"
@@ -118,8 +118,8 @@
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
 					options={['Active', 'Probationary', 'Deprecated', 'Suspended', 'TeaachOut']}
 				>
-					<Tag>{credential.Credential.CredentialType}</Tag>
-				</EditableCredentialRowSelect> -->
+					<Tag>{credential.Credential.CredentialStatusType}</Tag>
+				</EditableCredentialRowSelect>
 
 				<!-- 					
 					<EditableCredentialRowTags 
