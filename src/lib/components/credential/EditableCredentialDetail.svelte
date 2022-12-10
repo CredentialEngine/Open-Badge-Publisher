@@ -2,8 +2,10 @@
 	import { slide } from 'svelte/transition';
 	import * as bcp47 from 'bcp-47';
 	import * as yup from 'yup';
-	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
 
+	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
+	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
+	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 
@@ -11,13 +13,9 @@
 	import { ctdlCredentials } from '$lib/stores/badgeDestinationStore.js';
 	import { credentialTypesStore } from '$lib/stores/credentialTypesStore.js';
 	import type { CtdlApiCredential } from '$lib/stores/badgeDestinationStore.js';
-	import CredentialProofingList from '$lib/partials/CredentialProofingList.svelte';
-	import EditableCredentialRowSelect from './EditableCredentialRowSelect.svelte';
-	import EditableCredentialRowTags from './EditableCredentialRowTags.svelte';
 
 	export let credential: CtdlApiCredential;
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
-
 </script>
 
 <div
@@ -66,12 +64,12 @@
 					fieldName="Credential Type"
 					helpText="CTDL defines a number of Credential subclasses so issuers can describe Credentials more specifically."
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
-					options={$credentialTypesStore.map(typ => typ.URI)}
+					options={$credentialTypesStore.map((typ) => typ.URI)}
 				>
 					<Tag>{credential.Credential.CredentialType}</Tag>
 				</EditableCredentialRowSelect>
 
-				<EditableCredentialRowText 
+				<EditableCredentialRowText
 					{credential}
 					editable={true}
 					fieldId="Image"
@@ -90,14 +88,14 @@
 					{/if}
 				</EditableCredentialRowText>
 
-				<EditableCredentialRowText 
+				<EditableCredentialRowText
 					{credential}
 					fieldId="Description"
 					editable={true}
 					longText={true}
 				/>
 
-				<EditableCredentialRowText 
+				<EditableCredentialRowText
 					{credential}
 					editable={true}
 					fieldId="SubjectWebpage"
@@ -108,7 +106,7 @@
 						{credential.Credential.SubjectWebpage}
 					</a>
 				</EditableCredentialRowText>
-				
+
 				<EditableCredentialRowSelect
 					{credential}
 					editable={true}
@@ -146,7 +144,7 @@
 					{#each credential.Credential.InLanguage as lang}<Tag>{lang}</Tag>{/each}
 				</EditableCredentialRowTags> -->
 
-				<EditableCredentialRowTags 
+				<EditableCredentialRowTags
 					{credential}
 					editable={true}
 					fieldId="Keyword"
@@ -154,7 +152,7 @@
 					helpText="List of keywords for this credential"
 				/>
 
-			<!--
+				<!--
 				Requires
 					Requires not working yet...
 				 -->
