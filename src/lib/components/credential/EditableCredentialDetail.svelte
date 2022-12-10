@@ -144,17 +144,15 @@
 					}
 				>
 					{#each credential.Credential.InLanguage as lang}<Tag>{lang}</Tag>{/each}
-				</EditableCredentialRowText> 
+				</EditableCredentialRowTags> -->
 
 				<EditableCredentialRowTags 
 					{credential}
 					editable={true}
-					fieldId="InLanguage"
-					fieldName="Language"
-					helpText="Enter a standardized code or tag compatible with IETF BCP 47"
-				>
-					{#each credential.Credential.InLanguage as lang}<Tag>{lang}</Tag>{/each}
-				</EditableCredentialRowText> -->
+					fieldId="Keyword"
+					fieldName="Keywords"
+					helpText="List of keywords for this credential"
+				/>
 
 			<!--
 				Requires
