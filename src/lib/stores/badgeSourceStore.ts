@@ -1,5 +1,4 @@
 import { writable, derived, get } from 'svelte/store';
-import { array } from 'yup';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 
 enum BadgeSourceTypeOptions {
@@ -10,9 +9,9 @@ enum BadgeSourceTypeOptions {
 }
 
 export const badgeSourceType = writable(BadgeSourceTypeOptions['None']);
-export const badgeSetupStep = writable(1);
+export const badgeSetupStep = writable(0);
 
-interface Alignment {
+export interface Alignment {
 	targetName: string;
 	targetUrl: string;
 	targetDescription: string;
@@ -20,7 +19,7 @@ interface Alignment {
 	targetCode?: string;
 }
 
-interface BadgeClassBasic {
+export interface BadgeClassBasic {
 	id: string;
 	name: string;
 	image: string;
@@ -139,7 +138,9 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 	if (!get(canvasSelectedRegion) || !get(canvasAgreeTerms) || !get(canvasAccessToken)) return false;
 
 	const requestData = {
-		URL: `${canvasRegions.get(get(canvasSelectedRegion))?.apiDomain}/v2/issuers/${get(canvasSelectedIssuer)?.entityId}/badgeclasses`,
+		URL: `${canvasRegions.get(get(canvasSelectedRegion))?.apiDomain}/v2/issuers/${
+			get(canvasSelectedIssuer)?.entityId
+		}/badgeclasses`,
 		Method: 'GET',
 		Body: null,
 		Headers: [

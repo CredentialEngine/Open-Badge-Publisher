@@ -25,6 +25,7 @@
 		publisherSetupStep,
 		updateOrgCredentials
 	} from '$lib/stores/publisherStore.js';
+	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let currentMessage = {
@@ -67,7 +68,14 @@
 				});
 				const responseData = await response.json();
 				if (!responseData['Valid']) {
-					setAlert('error', responseData['Messages'][0], 'Authentication error:');
+					let errorMessage: string;
+					try {
+						errorMessage = responseData.Messages[0] || responseData.message;
+					} catch {
+						errorMessage = 'Unexpected server error!';
+					}
+
+					setAlert('error', errorMessage, 'Authentication error:');
 					return;
 				}
 
@@ -137,19 +145,18 @@
 
 		<!-- STEP 0: Automated checking if the user is already authenticated -->
 		{#if $publisherSetupStep == 0}
-			<div id="publishersetup-step0" transition:fade={{ duration: 400 }}>
+			<div id="publishersetup-step0" transition:slide>
 				<Heading><h3>Connect your Publisher Account</h3></Heading>
-				<div class="mt-2">
+				<BodyText>Checking to see if your publisher account is already connected.</BodyText>
+
+				<div class="my-4 flex flex-col items-center justify-center w-full h-48">
 					<LoadingSpinner />
-				</div>
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
-					<NextPrevButton on:click={() => null} isNext={true} isActive={false} />
 				</div>
 			</div>
 
 			<!-- STEP 1: Show connected account data or allow user to connect account -->
 		{:else if $publisherSetupStep == 1}
-			<div id="registrysetup-step1" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
+			<div id="registrysetup-step1" in:slide out:fly={{ x: -400 }}>
 				{#if !$publisherUser.user}
 					<!-- auto-loading the user not possible, but they can authenticate manually -->
 					<Heading><h3>Connect your Publisher Account</h3></Heading>
@@ -357,6 +364,8 @@
 					<NextPrevButton
 						on:click={() => {
 							panelIsHidden = true;
+							$publisherSetupStep = 4;
+							if ($badgeSetupStep == 0) $badgeSetupStep = 1;
 						}}
 						isNext={true}
 						isActive={!!selectedOrg}
@@ -386,6 +395,7 @@
 				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
 				on:click={() => {
 					panelIsHidden = false;
+					$publisherSetupStep = 3;
 				}}
 			>
 				Edit

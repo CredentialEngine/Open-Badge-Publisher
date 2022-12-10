@@ -14,16 +14,18 @@
 		checkedBadges,
 		fetchCanvasIssuerBadges
 	} from '$lib/stores/badgeSourceStore.js';
+	import { publisherSetupStep } from '$lib/stores/publisherStore.js';
+	import { ctdlCredentials, proofingStep } from '$lib/stores/badgeDestinationStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
+	// panelIsHidden = true when data has been saved and this panel is no longer active.
 	let panelIsHidden = false;
 
 	const handleAdvanceToBadgeSelection = () => {
-		if ($badgeSourceType == 'canvas')
-			fetchCanvasIssuerBadges();
+		if ($badgeSourceType == 'canvas') fetchCanvasIssuerBadges();
 		$badgeSetupStep = 3;
-	}
+	};
 </script>
 
 <Heading>
@@ -39,7 +41,7 @@
 			<ConfigurationStep
 				stepNumber="4"
 				stepName="Choose Source Type"
-				isActive={$badgeSetupStep == 1}
+				isActive={$badgeSetupStep == 1 && $publisherSetupStep > 3}
 			/>
 			<ConfigurationStep
 				stepNumber="5"
@@ -50,7 +52,13 @@
 		</div>
 
 		<!-- Step 1: Choose Source Type -->
-		{#if $badgeSetupStep == 1}
+		{#if $badgeSetupStep == 0}
+			<div>
+				<Heading><h3 aria-label="source type">No data yet</h3></Heading>
+
+				<BodyText>Complete publisher configuration to connect badge data source.</BodyText>
+			</div>
+		{:else if $badgeSetupStep == 1}
 			<div id="badgesetup-step1">
 				<Heading><h3>Choose Source Type</h3></Heading>
 				<BodyText>
@@ -105,10 +113,7 @@
 
 				<div class="md:flex items-center border-b pb-6 border-gray-200">
 					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
-					<NextPrevButton
-						on:click={handleAdvanceToBadgeSelection}
-						isActive={$badgeSetupComplete}
-					/>
+					<NextPrevButton on:click={handleAdvanceToBadgeSelection} isActive={$badgeSetupComplete} />
 				</div>
 			</div>
 
@@ -122,6 +127,11 @@
 					<NextPrevButton
 						on:click={() => {
 							panelIsHidden = true;
+							$badgeSetupStep = 4;
+							if ($proofingStep == 0) {
+								$proofingStep = 1;
+								ctdlCredentials.importCheckedSourceBadges(); // TODO
+							}
 						}}
 						isNext={true}
 						isActive={Object.keys($checkedBadges).length > 0}
@@ -152,6 +162,7 @@
 				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
 				on:click={() => {
 					panelIsHidden = false;
+					$badgeSetupStep = 3;
 				}}
 			>
 				Edit

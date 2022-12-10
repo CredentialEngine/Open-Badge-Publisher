@@ -16,7 +16,7 @@
 	</div>
 </div>
 <div class="dark:bg-gray-900">
-	<div class="max-w-5xl container mx-auto p-6">
+	<div class="max-w-5xl container mx-auto p-2 sm:p-6">
 		<main class="w-full h-full">
 			<slot />
 		</main>

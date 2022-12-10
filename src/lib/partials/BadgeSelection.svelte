@@ -7,18 +7,17 @@
 		normalizedBadges,
 		checkedBadges
 	} from '$lib/stores/badgeSourceStore.js';
+	import abbreviate from '$lib/utils/abbreviate.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
-
-	const abbreviate = (str: string, n = 60) => (str.length > n ? str.slice(0, n - 1) + '…' : str);
 
 	const handleChange = (badgeId: string) => {
 		$checkedBadges[badgeId] = !$checkedBadges[badgeId];
 		$checkedBadges = Object.fromEntries(
 			Object.entries($checkedBadges).filter(([key, value]) => value === true)
 		);
-		console.log("Updated badge selections")
-		console.log($checkedBadges)
+		console.log('Updated badge selections');
+		console.log($checkedBadges);
 	};
 </script>
 
