@@ -11,7 +11,7 @@
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;
-	export let options: string[] = [];
+	export let options: Array<{value: string, name: string}>;
 	export let validator: BaseSchema = yup.string();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
@@ -80,7 +80,7 @@
 			>
 				<option selected={!value}>Choose option</option>
 				{#each options as option (option)}
-					<option value={option} selected={value == option}>{option}</option>
+					<option value={option.value} selected={value == option.value}>{option.name}</option>
 				{/each}
 			</select>
 			{#if validationErrorMessage}

@@ -64,7 +64,7 @@
 					fieldName="Credential Type"
 					helpText="CTDL defines a number of Credential subclasses so issuers can describe Credentials more specifically."
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
-					options={$credentialTypesStore.map((typ) => typ.URI)}
+					options={$credentialTypesStore.map((typ) => {return {value: typ.URI, name: typ.Name};})}
 				>
 					<Tag>{credential.Credential.CredentialType}</Tag>
 				</EditableCredentialRowSelect>
@@ -114,13 +114,18 @@
 					fieldName="Status"
 					helpText="If the credential is not Active, there are some options "
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
-					options={['Active', 'Probationary', 'Deprecated', 'Suspended', 'TeaachOut']}
+					options={[
+						{value: 'Active', name: 'Active'},
+						{value: 'Probationary', name: 'Probationary'},
+						{value: 'Deprecated', name: 'Deprecated'},
+						{value: 'Suspended', name: 'Suspended'},
+						{value: 'TeachOut', name: 'Teach Out'}
+					]}
 				>
 					<Tag>{credential.Credential.CredentialStatusType}</Tag>
 				</EditableCredentialRowSelect>
-
-				<!-- 					
-					<EditableCredentialRowTags 
+					
+				<EditableCredentialRowTags 
 					{credential}
 					editable={true}
 					fieldId="InLanguage"
@@ -133,6 +138,8 @@
 							(value, testContext) => {
 								try {
 									const parsed = bcp47.parse(value || '');
+									console.log(`Parsed ${value} and got...`)
+									console.log(parsed)
 									return true;
 								} catch {
 									return false;
@@ -140,9 +147,7 @@
 							}
 						)
 					}
-				>
-					{#each credential.Credential.InLanguage as lang}<Tag>{lang}</Tag>{/each}
-				</EditableCredentialRowTags> -->
+				/>
 
 				<EditableCredentialRowTags
 					{credential}

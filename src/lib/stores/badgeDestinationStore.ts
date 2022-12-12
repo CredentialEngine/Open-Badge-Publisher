@@ -70,44 +70,44 @@ export interface CtdlApiCredential {
 export const defaultAchievementTypeForBadgeAchievementType = (btype: string): string => {
 	const mapping: { [key: string]: string } = {
 		// Direct CTDL Mappings. List formatted as OpenBadgeTerm: CTDLTerm
-		ApprenticeshipCertificate: 'ApprenticeshipCertificate',
-		AssociateDegree: 'AssociateDegree',
-		Badge: 'OpenBadge',
-		BachelorDegree: 'BachelorDegree',
-		Certificate: 'Certificate',
-		CertificateOfCompletion: 'CertificateOfCompletion',
-		Certification: 'Certification',
-		Degree: 'Degree',
-		Diploma: 'Diploma',
-		DoctoralDegree: 'DoctoralDegree',
-		GeneralEducationDevelopment: 'GeneralEducationDevelopment',
-		JourneymanCertificate: 'JourneymanCertificate',
-		License: 'License',
-		ProfessionalDoctorate: 'ProfessionalDoctorate',
-		QualityAssuranceCredential: 'QualityAssuranceCredential',
-		MasterCertificate: 'MasterCertificate',
-		MasterDegree: 'MasterDegree',
-		MicroCredential: 'MicroCredential',
-		ResearchDoctorate: 'ResearchDoctorate',
-		SecondarySchoolDiploma: 'SecondarySchoolDiploma',
+		ApprenticeshipCertificate: 'ceterms:ApprenticeshipCertificate',
+		AssociateDegree: 'ceterms:AssociateDegree',
+		Badge: 'ceterms:OpenBadge',
+		BachelorDegree: 'ceterms:BachelorDegree',
+		Certificate: 'ceterms:Certificate',
+		CertificateOfCompletion: 'ceterms:CertificateOfCompletion',
+		Certification: 'ceterms:Certification',
+		Degree: 'ceterms:Degree',
+		Diploma: 'ceterms:Diploma',
+		DoctoralDegree: 'ceterms:DoctoralDegree',
+		GeneralEducationDevelopment: 'ceterms:GeneralEducationDevelopment',
+		JourneymanCertificate: 'ceterms:JourneymanCertificate',
+		License: 'ceterms:License',
+		ProfessionalDoctorate: 'ceterms:ProfessionalDoctorate',
+		QualityAssuranceCredential: 'ceterms:QualityAssuranceCredential',
+		MasterCertificate: 'ceterms:MasterCertificate',
+		MasterDegree: 'ceterms:MasterDegree',
+		MicroCredential: 'ceterms:MicroCredential',
+		ResearchDoctorate: 'ceterms:ResearchDoctorate',
+		SecondarySchoolDiploma: 'ceterms:SecondarySchoolDiploma',
 
 		// Not Found in CTDL https://credreg.net/ctdl/terms#credentialType enumeration
-		Achievement: 'OpenBadge',
-		Assessment: 'OpenBadge',
-		Assignment: 'OpenBadge',
-		Award: 'OpenBadge',
-		CoCurricular: 'OpenBadge',
-		CommunityService: 'OpenBadge',
-		Competency: 'OpenBadge',
-		Course: 'OpenBadge',
-		Fieldwork: 'OpenBadge',
-		LearningProgram: 'OpenBadge',
-		Membership: 'OpenBadge'
+		Achievement: 'ceterms:OpenBadge',
+		Assessment: 'ceterms:OpenBadge',
+		Assignment: 'ceterms:OpenBadge',
+		Award: 'ceterms:OpenBadge',
+		CoCurricular: 'ceterms:OpenBadge',
+		CommunityService: 'ceterms:OpenBadge',
+		Competency: 'ceterms:OpenBadge',
+		Course: 'ceterms:OpenBadge',
+		Fieldwork: 'ceterms:OpenBadge',
+		LearningProgram: 'ceterms:OpenBadge',
+		Membership: 'ceterms:OpenBadge'
 	};
 
 	if (Object.hasOwn(mapping, btype)) return mapping[btype];
 
-	return 'OpenBadge'; // default.
+	return 'ceterms:OpenBadge'; // default.
 };
 
 // Converts a credential's data from Open Badges format to CTDL Publisher API format
