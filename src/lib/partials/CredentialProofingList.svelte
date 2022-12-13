@@ -8,7 +8,7 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import TagLink from '$lib/components/TagLink.svelte';
 	import abbreviate from '$lib/utils/abbreviate.js';
-	import { ctdlCredentials } from '$lib/stores/badgeDestinationStore.js';
+	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
 
 	let currentlyEditing: { [key: string]: boolean } = {};
 	const handleEditCredential = (credentialId: string) => {

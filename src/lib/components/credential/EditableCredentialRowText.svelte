@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { CtdlApiCredential } from '$lib/stores/badgeDestinationStore.js';
+	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { ctdlCredentials } from '$lib/stores/badgeDestinationStore.js';
+	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 
 	export let credential: CtdlApiCredential;

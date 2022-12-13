@@ -10,9 +10,9 @@
 	import Tag from '$lib/components/Tag.svelte';
 
 	import abbreviate from '$lib/utils/abbreviate.js';
-	import { ctdlCredentials } from '$lib/stores/badgeDestinationStore.js';
+	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
 	import { credentialTypesStore } from '$lib/stores/credentialTypesStore.js';
-	import type { CtdlApiCredential } from '$lib/stores/badgeDestinationStore.js';
+	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
 
 	export let credential: CtdlApiCredential;
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
@@ -64,7 +64,9 @@
 					fieldName="Credential Type"
 					helpText="CTDL defines a number of Credential subclasses so issuers can describe Credentials more specifically."
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
-					options={$credentialTypesStore.map((typ) => {return {value: typ.URI, name: typ.Name};})}
+					options={$credentialTypesStore.map((typ) => {
+						return { value: typ.URI, name: typ.Name };
+					})}
 				>
 					<Tag>{credential.Credential.CredentialType}</Tag>
 				</EditableCredentialRowSelect>
@@ -115,38 +117,39 @@
 					helpText="If the credential is not Active, there are some options "
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
 					options={[
-						{value: 'Active', name: 'Active'},
-						{value: 'Probationary', name: 'Probationary'},
-						{value: 'Deprecated', name: 'Deprecated'},
-						{value: 'Suspended', name: 'Suspended'},
-						{value: 'TeachOut', name: 'Teach Out'}
+						{ value: 'Active', name: 'Active' },
+						{ value: 'Probationary', name: 'Probationary' },
+						{ value: 'Deprecated', name: 'Deprecated' },
+						{ value: 'Suspended', name: 'Suspended' },
+						{ value: 'TeachOut', name: 'Teach Out' }
 					]}
 				>
 					<Tag>{credential.Credential.CredentialStatusType}</Tag>
 				</EditableCredentialRowSelect>
-					
-				<EditableCredentialRowTags 
+
+				<EditableCredentialRowTags
 					{credential}
 					editable={true}
 					fieldId="InLanguage"
 					fieldName="Language"
 					helpText="Enter a standardized code or tag compatible with IETF BCP 47"
-					validator={
-						yup.string().required().test(
+					validator={yup
+						.string()
+						.required()
+						.test(
 							'languageCodeValid',
 							"Language code must be a valid BCP-47 identifier like 'en-US'",
 							(value, testContext) => {
 								try {
 									const parsed = bcp47.parse(value || '');
-									console.log(`Parsed ${value} and got...`)
-									console.log(parsed)
+									console.log(`Parsed ${value} and got...`);
+									console.log(parsed);
 									return true;
 								} catch {
 									return false;
 								}
 							}
-						)
-					}
+						)}
 				/>
 
 				<EditableCredentialRowTags
