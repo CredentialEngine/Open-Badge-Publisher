@@ -10,12 +10,20 @@
 	import Tag from '$lib/components/Tag.svelte';
 
 	import abbreviate from '$lib/utils/abbreviate.js';
-	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
-	import { credentialTypesStore } from '$lib/stores/credentialTypesStore.js';
+	import { credentialDrafts } from '$lib/stores/publisherStore.js';
+	import { credentialTypesStore, prettyNameForCredentialType } from '$lib/stores/credentialTypesStore.js';
 	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
 
 	export let credential: CtdlApiCredential;
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
+
+	const credentialStatusOptions = [
+		{ value: 'Active', name: 'Active' },
+		{ value: 'Probationary', name: 'Probationary' },
+		{ value: 'Deprecated', name: 'Deprecated' },
+		{ value: 'Suspended', name: 'Suspended' },
+		{ value: 'TeachOut', name: 'Teach Out' }
+	]
 </script>
 
 <div
@@ -67,9 +75,7 @@
 					options={$credentialTypesStore.map((typ) => {
 						return { value: typ.URI, name: typ.Name };
 					})}
-				>
-					<Tag>{credential.Credential.CredentialType}</Tag>
-				</EditableCredentialRowSelect>
+				/>
 
 				<EditableCredentialRowText
 					{credential}
@@ -92,13 +98,6 @@
 
 				<EditableCredentialRowText
 					{credential}
-					fieldId="Description"
-					editable={true}
-					longText={true}
-				/>
-
-				<EditableCredentialRowText
-					{credential}
 					editable={true}
 					fieldId="SubjectWebpage"
 					helpText="If there is an external badge criteria URL, that is used. Otherwise id is used. This URL must be resolvable at publication time."
@@ -116,16 +115,8 @@
 					fieldName="Status"
 					helpText="If the credential is not Active, there are some options "
 					helpUrl="https://credreg.net/ctdl/handbook#credentialtypes"
-					options={[
-						{ value: 'Active', name: 'Active' },
-						{ value: 'Probationary', name: 'Probationary' },
-						{ value: 'Deprecated', name: 'Deprecated' },
-						{ value: 'Suspended', name: 'Suspended' },
-						{ value: 'TeachOut', name: 'Teach Out' }
-					]}
-				>
-					<Tag>{credential.Credential.CredentialStatusType}</Tag>
-				</EditableCredentialRowSelect>
+					options={credentialStatusOptions}
+				/>
 
 				<EditableCredentialRowTags
 					{credential}

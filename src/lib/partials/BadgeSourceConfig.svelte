@@ -14,8 +14,8 @@
 		checkedBadges,
 		fetchCanvasIssuerBadges
 	} from '$lib/stores/badgeSourceStore.js';
-	import { publisherSetupStep } from '$lib/stores/publisherStore.js';
-	import { ctdlCredentials, proofingStep } from '$lib/stores/publisherStore.js';
+	import { ctdlPublicationResultStore, publisherSetupStep } from '$lib/stores/publisherStore.js';
+	import { credentialDrafts, proofingStep } from '$lib/stores/publisherStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
@@ -130,7 +130,8 @@
 							$badgeSetupStep = 4;
 							if ($proofingStep == 0) {
 								$proofingStep = 1;
-								ctdlCredentials.importCheckedSourceBadges(); // TODO
+								credentialDrafts.importCheckedSourceBadges();
+								ctdlPublicationResultStore.initialize();
 							}
 						}}
 						isNext={true}

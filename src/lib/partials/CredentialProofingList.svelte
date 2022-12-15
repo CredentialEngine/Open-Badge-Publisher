@@ -8,7 +8,12 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import TagLink from '$lib/components/TagLink.svelte';
 	import abbreviate from '$lib/utils/abbreviate.js';
-	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
+	import { prettyNameForCredentialType } from '$lib/stores/credentialTypesStore.js';
+	import {
+		credentialDrafts,
+		ctdlPublicationResultStore,
+		PubStatuses
+	} from '$lib/stores/publisherStore.js';
 
 	let currentlyEditing: { [key: string]: boolean } = {};
 	const handleEditCredential = (credentialId: string) => {
@@ -25,7 +30,7 @@
 </BodyText>
 
 <ul class="space-y-4">
-	{#each $ctdlCredentials as credential (credential.Credential.CredentialId)}
+	{#each $credentialDrafts as credential (credential.Credential.CredentialId)}
 		<li>
 			{#if currentlyEditing[credential.Credential.CredentialId]}
 				<EditableCredentialDetail {credential} {handleFinishEditingCredential} />
@@ -61,9 +66,20 @@
 						/>
 					</div>
 					<div class="p-6 flex-auto">
-						<Heading><h4>{credential.Credential.Name}</h4></Heading>
+						<Heading>
+							<h4 class="!mt-0 mb-2">
+								{credential.Credential.Name}
+								{#if $ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus == PubStatuses.PendingUpdate}
+									<span
+										class="bg-supermint text-blue-800 text-sm font-medium mx-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
+									>
+										Updated
+									</span>
+								{/if}
+							</h4></Heading
+						>
 						<div class="space-x-2">
-							<Tag>{credential.Credential.CredentialType}</Tag>
+							<Tag>{prettyNameForCredentialType(credential.Credential.CredentialType)}</Tag>
 							<Tag>{credential.Credential.CredentialStatusType}</Tag>
 							<Tag>{credential.Credential.InLanguage.join(', ')}</Tag>
 							<a href={credential.Credential.CredentialId} target="new"
@@ -83,7 +99,7 @@
 						</BodyText>
 						<button
 							type="button"
-							class="text-gray-900 text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+							class="text-gray-900 text-sm px-5 mt-2 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
 							on:click={() => handleEditCredential(credential.Credential.CredentialId)}
 						>
 							Edit
