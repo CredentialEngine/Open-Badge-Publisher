@@ -60,12 +60,17 @@
 						{/if}
 					</td>
 					<td class="py-4 px-6 flex flex-row py-4 space-x-3">
-						{#if [PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveInProgress].includes($ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus)}
+						{#if [PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes($ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus)}
 							<button
 								class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-								disabled={$ctdlPublicationResultStore[draft.Credential.CredentialId]
-									?.publicationStatus == PubStatuses.SaveInProgress}
 								on:click={() => saveCredential(draft)}
+							>
+								Save
+							</button>
+						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
+							<button
+								class="cursor-not-allowed text-gray-700 w-full text-sm px-5 py-2.5 bg-white focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+								disabled
 							>
 								Save
 							</button>

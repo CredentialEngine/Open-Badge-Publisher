@@ -473,13 +473,14 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 
 	if (
 		!status ||
-		![PubStatuses.PendingNew, PubStatuses.PendingUpdate].includes(status.publicationStatus)
+		![PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes(status.publicationStatus)
 	)
 		return;
 
 	ctdlPublicationResultStore.updateCredentialStatus(credential.Credential.CredentialId, {
 		CredentialId: credential.Credential.CredentialId,
-		publicationStatus: PubStatuses.SaveInProgress
+		publicationStatus: PubStatuses.SaveInProgress,
+		messages: []
 	});
 
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Credential/Save`;
