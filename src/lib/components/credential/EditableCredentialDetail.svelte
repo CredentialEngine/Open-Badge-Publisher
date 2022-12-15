@@ -133,8 +133,6 @@
 							(value, testContext) => {
 								try {
 									const parsed = bcp47.parse(value || '');
-									console.log(`Parsed ${value} and got...`);
-									console.log(parsed);
 									return true;
 								} catch {
 									return false;

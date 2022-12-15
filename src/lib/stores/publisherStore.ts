@@ -193,12 +193,9 @@ export const getUser = async () => {
 	const url = `${PUBLIC_UI_API_BASEURL || '/publisher'}/StagingApi/Load/User`;
 	if (!haveSameDomain(url, PUBLIC_BASEURL)) return null;
 
-	console.log(`Fetching User from ${url} ...`);
-
 	// Attempt to get user from the publisher using cookies that may be set if this app is running on same-origin.
 	// TODO: just skip this if we can tell in advance that it is not running on same origin.
 	const response = await fetch(url, { credentials: 'include' });
-	console.log(`UserResponse: ${response.status}`);
 	if (!response.ok) return null;
 
 	const data = await response.json();
@@ -398,7 +395,6 @@ const createPublicationResultStore = () => {
 			publicationStatus: PubStatuses.PendingUpdate,
 			publisherData: responseData['Data'] as CtdlCredential
 		});
-		console.log(`saving publisher data to credential status store`)
 
 		credentialDrafts.reconcileCredentialWithPublisher(
 			c.CredentialId,

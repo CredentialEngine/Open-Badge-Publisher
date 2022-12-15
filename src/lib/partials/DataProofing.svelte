@@ -34,7 +34,6 @@
 				return credential.publicationStatus == PubStatuses.Pending;
 			}
 		).length;
-		console.log(`${numLoadsPending} loading of ${numCredentialsTotal}`);
 	}
 </script>
 
@@ -87,11 +86,7 @@
 
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
 			<NextPrevButton on:click={handlePreviousStep} isNext={false} />
-			<NextPrevButton
-				on:click={() => {
-					handleNextStep();
-				}}
-			/>
+			<NextPrevButton on:click={handleNextStep} />
 		</div>
 	{:else if $proofingStep == 3}
 		<div transition:slide>
@@ -105,6 +100,7 @@
 		</div>
 
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
+			<NextPrevButton on:click={handlePreviousStep} isNext={false} />
 			<NextPrevButton on:click={handlePreviousStep} isActive={false} />
 		</div>
 	{/if}

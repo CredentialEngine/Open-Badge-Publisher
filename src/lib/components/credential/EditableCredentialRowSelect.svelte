@@ -64,7 +64,6 @@
 	}
 
 	const prettyNameForValue = (v: string | undefined): string => {
-		console.log(`checking options for ${v}`);
 		const option = options.find(o => o.value == v);
 		if (!option)
 			return v || '';

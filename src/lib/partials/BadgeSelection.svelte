@@ -17,8 +17,6 @@
 		$checkedBadges = Object.fromEntries(
 			Object.entries($checkedBadges).filter(([key, value]) => value === true)
 		);
-		console.log('Updated badge selections');
-		console.log($checkedBadges);
 	};
 </script>
 
