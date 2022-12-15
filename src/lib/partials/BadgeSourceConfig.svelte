@@ -15,7 +15,7 @@
 		fetchCanvasIssuerBadges
 	} from '$lib/stores/badgeSourceStore.js';
 	import { publisherSetupStep } from '$lib/stores/publisherStore.js';
-	import { ctdlCredentials, proofingStep } from '$lib/stores/badgeDestinationStore.js';
+	import { ctdlCredentials, proofingStep } from '$lib/stores/publisherStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 

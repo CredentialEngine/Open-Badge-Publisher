@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { CtdlApiCredential } from '$lib/stores/badgeDestinationStore.js';
+	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { ctdlCredentials } from '$lib/stores/badgeDestinationStore.js';
+	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 
 	export let credential: CtdlApiCredential;
@@ -11,7 +11,7 @@
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;
-	export let options: Array<{value: string, name: string}>;
+	export let options: Array<{ value: string; name: string }>;
 	export let validator: BaseSchema = yup.string();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;

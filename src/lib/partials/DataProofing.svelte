@@ -5,9 +5,10 @@
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import Alert from '$lib/components/Alert.svelte';
-	import CredentialProofingList from './CredentialProofingList.svelte';
+	import CredentialProofingList from '$lib/partials/CredentialProofingList.svelte';
+	import SaveToPublisher from '$lib/partials/SaveToPublisher.svelte';
 
-	import { ctdlCredentials, proofingStep } from '$lib/stores/badgeDestinationStore.js';
+	import { ctdlCredentials, ctdlPublicationResultStore, proofingStep } from '$lib/stores/publisherStore.js';
 	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
 
 	const handleNextStep = () => {
@@ -61,19 +62,24 @@
 
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
 			<NextPrevButton on:click={handlePreviousStep} isNext={false} />
-			<NextPrevButton on:click={handleNextStep} isActive={false} />
+			<NextPrevButton on:click={ () => {
+				ctdlPublicationResultStore.initialize();
+				handleNextStep();
+			} } />
 		</div>
 	{:else if $proofingStep == 3}
 		<div transition:slide>
 			<Heading><h3 aria-label="source type">Save to Publisher</h3></Heading>
 
 			<BodyText>
-				Connect your badge system to preview data and make final adjustments for publication.
+				Ready to push badges to the publisher for your Organization's final review.
 			</BodyText>
+
+			<SaveToPublisher />
 		</div>
 
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
-			<NextPrevButton on:click={handlePreviousStep} isNext={true} />
+			<NextPrevButton on:click={handlePreviousStep} isActive={false} />
 		</div>
 	{/if}
 </div>
