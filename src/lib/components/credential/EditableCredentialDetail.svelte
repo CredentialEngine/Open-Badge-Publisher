@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { setContext } from 'svelte';
+	import { tick } from 'svelte';
 	import * as bcp47 from 'bcp-47';
 	import * as yup from 'yup';
 
@@ -33,10 +33,12 @@
 			handleFinishEditingCredential(credential.Credential.CredentialId);
 		}, 200)
 	};
-	const handleUnsaved = () => {
+	const handleUnsaved = async () => {
 		if (editStatus != EditStatus.Editing) {
 			editStatus = EditStatus.Editing;
 			modalVisible = true;
+			// await tick();
+			// document.getElementById(`unsaved-${credential.Credential.CredentialId}`)?.focus();
 		}
 	};
 	const handleRevert = () => {

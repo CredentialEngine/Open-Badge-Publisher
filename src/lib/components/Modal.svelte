@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Button from '$lib/components/Button.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
@@ -9,6 +10,7 @@
 	export let visible = false;
 	export let id = 'modalDialog';
 	export let title = 'Modal Dialog';
+	let element: HTMLElement | null;
 
 	const handleClose = () => {
 		dispatch('close');
@@ -26,6 +28,14 @@
 			onClick: handleClose
 		}
 	];
+
+	onMount(() => {
+		element = document.getElementById(id);
+		element?.addEventListener('transitionend', (e) => {
+			if (element && visible)
+				element.focus();
+		});
+	})
 </script>
 
 <div
@@ -33,8 +43,9 @@
 	tabindex="-1"
 	aria-hidden={!visible}
 	class:hidden={!visible}
+	class:visible={visible}
 	transition:fade
-	class="fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto inset-0 h-modal h-full bg-black bg-opacity-80"
+	class="modaldialog fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto inset-0 h-modal h-full bg-black bg-opacity-80"
 >
 	<div class="relative w-full h-full max-w-2xl mx-auto h-auto">
 		<div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -77,3 +88,14 @@
 		</div>
 	</div>
 </div>
+
+<style>
+.modaldialog {
+  background-color: rgba(0, 0, 0, 0.8);
+
+}
+.modaldialog.visible:not(:focus-within) {
+  background-color: rgba(0, 0, 1, 0.8);
+  transition: background-color 0.01s;
+}
+</style>
