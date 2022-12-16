@@ -182,8 +182,7 @@ export const credentialTypesStore = readable<CredentialType[]>(DEFAULT_TYPES);
 
 export const prettyNameForCredentialType = (t: string): string => {
 	const credentialTypes = get(credentialTypesStore);
-	const credentialType = credentialTypes.find(ct => ct.URI == t);
-	if (!credentialType)
-		return t;
+	const credentialType = credentialTypes.find((ct) => ct.URI == t);
+	if (!credentialType) return t;
 	return credentialType.Name;
-}
+};

@@ -16,8 +16,11 @@
 	} from '$env/static/public';
 
 	if (!PUBLIC_UI_API_BASEURL || !PUBLIC_PUBLISHER_API_BASEURL || !PUBLIC_PUBLISHER_API_ENV_LABEL)
-		throw error(404, { message: 'Application environment settings not properly configured. Follow instructions on setting up the .env'})
-	</script>
+		throw error(404, {
+			message:
+				'Application environment settings not properly configured. Follow instructions on setting up the .env'
+		});
+</script>
 
 <BodyText>
 	This app can help publish new and updated Open Badges to the Credential Registry. After importing

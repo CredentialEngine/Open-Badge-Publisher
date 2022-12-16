@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
+	import { createEventDispatcher } from 'svelte';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { credentialDrafts, ctdlPublicationResultStore } from '$lib/stores/publisherStore.js';
+	import { credentialDrafts, ctdlPublicationResultStore, EditStatus } from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 	import BodyText from '../typography/BodyText.svelte';
 
 	export let credential: CtdlApiCredential;
+	export let editStatus: EditStatus;
 	export let fieldName = '';
 	export let fieldId: 'Name' | 'Description' | 'SubjectWebpage' | 'Image' | 'CTID';
 	export let helpText = '';
@@ -15,6 +17,8 @@
 	export let editable = false;
 	export let longText = false;
 	export let validator: BaseSchema = yup.string();
+
+	const dispatch = createEventDispatcher();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
 	let value: string = credential.Credential[fieldId] || ''; // Todo -- Image is nullable. Make sure not to send '' to server
@@ -61,6 +65,15 @@
 		value = credential.Credential[fieldId] || '';
 		isEditing = false;
 	};
+
+	$: {
+		if (isEditing && editStatus == EditStatus.FinishRequested && value != credential.Credential[fieldId])
+			dispatch('unsavedChanges', {fieldId: fieldId});
+		else if (isEditing && editStatus == EditStatus.Reject)
+			handleCancelRowEdit();
+		else if (isEditing && editStatus == EditStatus.Accept)
+			handleSaveRow();
+	}
 </script>
 
 {#if !isEditing}
@@ -130,7 +143,9 @@
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div transition:slide>
 					<BodyText>
-						<span class="text-xs text-gray-600 dark:gray-400">On publisher: {publisherFieldData}</span>
+						<span class="text-xs text-gray-600 dark:gray-400"
+							>On publisher: {publisherFieldData}</span
+						>
 					</BodyText>
 				</div>
 			{/if}

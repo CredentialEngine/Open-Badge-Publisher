@@ -127,7 +127,7 @@
 						{/if}
 						{#each $ctdlPublicationResultStore[credential.Credential.CredentialId]?.messages || [] as message}
 							<div class="mt-2">
-								<Alert level="error" message={message} />
+								<Alert level="error" {message} />
 							</div>
 						{/each}
 					</div>

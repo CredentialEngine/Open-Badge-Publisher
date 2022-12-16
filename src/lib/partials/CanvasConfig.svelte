@@ -259,7 +259,7 @@
 						on:select={(e) => ($canvasSelectedIssuer = issuer)}
 						description={issuer.description}
 					>
-						<slot name="label"
+						<span slot="label"
 							><span class="text-sm font-light text-gray-500 dark:text-gray-400">
 								<a
 									href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${
@@ -269,8 +269,7 @@
 									class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
 									>{issuer.name}</a
 								>
-							</span></slot
-						>
+							</span></span>
 					</RadioCard>
 				{/each}
 			</ul>

@@ -330,7 +330,7 @@ const createCredentialDraftStore = () => {
 
 				let updated = {
 					PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier,
-					Credential: {...publisherData}
+					Credential: { ...publisherData }
 				};
 				Object.keys(credential.Credential).map((key) => {
 					// If the badge system version has data for the key, set that value into the draft.
@@ -370,6 +370,13 @@ export interface CredentialPublicationStatus {
 	publicationStatus: PubStatuses;
 	messages?: string[];
 	publisherData?: CtdlCredential;
+}
+
+export enum EditStatus {
+	FinishRequested,
+	Reject,
+	Accept,
+	Editing
 }
 
 const createPublicationResultStore = () => {
@@ -473,7 +480,9 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 
 	if (
 		!status ||
-		![PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes(status.publicationStatus)
+		![PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes(
+			status.publicationStatus
+		)
 	)
 		return;
 

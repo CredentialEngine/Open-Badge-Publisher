@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
+	import { setContext } from 'svelte';
 	import * as bcp47 from 'bcp-47';
 	import * as yup from 'yup';
 
@@ -7,15 +8,52 @@
 	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
 	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 
 	import abbreviate from '$lib/utils/abbreviate.js';
-	import { credentialDrafts } from '$lib/stores/publisherStore.js';
-	import { credentialTypesStore, prettyNameForCredentialType } from '$lib/stores/credentialTypesStore.js';
+	import { credentialDrafts, EditStatus } from '$lib/stores/publisherStore.js';
+	import {
+		credentialTypesStore,
+		prettyNameForCredentialType
+	} from '$lib/stores/credentialTypesStore.js';
 	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
+	import BodyText from '../typography/BodyText.svelte';
 
 	export let credential: CtdlApiCredential;
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
+
+	let modalVisible = false;
+	let editStatus: EditStatus = EditStatus.Editing;
+
+	const handleFinish = () => {
+		editStatus = EditStatus.FinishRequested;
+		setTimeout(() => {
+			if (editStatus == EditStatus.FinishRequested) 
+			handleFinishEditingCredential(credential.Credential.CredentialId);
+		}, 200)
+	};
+	const handleUnsaved = () => {
+		if (editStatus != EditStatus.Editing) {
+			editStatus = EditStatus.Editing;
+			modalVisible = true;
+		}
+	};
+	const handleRevert = () => {
+		editStatus = EditStatus.Reject;
+		modalVisible = false;
+		setTimeout(() => {
+			handleFinishEditingCredential(credential.Credential.CredentialId);
+		}, 200);
+	};
+	const handleAccept = () => {
+		editStatus = EditStatus.Accept;
+		modalVisible = false;
+		setTimeout(() => {
+			handleFinishEditingCredential(credential.Credential.CredentialId);
+		}, 200);
+	};
+
 
 	const credentialStatusOptions = [
 		{ value: 'Active', name: 'Active' },
@@ -23,7 +61,9 @@
 		{ value: 'Deprecated', name: 'Deprecated' },
 		{ value: 'Suspended', name: 'Suspended' },
 		{ value: 'TeachOut', name: 'Teach Out' }
-	]
+	];
+
+	
 </script>
 
 <div
@@ -45,6 +85,8 @@
 			<tbody>
 				<EditableCredentialRowText
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					fieldId="Name"
 					editable={true}
 					validator={yup.string().required()}
@@ -52,6 +94,8 @@
 
 				<EditableCredentialRowText
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					fieldId="CTID"
 					editable={false}
 					helpText="A Credential Transparency Identifier (CTID) is assigned by Credential Engine upon creation."
@@ -59,6 +103,8 @@
 
 				<EditableCredentialRowText
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="Description"
 					longText={true}
@@ -67,6 +113,8 @@
 
 				<EditableCredentialRowSelect
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="CredentialType"
 					fieldName="Credential Type"
@@ -79,6 +127,8 @@
 
 				<EditableCredentialRowText
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="Image"
 					helpText="The URL to an image that is a symbolic representation of the achievement. Data URIs cannot be used in the Registry."
@@ -98,6 +148,8 @@
 
 				<EditableCredentialRowText
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="SubjectWebpage"
 					helpText="If there is an external badge criteria URL, that is used. Otherwise id is used. This URL must be resolvable at publication time."
@@ -110,6 +162,8 @@
 
 				<EditableCredentialRowSelect
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="CredentialStatusType"
 					fieldName="Status"
@@ -120,6 +174,8 @@
 
 				<EditableCredentialRowTags
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="InLanguage"
 					fieldName="Language"
@@ -143,6 +199,8 @@
 
 				<EditableCredentialRowTags
 					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
 					editable={true}
 					fieldId="Keyword"
 					fieldName="Keywords"
@@ -160,12 +218,24 @@
 			<button
 				type="button"
 				class="text-gray-900 text-sm mt-6 px-5 py-2.5 b mr-6 mb-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-				on:click={() => {
-					handleFinishEditingCredential(credential.Credential.CredentialId);
-				}}
+				on:click={() => {handleFinish();}}
 			>
 				Finished Editing
 			</button>
 		</div>
 	</div>
 </div>
+
+<Modal
+	visible={modalVisible}
+	id={`unsaved-${credential.Credential.CredentialId}`}
+	on:close={() => {modalVisible = false;}}
+	title="Unsaved Changes"
+	actions={[
+		{ label: 'Cancel', buttonType: 'default', onClick: () => {modalVisible = false;} },
+		{ label: 'Revert changes', buttonType: 'danger', onClick: handleRevert },
+		{ label: 'Accept changes', buttonType: 'primary', onClick: handleAccept },
+	]}
+>
+	<BodyText>Some fields have unsaved changes. Do you want to save these changes or discard them?</BodyText>
+</Modal>

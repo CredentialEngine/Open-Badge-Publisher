@@ -16,9 +16,7 @@
 			{stepNumber}
 		</p>
 	</div>
-	<p
-		class="text-base ml-3 mr-5 font-medium leading-4 text-gray-800 dark:text-gray-100"
-	>
+	<p class="text-base ml-3 mr-5 font-medium leading-4 text-gray-800 dark:text-gray-100">
 		{stepName}
 	</p>
 </div>

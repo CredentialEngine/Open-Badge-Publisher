@@ -1,21 +1,25 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
+	import { createEventDispatcher } from 'svelte';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { credentialDrafts, ctdlPublicationResultStore } from '$lib/stores/publisherStore.js';
+	import { credentialDrafts, ctdlPublicationResultStore, EditStatus } from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	export let credential: CtdlApiCredential;
 	export let fieldName = '';
+	export let editStatus: EditStatus;
 	export let fieldId: 'CredentialType' | 'CredentialStatusType';
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;
 	export let options: Array<{ value: string; name: string }>;
 	export let validator: BaseSchema = yup.string();
+
+	const dispatch = createEventDispatcher();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
 	let value: string = credential.Credential[fieldId] || ''; // Todo -- Image is nullable. Make sure not to send '' to server
@@ -58,16 +62,24 @@
 		isEditing = false;
 	};
 
-	const handlCancelRowEdit = () => {
+	const handleCancelRowEdit = () => {
 		value = credential.Credential[fieldId] || '';
 		isEditing = false;
-	}
+	};
 
 	const prettyNameForValue = (v: string | undefined): string => {
-		const option = options.find(o => o.value == v);
-		if (!option)
-			return v || '';
+		const option = options.find((o) => o.value == v);
+		if (!option) return v || '';
 		return option.name;
+	};
+
+	$: {
+		if (isEditing && editStatus == EditStatus.FinishRequested && value != credential.Credential[fieldId])
+			dispatch('unsavedChanges', {fieldId: fieldId});
+		else if (isEditing && editStatus == EditStatus.Reject)
+			handleCancelRowEdit();
+		else if (isEditing && editStatus == EditStatus.Accept)
+			handleSaveRow();
 	}
 </script>
 
@@ -132,7 +144,9 @@
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div transition:slide>
 					<BodyText>
-						<span class="text-xs text-gray-600 dark:gray-400">On publisher: {prettyNameForValue(publisherFieldData)}</span>
+						<span class="text-xs text-gray-600 dark:gray-400"
+							>On publisher: {prettyNameForValue(publisherFieldData)}</span
+						>
 					</BodyText>
 				</div>
 			{/if}
@@ -144,7 +158,7 @@
 			<button
 				type="button"
 				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-				on:click={handlCancelRowEdit}
+				on:click={handleCancelRowEdit}
 			>
 				Cancel
 			</button>

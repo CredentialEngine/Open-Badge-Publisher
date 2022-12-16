@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import { scale, slide } from 'svelte/transition';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { credentialDrafts, ctdlPublicationResultStore } from '$lib/stores/publisherStore.js';
+	import { credentialDrafts, ctdlPublicationResultStore, EditStatus } from '$lib/stores/publisherStore.js';
 	import abbreviate from '$lib/utils/abbreviate.js';
 	import Alert from '$lib/components/Alert.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -12,12 +13,15 @@
 	import Close from '$lib/icons/close.svelte';
 
 	export let credential: CtdlApiCredential;
+	export let editStatus: EditStatus;
 	export let fieldName = '';
 	export let fieldId: 'Keyword' | 'InLanguage';
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;
 	export let validator: BaseSchema = yup.string().required();
+
+	const dispatch = createEventDispatcher();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
 	let value: string[] = credential.Credential[fieldId] || [];
@@ -38,11 +42,17 @@
 		} else {
 			publisherFieldData = [];
 		}
-	})
+	});
+
+	const setChanged = (a: string[], b: string[]):boolean => {
+		const reducer = (changedYet: boolean, v: string): boolean =>
+			changedYet == true ? true : !b.includes(v);
+		return (a.length != b.length || a.reduce(reducer, false));
+	}
 	
-	const reducer = (changedYet: boolean, v: string):boolean => (changedYet == true) ? true : !publisherFieldData.includes(v);
 	let isValueUpdated = false;
-	$: isValueUpdated = isPendingUpdate && (publisherFieldData.length != value.length || value.reduce(reducer, false));
+	$: isValueUpdated =
+		isPendingUpdate && setChanged(publisherFieldData, value);
 
 	const handleSaveRow = () => {
 		validationErrorMessage = ''; // reset error message.
@@ -91,6 +101,15 @@
 		value = credential.Credential[fieldId] || [];
 		isEditing = false;
 	};
+
+	$: {
+		if (isEditing && editStatus == EditStatus.FinishRequested && setChanged(credential.Credential[fieldId] || [], value))
+			dispatch('unsavedChanges', {fieldId: fieldId});
+		else if (isEditing && editStatus == EditStatus.Reject)
+			handleCancelRowEdit();
+		else if (isEditing && editStatus == EditStatus.Accept)
+			handleSaveRow();
+	}
 </script>
 
 {#if !isEditing}
@@ -190,7 +209,9 @@
 			{#if isValueUpdated}
 				<div transition:slide>
 					<BodyText>
-						<span class="text-xs text-gray-600 dark:gray-400">On publisher: {publisherFieldData.join(', ')}</span>
+						<span class="text-xs text-gray-600 dark:gray-400"
+							>On publisher: {publisherFieldData.join(', ')}</span
+						>
 					</BodyText>
 				</div>
 			{/if}
