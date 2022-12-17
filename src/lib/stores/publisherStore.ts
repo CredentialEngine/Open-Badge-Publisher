@@ -306,7 +306,7 @@ const reconcileAlignments = (
 ): AlignmentObject[] => {
 	let representation: AlignmentObject[] = [];
 	publisherRequires.forEach((pa) => {
-		if (pa.Description != 'Open Badges Alignments') representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
+		if (pa.Description != 'Open Badges Alignment') representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
 	});
 	if (badgeSystemAlignments.length) representation.push(badgeSystemAlignments[0]);
 
