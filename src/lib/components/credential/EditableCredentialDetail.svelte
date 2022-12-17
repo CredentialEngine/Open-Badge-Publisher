@@ -4,9 +4,10 @@
 	import * as bcp47 from 'bcp-47';
 	import * as yup from 'yup';
 
-	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
+	import EditableCredentialRowAlignment from '$lib/components/credential/EditableCredentialRowAlignment.svelte';
 	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
 	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
+	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import Tag from '$lib/components/Tag.svelte';
@@ -29,9 +30,9 @@
 	const handleFinish = () => {
 		editStatus = EditStatus.FinishRequested;
 		setTimeout(() => {
-			if (editStatus == EditStatus.FinishRequested) 
-			handleFinishEditingCredential(credential.Credential.CredentialId);
-		}, 200)
+			if (editStatus == EditStatus.FinishRequested)
+				handleFinishEditingCredential(credential.Credential.CredentialId);
+		}, 200);
 	};
 	const handleUnsaved = async () => {
 		if (editStatus != EditStatus.Editing) {
@@ -56,7 +57,6 @@
 		}, 200);
 	};
 
-
 	const credentialStatusOptions = [
 		{ value: 'Active', name: 'Active' },
 		{ value: 'Probationary', name: 'Probationary' },
@@ -64,8 +64,6 @@
 		{ value: 'Suspended', name: 'Suspended' },
 		{ value: 'TeachOut', name: 'Teach Out' }
 	];
-
-	
 </script>
 
 <div
@@ -209,10 +207,12 @@
 					helpText="List of keywords for this credential"
 				/>
 
-				<!--
-				Requires
-					Requires not working yet...
-				 -->
+				<EditableCredentialRowAlignment
+					{credential}
+					fieldId="Requires"
+					fieldName="Alignment(s)"
+					helpText="A set of alignments that represent the competencies this badge requires."
+				/>
 			</tbody>
 		</table>
 
@@ -220,7 +220,9 @@
 			<button
 				type="button"
 				class="text-gray-900 text-sm mt-6 px-5 py-2.5 b mr-6 mb-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-				on:click={() => {handleFinish();}}
+				on:click={() => {
+					handleFinish();
+				}}
 			>
 				Finished Editing
 			</button>
@@ -231,13 +233,23 @@
 <Modal
 	visible={modalVisible}
 	id={`unsaved-${credential.Credential.CredentialId}`}
-	on:close={() => {modalVisible = false;}}
+	on:close={() => {
+		modalVisible = false;
+	}}
 	title="Unsaved Changes"
 	actions={[
-		{ label: 'Cancel', buttonType: 'default', onClick: () => {modalVisible = false;} },
+		{
+			label: 'Cancel',
+			buttonType: 'default',
+			onClick: () => {
+				modalVisible = false;
+			}
+		},
 		{ label: 'Revert changes', buttonType: 'danger', onClick: handleRevert },
-		{ label: 'Accept changes', buttonType: 'primary', onClick: handleAccept },
+		{ label: 'Accept changes', buttonType: 'primary', onClick: handleAccept }
 	]}
 >
-	<BodyText>Some fields have unsaved changes. Do you want to save these changes or discard them?</BodyText>
+	<BodyText
+		>Some fields have unsaved changes. Do you want to save these changes or discard them?</BodyText
+	>
 </Modal>

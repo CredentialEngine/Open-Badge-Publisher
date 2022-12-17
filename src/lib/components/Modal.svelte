@@ -32,10 +32,9 @@
 	onMount(() => {
 		element = document.getElementById(id);
 		element?.addEventListener('transitionend', (e) => {
-			if (element && visible)
-				element.focus();
+			if (element && visible) element.focus();
 		});
-	})
+	});
 </script>
 
 <div
@@ -43,7 +42,7 @@
 	tabindex="-1"
 	aria-hidden={!visible}
 	class:hidden={!visible}
-	class:visible={visible}
+	class:visible
 	transition:fade
 	class="modaldialog fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto inset-0 h-modal h-full bg-black bg-opacity-80"
 >
@@ -90,12 +89,11 @@
 </div>
 
 <style>
-.modaldialog {
-  background-color: rgba(0, 0, 0, 0.8);
-
-}
-.modaldialog.visible:not(:focus-within) {
-  background-color: rgba(0, 0, 1, 0.8);
-  transition: background-color 0.01s;
-}
+	.modaldialog {
+		background-color: rgba(0, 0, 0, 0.8);
+	}
+	.modaldialog.visible:not(:focus-within) {
+		background-color: rgba(0, 0, 1, 0.8);
+		transition: background-color 0.01s;
+	}
 </style>

@@ -36,6 +36,18 @@ interface OrganizationDataStore {
 	org?: PublisherOrganization;
 }
 
+export interface AlignmentObject {
+	Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
+	TargetCompetency: Array<{
+		// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
+		FrameworkName?: string; // targetFramework -- Optional Framework Name
+		TargetNodeName: string; // targetName -- Required Competency Name
+		TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
+		TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
+		CodedNotation?: string; // targetCode
+	}>;
+}
+
 export interface CtdlCredential {
 	//============= REQUIRED / POPULATED PROPERTIES =============
 	CredentialId: string; // "https://example.com/e198bbd5",  //The required primary ID of the credential
@@ -81,17 +93,7 @@ export interface CtdlCredential {
 	// "Subject": string[];  // ["Subject1", "Subject2"], // not used at this time. list of subjects for the credential
 
 	// Alignments: Condition profiles with required competencies (Open Badges alignments are assumed to have this relation in Credential)
-	Requires: Array<{
-		Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
-		TargetCompetency: Array<{
-			// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
-			FrameworkName?: string; // targetFramework -- Optional Framework Name
-			TargetNodeName: string; // targetName -- Required Competency Name
-			TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
-			TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
-			CodedNotation?: string; // targetCode
-		}>;
-	}>;
+	Requires: AlignmentObject[];
 }
 
 export interface CtdlApiCredential {
@@ -255,6 +257,21 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 	if (!publisherOrgId) throw new Error('Publishing org must be set before importing credentials.');
 
 	const badgeAlignments = b.alignment || [];
+	let destinationAlignment: AlignmentObject = {
+		Description: 'Open Badges Alignment',
+		TargetCompetency: []
+	};
+	badgeAlignments.map((a: Alignment) => {
+		destinationAlignment.TargetCompetency.push({
+			FrameworkName: a.targetFramework,
+			TargetNode: a.targetUrl,
+			TargetNodeName: a.targetName,
+			TargetNodeDescription: a.targetDescription,
+			CodedNotation: a.targetCode
+		});
+	});
+	const requiresData = destinationAlignment.TargetCompetency.length ? [destinationAlignment] : [];
+
 	return {
 		PublishForOrganizationIdentifier: publisherOrgId,
 		Credential: {
@@ -278,22 +295,22 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 					IdentifierValueCode: b.id
 				}
 			],
-			Requires: badgeAlignments.map((a: Alignment) => {
-				return {
-					Description: 'Open Badges Alignment',
-					TargetCompetency: [
-						{
-							FrameworkName: a.targetFramework,
-							TargetNode: a.targetUrl,
-							TargetNodeName: a.targetName,
-							TargetNodeDescription: a.targetDescription,
-							CodedNotation: a.targetCode
-						}
-					]
-				};
-			})
+			Requires: requiresData
 		}
 	};
+};
+
+const reconcileAlignments = (
+	publisherRequires: AlignmentObject[],
+	badgeSystemAlignments: AlignmentObject[]
+): AlignmentObject[] => {
+	let representation: AlignmentObject[] = [];
+	publisherRequires.forEach((pa) => {
+		if (pa.Description != 'Open Badges Alignments') representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
+	});
+	if (badgeSystemAlignments.length) representation.push(badgeSystemAlignments[0]);
+
+	return representation;
 };
 
 // This store holds credential drafts ready for publishing.
@@ -334,7 +351,12 @@ const createCredentialDraftStore = () => {
 				};
 				Object.keys(credential.Credential).map((key) => {
 					// If the badge system version has data for the key, set that value into the draft.
-					if (credential.Credential[key as keyof CtdlCredential] != undefined)
+					if ('Requires' == key)
+						updated.Credential[key] = reconcileAlignments(
+							updated.Credential[key],
+							credential.Credential[key]
+						);
+					else if (credential.Credential[key as keyof CtdlCredential] != undefined)
 						updated.Credential[key] = credential.Credential[key];
 				});
 

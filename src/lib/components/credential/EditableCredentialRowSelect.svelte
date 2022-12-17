@@ -4,7 +4,11 @@
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { credentialDrafts, ctdlPublicationResultStore, EditStatus } from '$lib/stores/publisherStore.js';
+	import {
+		credentialDrafts,
+		ctdlPublicationResultStore,
+		EditStatus
+	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -74,12 +78,14 @@
 	};
 
 	$: {
-		if (isEditing && editStatus == EditStatus.FinishRequested && value != credential.Credential[fieldId])
-			dispatch('unsavedChanges', {fieldId: fieldId});
-		else if (isEditing && editStatus == EditStatus.Reject)
-			handleCancelRowEdit();
-		else if (isEditing && editStatus == EditStatus.Accept)
-			handleSaveRow();
+		if (
+			isEditing &&
+			editStatus == EditStatus.FinishRequested &&
+			value != credential.Credential[fieldId]
+		)
+			dispatch('unsavedChanges', { fieldId: fieldId });
+		else if (isEditing && editStatus == EditStatus.Reject) handleCancelRowEdit();
+		else if (isEditing && editStatus == EditStatus.Accept) handleSaveRow();
 	}
 </script>
 

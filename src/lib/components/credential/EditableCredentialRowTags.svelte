@@ -5,7 +5,11 @@
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { credentialDrafts, ctdlPublicationResultStore, EditStatus } from '$lib/stores/publisherStore.js';
+	import {
+		credentialDrafts,
+		ctdlPublicationResultStore,
+		EditStatus
+	} from '$lib/stores/publisherStore.js';
 	import abbreviate from '$lib/utils/abbreviate.js';
 	import Alert from '$lib/components/Alert.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -44,15 +48,14 @@
 		}
 	});
 
-	const setChanged = (a: string[], b: string[]):boolean => {
+	const setChanged = (a: string[], b: string[]): boolean => {
 		const reducer = (changedYet: boolean, v: string): boolean =>
 			changedYet == true ? true : !b.includes(v);
-		return (a.length != b.length || a.reduce(reducer, false));
-	}
-	
+		return a.length != b.length || a.reduce(reducer, false);
+	};
+
 	let isValueUpdated = false;
-	$: isValueUpdated =
-		isPendingUpdate && setChanged(publisherFieldData, value);
+	$: isValueUpdated = isPendingUpdate && setChanged(publisherFieldData, value);
 
 	const handleSaveRow = () => {
 		validationErrorMessage = ''; // reset error message.
@@ -103,12 +106,14 @@
 	};
 
 	$: {
-		if (isEditing && editStatus == EditStatus.FinishRequested && setChanged(credential.Credential[fieldId] || [], value))
-			dispatch('unsavedChanges', {fieldId: fieldId});
-		else if (isEditing && editStatus == EditStatus.Reject)
-			handleCancelRowEdit();
-		else if (isEditing && editStatus == EditStatus.Accept)
-			handleSaveRow();
+		if (
+			isEditing &&
+			editStatus == EditStatus.FinishRequested &&
+			setChanged(credential.Credential[fieldId] || [], value)
+		)
+			dispatch('unsavedChanges', { fieldId: fieldId });
+		else if (isEditing && editStatus == EditStatus.Reject) handleCancelRowEdit();
+		else if (isEditing && editStatus == EditStatus.Accept) handleSaveRow();
 	}
 </script>
 
