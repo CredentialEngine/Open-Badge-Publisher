@@ -36,6 +36,72 @@ interface OrganizationDataStore {
 	org?: PublisherOrganization;
 }
 
+export interface AlignmentObject {
+	Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
+	TargetCompetency: Array<{
+		// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
+		FrameworkName?: string; // targetFramework -- Optional Framework Name
+		TargetNodeName: string; // targetName -- Required Competency Name
+		TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
+		TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
+		CodedNotation?: string; // targetCode
+	}>;
+}
+
+export interface CtdlCredential {
+	//============= REQUIRED / POPULATED PROPERTIES =============
+	CredentialId: string; // "https://example.com/e198bbd5",  //The required primary ID of the credential
+
+	CredentialType: string; // "Badge",
+	CredentialStatusType: 'Active' | 'Deprecated' | 'Probationary' | 'Suspended' | 'TeachOut'; // Default "Active"
+
+	Name: string; // "Name of Badge",
+	Description: string; // "Description of badge.",
+
+	// Issuer: One of OwnedBy or OfferedBy is required
+	OwnedBy: Array<{
+		CTID: string; // CTID of the owning organization: "ce-696ea290-249a-4f99-9ed1-419f000d8472"
+	}>;
+	OfferedBy: Array<{
+		CTID: string; // CTID of the offering organization: "ce-696ea290-249a-4f99-9ed1-419f000d8472"
+	}>;
+
+	//The CTID is not included for a new credential. The generated CTID would be returned on a valid add and would be required for updates.
+	CTID?: string; // "ce-816cc650-f86d-4c08-9024-01c347e59b3d",
+
+	//SubjectWebpage is required and must be resolvable at publication time. Use criteria URL if used, or BadgeClass.id
+	SubjectWebpage: string; // "http://www.hutchcc.edu/",
+
+	//============= OPTIONAL PROPERTIES =============
+	InLanguage: string[]; // ["en-US"], // Language: defaults to en-US if not provided
+
+	// SameAs: provide the CTID or URL of a resource in the registry. Not presently used.
+	// "SameAs": [
+	//     "ce-f2b07632-753f-4514-8e9b-a42225a6cbfb", "https://credentialengineregistry.org/resources/ce-6fdd56d3-0214-4a67-b0c4-bb4c16ce9a13"
+	// ],
+
+	// Other identifiers specific to the current credential. Not used at this time, but could be supported for OB 3.0.
+	Identifier?: Array<{
+		IdentifierType: string; // "@id" - "Framework, scheme or organizing principle of this identifier"
+		IdentifierTypeName: string; // "Open Badges ID";
+		IdentifierValueCode: string; // "https://example.com/e198bbd5"
+	}>;
+
+	Image: string; // "https://placekitten.com/400/400" //image URL
+
+	Keyword?: string[]; // ["tag1", "tag two"] // list of keywords for the credential
+	// "Subject": string[];  // ["Subject1", "Subject2"], // not used at this time. list of subjects for the credential
+
+	// Alignments: Condition profiles with required competencies (Open Badges alignments are assumed to have this relation in Credential)
+	Requires: AlignmentObject[];
+}
+
+export interface CtdlApiCredential {
+	//required CTID of the owning organization
+	PublishForOrganizationIdentifier: string; // "ce-696ea290-249a-4f99-9ed1-419f000d8472",
+	Credential: CtdlCredential;
+}
+
 interface PublisherCredentialSummary {
 	Id: number;
 	RowId: string;
@@ -43,74 +109,13 @@ interface PublisherCredentialSummary {
 	Description: string;
 	CTID: string;
 	Type: string;
+	CredentialId?: string;
+	Credential?: CtdlCredential;
 }
 
 interface PublisherCredentialsDataStore {
 	credentials: Array<PublisherCredentialSummary>;
 	totalResults: number;
-}
-
-export interface CtdlApiCredential {
-	//required CTID of the owning organization
-	PublishForOrganizationIdentifier: string; // "ce-696ea290-249a-4f99-9ed1-419f000d8472",
-
-	Credential: {
-		//============= REQUIRED / POPULATED PROPERTIES =============
-		CredentialId: string; // "https://example.com/e198bbd5",  //The required primary ID of the credential
-
-		CredentialType: string; // "Badge",
-		CredentialStatusType: 'Active' | 'Deprecated' | 'Probationary' | 'Suspended' | 'TeachOut'; // Default "Active"
-
-		Name: string; // "Name of Badge",
-		Description: string; // "Description of badge.",
-
-		// Issuer: One of OwnedBy or OfferedBy is required
-		OwnedBy: Array<{
-			CTID: string; // CTID of the owning organization: "ce-696ea290-249a-4f99-9ed1-419f000d8472"
-		}>;
-		OfferedBy: Array<{
-			CTID: string; // CTID of the offering organization: "ce-696ea290-249a-4f99-9ed1-419f000d8472"
-		}>;
-
-		//The CTID is not included for a new credential. The generated CTID would be returned on a valid add and would be required for updates.
-		CTID?: string; // "ce-816cc650-f86d-4c08-9024-01c347e59b3d",
-
-		//SubjectWebpage is required and must be resolvable at publication time. Use criteria URL if used, or BadgeClass.id
-		SubjectWebpage: string; // "http://www.hutchcc.edu/",
-
-		//============= OPTIONAL PROPERTIES =============
-		InLanguage: string[]; // ["en-US"], // Language: defaults to en-US if not provided
-
-		// SameAs: provide the CTID or URL of a resource in the registry. Not presently used.
-		// "SameAs": [
-		//     "ce-f2b07632-753f-4514-8e9b-a42225a6cbfb", "https://credentialengineregistry.org/resources/ce-6fdd56d3-0214-4a67-b0c4-bb4c16ce9a13"
-		// ],
-
-		// Other identifiers specific to the current credential. Not used at this time, but could be supported for OB 3.0.
-		Identifier?: Array<{
-			IdentifierType: string; // "@id" - "Framework, scheme or organizing principle of this identifier"
-			IdentifierTypeName: string; // "Open Badges ID";
-			IdentifierValueCode: string; // "https://example.com/e198bbd5"
-		}>;
-
-		Image: string; // "https://placekitten.com/400/400" //image URL
-
-		Keyword?: string[]; // ["tag1", "tag two"] // list of keywords for the credential
-		// "Subject": string[];  // ["Subject1", "Subject2"], // not used at this time. list of subjects for the credential
-
-		// Alignments: Condition profiles with required competencies (Open Badges alignments are assumed to have this relation in Credential)
-		Requires: Array<{
-			Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
-			TargetCompetency: Array<{
-				// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
-				FrameworkName?: string; // targetFramework -- Optional Framework Name
-				TargetNodeName: string; // targetName -- Required Competency Name
-				TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
-				TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
-				CodedNotation?: string; // targetCode
-			}>;
-		}>;
-	};
 }
 
 // Which user is authenticated, if any
@@ -128,7 +133,7 @@ export const publisherCredentials = writable<PublisherCredentialsDataStore>({
 	credentials: [],
 	totalResults: 0
 });
-export const updateOrgCredentials = async (): Promise<boolean> => {
+export const getOrgCredentialList = async (): Promise<boolean> => {
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Resource/PublisherSearch`;
 	const orgCtid = get(publisherOrganization).org?.CTID;
 
@@ -141,15 +146,12 @@ export const updateOrgCredentials = async (): Promise<boolean> => {
 			{
 				URI: '@type',
 				ItemTexts: ['credential']
-			},
-			{
-				URI: 'ceterms:credentialType',
-				ItemTexts: ['ceterms:OpenBadge']
 			}
 		],
 		Skip: 0,
 		Take: 100
 	};
+	// TODO: handle pagination
 
 	const response = await fetch(url, {
 		method: 'POST',
@@ -193,12 +195,9 @@ export const getUser = async () => {
 	const url = `${PUBLIC_UI_API_BASEURL || '/publisher'}/StagingApi/Load/User`;
 	if (!haveSameDomain(url, PUBLIC_BASEURL)) return null;
 
-	console.log(`Fetching User from ${url} ...`);
-
 	// Attempt to get user from the publisher using cookies that may be set if this app is running on same-origin.
 	// TODO: just skip this if we can tell in advance that it is not running on same origin.
 	const response = await fetch(url, { credentials: 'include' });
-	console.log(`UserResponse: ${response.status}`);
 	if (!response.ok) return null;
 
 	const data = await response.json();
@@ -258,6 +257,21 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 	if (!publisherOrgId) throw new Error('Publishing org must be set before importing credentials.');
 
 	const badgeAlignments = b.alignment || [];
+	let destinationAlignment: AlignmentObject = {
+		Description: 'Open Badges Alignment',
+		TargetCompetency: []
+	};
+	badgeAlignments.map((a: Alignment) => {
+		destinationAlignment.TargetCompetency.push({
+			FrameworkName: a.targetFramework,
+			TargetNode: a.targetUrl,
+			TargetNodeName: a.targetName,
+			TargetNodeDescription: a.targetDescription,
+			CodedNotation: a.targetCode
+		});
+	});
+	const requiresData = destinationAlignment.TargetCompetency.length ? [destinationAlignment] : [];
+
 	return {
 		PublishForOrganizationIdentifier: publisherOrgId,
 		Credential: {
@@ -273,7 +287,7 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 			SubjectWebpage: b.criteria.id || b.id, // Fall back to primary ID if no criteria URL set.
 			Image: b.image,
 			Keyword: b.tags,
-			InLanguage: ['en-us'],
+			InLanguage: ['en-US'],
 			Identifier: [
 				{
 					IdentifierType: 'id',
@@ -281,26 +295,26 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 					IdentifierValueCode: b.id
 				}
 			],
-			Requires: badgeAlignments.map((a: Alignment) => {
-				return {
-					Description: 'Open Badges Alignment',
-					TargetCompetency: [
-						{
-							FrameworkName: a.targetFramework,
-							TargetNode: a.targetUrl,
-							TargetNodeName: a.targetName,
-							TargetNodeDescription: a.targetDescription,
-							CodedNotation: a.targetCode
-						}
-					]
-				};
-			})
+			Requires: requiresData
 		}
 	};
 };
 
+const reconcileAlignments = (
+	publisherRequires: AlignmentObject[],
+	badgeSystemAlignments: AlignmentObject[]
+): AlignmentObject[] => {
+	let representation: AlignmentObject[] = [];
+	publisherRequires.forEach((pa) => {
+		if (pa.Description != 'Open Badges Alignment') representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
+	});
+	if (badgeSystemAlignments.length) representation.push(badgeSystemAlignments[0]);
+
+	return representation;
+};
+
 // This store holds credential drafts ready for publishing.
-const createCtdlCredentialStore = () => {
+const createCredentialDraftStore = () => {
 	const { subscribe, set, update } = writable<CtdlApiCredential[]>([]);
 
 	return {
@@ -323,12 +337,44 @@ const createCtdlCredentialStore = () => {
 					a.Credential.Name.localeCompare(b.Credential.Name)
 				);
 			});
+		},
+		reconcileCredentialWithPublisher: (credentialId: string, publisherData: CtdlCredential) => {
+			update((credentialList) => {
+				const credential = credentialList.find((c) => c.Credential.CredentialId == credentialId);
+				if (!credential) {
+					return credentialList;
+				}
+
+				let updated = {
+					PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier,
+					Credential: { ...publisherData }
+				};
+				Object.keys(credential.Credential).map((key) => {
+					// If the badge system version has data for the key, set that value into the draft.
+					if ('Requires' == key)
+						updated.Credential[key] = reconcileAlignments(
+							updated.Credential[key],
+							credential.Credential[key]
+						);
+					else if (credential.Credential[key as keyof CtdlCredential] != undefined)
+						updated.Credential[key] = credential.Credential[key];
+				});
+
+				const filteredList = credentialList.filter(
+					(c) => c.Credential.CredentialId != credentialId
+				);
+
+				return [...filteredList, updated].sort((a, b) =>
+					a.Credential.Name.localeCompare(b.Credential.Name)
+				);
+			});
 		}
 	};
 };
-export const ctdlCredentials = createCtdlCredentialStore();
+export const credentialDrafts = createCredentialDraftStore();
 
 export enum PubStatuses {
+	'Pending' = 'Pending',
 	'PendingNew' = 'Pending New',
 	'PendingUpdate' = 'Pending Update',
 	'SaveInProgress' = 'Save in Progress',
@@ -341,62 +387,132 @@ export interface CredentialPublicationStatus {
 	CTID?: string;
 	CTDLType?: string;
 	CTDLTypeLabel?: string;
+
+	CredentialId: string;
 	publicationStatus: PubStatuses;
-	messages?: string[]
+	messages?: string[];
+	publisherData?: CtdlCredential;
 }
 
+export enum EditStatus {
+	FinishRequested,
+	Reject,
+	Accept,
+	Editing
+}
 
 const createPublicationResultStore = () => {
-	const { subscribe, set, update } = writable<{ [key: string]: CredentialPublicationStatus }>(
-		{}
-	);
+	const { subscribe, set, update } = writable<{ [key: string]: CredentialPublicationStatus }>({});
+	const getFullCredentialDetail = async (c: CredentialPublicationStatus): Promise<boolean> => {
+		if (!c.CTID) return false;
+
+		const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Load/Credential/${c.CTID}`;
+
+		const response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${get(publisherUser).user?.Token}`
+			}
+		});
+
+		const responseData = await response.json();
+		if (!responseData['Valid']) {
+			throw new Error("Credential detail data couldn't be loaded.");
+		}
+
+		updateCredentialStatus(c.CredentialId, {
+			CredentialId: c.CredentialId,
+			publicationStatus: PubStatuses.PendingUpdate,
+			publisherData: responseData['Data'] as CtdlCredential
+		});
+
+		credentialDrafts.reconcileCredentialWithPublisher(
+			c.CredentialId,
+			responseData['Data'] as CtdlCredential
+		);
+
+		return true;
+	};
+
+	const updateCredentialStatus = (credentialId: string, s: CredentialPublicationStatus) => {
+		update((currentStatus) => {
+			let newStatus = { ...currentStatus };
+
+			newStatus[credentialId] = {
+				...currentStatus[credentialId],
+				...s
+			};
+
+			return newStatus;
+		});
+	};
 
 	return {
 		subscribe,
-		updateCredentialStatus: (b: CtdlApiCredential, s: CredentialPublicationStatus) => {
-			update((currentStatus) => {
-				let newStatus = {...currentStatus};
-		
-				newStatus[b.Credential.CredentialId] = {
-					...currentStatus[b.Credential.CredentialId], 
-					...s
-				}
-				return newStatus;
-			});
-		},
+		updateCredentialStatus,
 		initialize: () => {
-			const credentials = get(ctdlCredentials);
-			let statusIndex: { [key: string]: CredentialPublicationStatus } = {}
+			const drafts = get(credentialDrafts);
+			const publisherSummaries = get(publisherCredentials).credentials;
+			const existingIds = publisherSummaries.map((s) => s.CredentialId);
+			let existingIdMatches: string[] = [];
+			let statusIndex: { [key: string]: CredentialPublicationStatus } = {};
 
-			credentials.map(c => {
+			drafts.map((c) => {
+				const summaryData =
+					publisherSummaries.filter((s) => s.CredentialId == c.Credential.CredentialId)[0] || {};
+
 				statusIndex[c.Credential.CredentialId] = {
-					publicationStatus: PubStatuses.PendingNew
+					...summaryData,
+					CredentialId: c.Credential.CredentialId,
+					publicationStatus: PubStatuses.Pending
 				};
+
+				if (existingIds.includes(c.Credential.CredentialId)) {
+					// If there is already a version of this credential online, we need to fetch its full details
+					existingIdMatches.push(c.Credential.CredentialId);
+					statusIndex[c.Credential.CredentialId].publicationStatus = PubStatuses.PendingUpdate;
+				} else {
+					// If there is no match, then we will upload it as a new credential.
+					statusIndex[c.Credential.CredentialId].publicationStatus = PubStatuses.PendingNew;
+				}
 			});
 
+			// Save initial results.
 			set(statusIndex);
-		}
-	}
 
+			// Queue up data population
+			existingIdMatches.map((existingId) => {
+				getFullCredentialDetail(statusIndex[existingId]).catch((reason) => {
+					updateCredentialStatus(existingId, {
+						CredentialId: existingId,
+						publicationStatus: PubStatuses.SaveError,
+						messages: [
+							"Error loading credential data from publisher. Can't update without loading existing data."
+						]
+					});
+				});
+			});
+		}
+	};
 };
-// Object indexed by CredentialId.
+// {[key: CredentialId]: CredentialPublicationStatus}
 export const ctdlPublicationResultStore = createPublicationResultStore();
 
-export const saveCredential = async (
-	credential: CtdlApiCredential
-) => {
+export const saveCredential = async (credential: CtdlApiCredential) => {
 	const status = get(ctdlPublicationResultStore)[credential.Credential.CredentialId];
-	
+
 	if (
 		!status ||
-		![PubStatuses.PendingNew, PubStatuses.PendingUpdate].includes(status.publicationStatus)
+		![PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes(
+			status.publicationStatus
+		)
 	)
 		return;
 
-	ctdlPublicationResultStore.updateCredentialStatus(credential, {
-			publicationStatus: PubStatuses.SaveInProgress
-		}
-	);
+	ctdlPublicationResultStore.updateCredentialStatus(credential.Credential.CredentialId, {
+		CredentialId: credential.Credential.CredentialId,
+		publicationStatus: PubStatuses.SaveInProgress,
+		messages: []
+	});
 
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Credential/Save`;
 	const orgCtid = get(publisherOrganization).org?.CTID;
@@ -411,18 +527,17 @@ export const saveCredential = async (
 	const responseData = await response.json();
 
 	if (!responseData['Valid']) {
-		ctdlPublicationResultStore.updateCredentialStatus(credential, {
+		ctdlPublicationResultStore.updateCredentialStatus(credential.Credential.CredentialId, {
+			CredentialId: credential.Credential.CredentialId,
 			publicationStatus: PubStatuses.SaveError,
 			messages: responseData['Messages']
 		});
-	}
-	else {
-		ctdlPublicationResultStore.updateCredentialStatus(credential, { 
+	} else {
+		ctdlPublicationResultStore.updateCredentialStatus(credential.Credential.CredentialId, {
 			...responseData['Data'],
+			CredentialId: credential.Credential.CredentialId,
 			publicationStatus: PubStatuses.SaveSuccess,
 			messages: responseData['Messages']
 		});
 	}
-	
-
 };

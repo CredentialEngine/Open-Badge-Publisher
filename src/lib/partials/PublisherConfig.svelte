@@ -23,7 +23,7 @@
 		setPublisherSelection,
 		resetPublisherSelection,
 		publisherSetupStep,
-		updateOrgCredentials
+		getOrgCredentialList
 	} from '$lib/stores/publisherStore.js';
 	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -104,7 +104,7 @@
 	}
 
 	const handlePreviewCredentials = () => {
-		credentialsLoading = updateOrgCredentials(); // eventually resolves to true once loaded
+		credentialsLoading = getOrgCredentialList(); // eventually resolves to true once loaded
 		publisherSetupStep.set(3);
 	};
 

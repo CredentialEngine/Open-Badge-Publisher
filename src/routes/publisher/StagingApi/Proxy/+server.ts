@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		URL: string;
 		Method: string;
 		Body: string;
-		Headers: Array<{ Name: string; Value: String }>;
+		Headers: Array<{ Name: string; Value: string }>;
 	} = await request.json();
 
 	const urlData = new URL(requestData.URL);
@@ -40,11 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const externalResponse = await fetch(requestData.URL, {
 		method: requestData.Method,
-		headers: {
-			...Object.fromEntries(requestData.Headers.map((i) => [i.Name, i.Value])),
-			Accept: 'application/json',
-			'Content-Type': 'application/json'
-		},
+		headers: Object.fromEntries(requestData.Headers.map((i) => [i.Name, i.Value])),
 		body: requestData.Body
 	});
 

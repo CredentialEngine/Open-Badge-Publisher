@@ -7,6 +7,7 @@
 		normalizedBadges,
 		checkedBadges
 	} from '$lib/stores/badgeSourceStore.js';
+	import { publisherCredentials } from '$lib/stores/publisherStore.js';
 	import abbreviate from '$lib/utils/abbreviate.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -16,8 +17,6 @@
 		$checkedBadges = Object.fromEntries(
 			Object.entries($checkedBadges).filter(([key, value]) => value === true)
 		);
-		console.log('Updated badge selections');
-		console.log($checkedBadges);
 	};
 </script>
 
@@ -44,7 +43,7 @@
 				<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
 					<td class="py-4 px-6">
 						<input
-							checked={!!checkedBadges[badge.id]}
+							checked={!!$checkedBadges[badge.id]}
 							on:change={() => {
 								handleChange(badge.id);
 							}}

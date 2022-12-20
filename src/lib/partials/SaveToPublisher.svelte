@@ -8,25 +8,27 @@
 		type CredentialPublicationStatus,
 		PubStatuses
 	} from '$lib/stores/publisherStore.js';
+	import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
 	import {
-		ctdlCredentials,
+		credentialDrafts,
 		ctdlPublicationResultStore,
 		publisherCredentials,
-        saveCredential
+		saveCredential
 	} from '$lib/stores/publisherStore.js';
 	import CredentialProofingList from './CredentialProofingList.svelte';
+	import Alert from '$lib/components/Alert.svelte';
 </script>
 
 <Heading><h4>Summary</h4></Heading>
 
-<BodyText>
-	<!-- TODO: Populate with actual live numbers -->
+<!-- <BodyText>
+	
 	There are <span class="font-bold">4 new pending credentials</span> ready to be saved.
 	<span class="font-bold">3 updates</span> to existing credentials are pending.
 	<span class="font-bold">1 new credential</span> and <span class="font-bold">2 new updates</span>
 	have been successfully saved. There were <span class="font-bold">2 errors</span> from this batch of
 	saves that you can review below.
-</BodyText>
+</BodyText> -->
 
 <div class="overflow-x-auto relative rounded-lg" transition:slide>
 	<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -38,7 +40,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each $ctdlCredentials as draft}
+			{#each $credentialDrafts as draft}
 				<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
 					<th
 						scope="row"
@@ -48,19 +50,37 @@
 					</th>
 					<td class="py-4 px-6">
 						{$ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus}
-                        {#if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
+						{#if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
 							<LoadingSpinner />
+						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveError}
+							{#each $ctdlPublicationResultStore[draft.Credential.CredentialId]?.messages || [] as message}
+								<div class="flex flex-col space-y-2">
+									<Alert {message} level="error" />
+								</div>
+							{/each}
 						{/if}
 					</td>
 					<td class="py-4 px-6 flex flex-row py-4 space-x-3">
-						{#if [PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveInProgress].includes($ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus)}
+						{#if [PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes($ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus)}
 							<button
-                                class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-                                disabled={$ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
-                                on:click={() => saveCredential(draft)}
-                            >
-                                Save
-                            </button>
+								class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+								on:click={() => saveCredential(draft)}
+							>
+								Save
+							</button>
+						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
+							<button
+								class="cursor-not-allowed text-gray-700 w-full text-sm px-5 py-2.5 bg-white focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+								disabled
+							>
+								Save
+							</button>
+						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveSuccess}
+							<span class="text-sm px-5 py-2.5 text-center font-medium">
+								<a href={`${PUBLIC_PUBLISHER_API_BASEURL}/detail/Credential/${$ctdlPublicationResultStore[draft.Credential.CredentialId]?.Id}`} class="text-indigo-700 dark:text-superaqua" target="new">
+									View Credential
+								</a>
+							</span>
 						{/if}
 					</td>
 				</tr>

@@ -7,6 +7,9 @@
 		canvasIssuers,
 		canvasSelectedIssuer
 	} from '$lib/stores/badgeSourceStore.js';
+	import {
+		publisherUser
+	} from '$lib/stores/publisherStore.js';
 	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import Alert from '$lib/components/Alert.svelte';
@@ -35,13 +38,21 @@
 				{
 					Name: 'Authorization',
 					Value: `Bearer ${$canvasAccessToken}`
+				},
+				{
+					Name: 'Accept',
+					Value: 'application/json'
 				}
 			]
 		};
 
+		let proxyRequestHeaders = new Headers();
+		if ($publisherUser.user?.Token)
+			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
 		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
 			method: 'POST',
-			body: JSON.stringify(requestData)
+			body: JSON.stringify(requestData),
+			headers: proxyRequestHeaders
 		});
 		const proxyResponseData = await proxyResponse.json();
 
@@ -259,7 +270,7 @@
 						on:select={(e) => ($canvasSelectedIssuer = issuer)}
 						description={issuer.description}
 					>
-						<slot name="label"
+						<span slot="label"
 							><span class="text-sm font-light text-gray-500 dark:text-gray-400">
 								<a
 									href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${
@@ -269,7 +280,7 @@
 									class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
 									>{issuer.name}</a
 								>
-							</span></slot
+							</span></span
 						>
 					</RadioCard>
 				{/each}

@@ -4,12 +4,11 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const publisherUrl = `${PUBLIC_PUBLISHER_API_BASEURL}/StagingApi/Login`;
-	const { apiKey, email, password } = await request.json();
+	const { email, password } = await request.json();
 
 	const publisherResponse = await fetch(publisherUrl, {
 		method: 'POST',
 		headers: {
-			Authorization: `ApiToken ${apiKey}`,
 			Accept: 'application/json',
 			'Content-Type': 'application/json'
 		},

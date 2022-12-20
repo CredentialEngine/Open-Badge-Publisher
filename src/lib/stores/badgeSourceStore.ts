@@ -147,6 +147,10 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 			{
 				Name: 'Authorization',
 				Value: `Bearer ${get(canvasAccessToken)}`
+			},
+			{
+				Name: 'Accept',
+				Value: 'application/json'
 			}
 		]
 	};
@@ -161,7 +165,6 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 		throw new Error('Error fetching badge data from Canvas Credentials.');
 
 	const issuerBadgeData = JSON.parse(proxyResponseData.Data?.Body);
-	console.log(issuerBadgeData);
 	canvasSelectedIssuerBadges.set(issuerBadgeData.result);
 
 	return true;

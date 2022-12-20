@@ -1,11 +1,19 @@
 <script lang="ts">
-	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
+	import { slide } from 'svelte/transition';
+	import { createEventDispatcher } from 'svelte';
+	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
-	import { ctdlCredentials } from '$lib/stores/publisherStore.js';
+	import {
+		credentialDrafts,
+		ctdlPublicationResultStore,
+		EditStatus
+	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
+	import BodyText from '../typography/BodyText.svelte';
 
 	export let credential: CtdlApiCredential;
+	export let editStatus: EditStatus;
 	export let fieldName = '';
 	export let fieldId: 'Name' | 'Description' | 'SubjectWebpage' | 'Image' | 'CTID';
 	export let helpText = '';
@@ -14,10 +22,25 @@
 	export let longText = false;
 	export let validator: BaseSchema = yup.string();
 
+	const dispatch = createEventDispatcher();
+
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
 	let value: string = credential.Credential[fieldId] || ''; // Todo -- Image is nullable. Make sure not to send '' to server
 	let isEditing = false;
 	let validationErrorMessage = '';
+
+	// Track if the current value represents a change from previously saved credential.
+	const isPendingUpdate =
+		$ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus ==
+		PubStatuses.PendingUpdate;
+	const publisherData =
+		$ctdlPublicationResultStore[credential.Credential.CredentialId]?.publisherData;
+	let publisherFieldData: string | undefined;
+	if (publisherData) {
+		publisherFieldData = publisherData[fieldId];
+	} else {
+		publisherFieldData = undefined;
+	}
 
 	const handleSaveRow = () => {
 		validationErrorMessage = ''; // reset error message.
@@ -38,9 +61,25 @@
 			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
 		};
 		editedCredential.Credential[fieldId] = value;
-		ctdlCredentials.updateCredential(editedCredential);
+		credentialDrafts.updateCredential(editedCredential);
 		isEditing = false;
 	};
+
+	const handleCancelRowEdit = () => {
+		value = credential.Credential[fieldId] || '';
+		isEditing = false;
+	};
+
+	$: {
+		if (
+			isEditing &&
+			editStatus == EditStatus.FinishRequested &&
+			value != credential.Credential[fieldId]
+		)
+			dispatch('unsavedChanges', { fieldId: fieldId });
+		else if (isEditing && editStatus == EditStatus.Reject) handleCancelRowEdit();
+		else if (isEditing && editStatus == EditStatus.Accept) handleSaveRow();
+	}
 </script>
 
 {#if !isEditing}
@@ -50,6 +89,15 @@
 			{fieldName || fieldId}
 		</th>
 		<td class="py-4 px-6">
+			{#if isPendingUpdate && publisherFieldData != value}
+				<div class="w-full mb-2" transition:slide>
+					<span
+						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded dark:bg-blue-200 dark:text-blue-800"
+					>
+						Updated
+					</span>
+				</div>
+			{/if}
 			<slot>{value}</slot>
 		</td>
 		<td class="py-4 px-6">
@@ -73,9 +121,19 @@
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
 		<td class="py-4 px-6">
+			{#if isPendingUpdate && publisherFieldData != value}
+				<div class="w-full mb-2">
+					<span
+						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded dark:bg-blue-200 dark:text-blue-800"
+					>
+						Updated
+					</span>
+				</div>
+			{/if}
 			{#if longText}
 				<textarea
 					id={inputId}
+					rows="7"
 					class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 					type="text"
 					bind:value
@@ -88,6 +146,15 @@
 					bind:value
 				/>
 			{/if}
+			{#if isPendingUpdate && publisherFieldData != value}
+				<div transition:slide>
+					<BodyText>
+						<span class="text-xs text-gray-600 dark:gray-400"
+							>On publisher: {publisherFieldData}</span
+						>
+					</BodyText>
+				</div>
+			{/if}
 			{#if validationErrorMessage}
 				<Alert level="error" message={validationErrorMessage} />
 			{/if}
@@ -96,9 +163,7 @@
 			<button
 				type="button"
 				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-				on:click={() => {
-					isEditing = false;
-				}}
+				on:click={handleCancelRowEdit}
 			>
 				Cancel
 			</button>
