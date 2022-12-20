@@ -7,6 +7,7 @@
 		credlyIssuerData,
 		credlySelectedIssuer
 	} from '$lib/stores/badgeSourceStore.js';
+	import { publisherUser } from '$lib/stores/publisherStore.js';
 	import type { CredlyBadgeBasic } from '$lib/stores/badgeSourceStore.js';
 	import { get } from 'svelte/store';
 	import * as yup from 'yup';
@@ -59,9 +60,14 @@
 			Headers: [{Name: 'Accept', Value: 'application/json'}]
 		};
 
+		let proxyRequestHeaders = new Headers();
+		proxyRequestHeaders.append('Content-Type', 'application/json');
+		if ($publisherUser.user?.Token)
+			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
 		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
 			method: 'POST',
-			body: JSON.stringify(requestData)
+			body: JSON.stringify(requestData),
+			headers: proxyRequestHeaders
 		});
 		const proxyResponseData = await proxyResponse.json();
 

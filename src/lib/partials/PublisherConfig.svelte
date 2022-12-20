@@ -64,7 +64,10 @@
 				const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Login`;
 				const response = await fetch(url, {
 					method: 'POST',
-					body: JSON.stringify(formData)
+					body: JSON.stringify(formData),
+					headers: {
+						'Content-Type': 'application/json'
+					}
 				});
 				const responseData = await response.json();
 				if (!responseData['Valid']) {

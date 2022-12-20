@@ -47,6 +47,7 @@
 		};
 
 		let proxyRequestHeaders = new Headers();
+		proxyRequestHeaders.append('Content-Type', 'application/json');
 		if ($publisherUser.user?.Token)
 			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
 		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
