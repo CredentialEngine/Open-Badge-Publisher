@@ -157,7 +157,8 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 		method: 'POST',
 		body: JSON.stringify(formData),
 		headers: {
-			Authorization: `Bearer ${get(publisherUser).user?.Token}`
+			Authorization: `Bearer ${get(publisherUser).user?.Token}`,
+			'Content-Type': 'application/json'
 		}
 	});
 	const responseData = await response.json();
@@ -521,7 +522,8 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 		method: 'POST',
 		body: JSON.stringify(credential),
 		headers: {
-			Authorization: `Bearer ${get(publisherUser).user?.Token}`
+			Authorization: `Bearer ${get(publisherUser).user?.Token}`,
+			'Content-Type': 'application/json'
 		}
 	});
 	const responseData = await response.json();

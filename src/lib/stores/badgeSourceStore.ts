@@ -1,5 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
+import { publisherUser } from '$lib/stores/publisherStore.js';
 
 enum BadgeSourceTypeOptions {
 	None = '',
@@ -155,9 +156,15 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 		]
 	};
 
+	let proxyRequestHeaders = new Headers();
+	proxyRequestHeaders.append('Content-Type', 'application/json');
+		if (get(publisherUser).user?.Token)
+			proxyRequestHeaders.append('Authorization', `Bearer ${get(publisherUser).user?.Token}`);
+
 	const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
 		method: 'POST',
-		body: JSON.stringify(requestData)
+		body: JSON.stringify(requestData),
+		headers: proxyRequestHeaders
 	});
 	const proxyResponseData = await proxyResponse.json();
 
