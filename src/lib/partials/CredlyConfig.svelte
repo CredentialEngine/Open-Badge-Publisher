@@ -56,7 +56,7 @@
 			URL: `https://www.credly.com/organizations/${$credlySelectedIssuer}/badges?sort=most_popular&page=1`,
 			Method: 'GET',
 			Body: null,
-			Headers: []
+			Headers: [{Name: 'Accept', Value: 'application/json'}]
 		};
 
 		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {

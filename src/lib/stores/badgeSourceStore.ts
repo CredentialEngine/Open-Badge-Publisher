@@ -147,6 +147,10 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 			{
 				Name: 'Authorization',
 				Value: `Bearer ${get(canvasAccessToken)}`
+			},
+			{
+				Name: 'Accept',
+				Value: 'application/json'
 			}
 		]
 	};

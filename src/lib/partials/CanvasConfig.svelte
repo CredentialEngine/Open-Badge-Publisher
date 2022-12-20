@@ -7,6 +7,9 @@
 		canvasIssuers,
 		canvasSelectedIssuer
 	} from '$lib/stores/badgeSourceStore.js';
+	import {
+		publisherUser
+	} from '$lib/stores/publisherStore.js';
 	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import Alert from '$lib/components/Alert.svelte';
@@ -35,13 +38,21 @@
 				{
 					Name: 'Authorization',
 					Value: `Bearer ${$canvasAccessToken}`
+				},
+				{
+					Name: 'Accept',
+					Value: 'application/json'
 				}
 			]
 		};
 
+		let proxyRequestHeaders = new Headers();
+		if ($publisherUser.user?.Token)
+			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
 		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
 			method: 'POST',
-			body: JSON.stringify(requestData)
+			body: JSON.stringify(requestData),
+			headers: proxyRequestHeaders
 		});
 		const proxyResponseData = await proxyResponse.json();
 
