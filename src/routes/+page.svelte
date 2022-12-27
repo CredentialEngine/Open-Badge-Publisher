@@ -3,6 +3,7 @@
 	import PublisherConfig from '$lib/partials/PublisherConfig.svelte';
 	import BadgeSourceConfig from '$lib/partials/BadgeSourceConfig.svelte';
 	import DataProofing from '$lib/partials/DataProofing.svelte';
+	import Reviewing from '$lib/partials/Reviewing.svelte';
 
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
@@ -25,7 +26,7 @@
 <BodyText>
 	This app can help publish new and updated Open Badges to the Credential Registry. After importing
 	your badges here and pushing them to the Publisher, you can continue in the Publisher to approve
-	finalize publication to the Registry.
+	final publication to the Registry.
 </BodyText>
 
 <section id="publisher-destination-configuration" class="mt-8">
@@ -38,4 +39,8 @@
 
 <section id="proofing" class="mt-10">
 	<DataProofing />
+</section>
+
+<section id="reviewing" class="mt-10">
+	<Reviewing />
 </section>

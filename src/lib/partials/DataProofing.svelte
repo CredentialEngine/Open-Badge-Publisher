@@ -13,7 +13,8 @@
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
-		proofingStep
+		proofingStep,
+		reviewingStep
 	} from '$lib/stores/publisherStore.js';
 	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
 
@@ -37,71 +38,101 @@
 	}
 </script>
 
-<Heading><h2>Data Preparation</h2></Heading>
+<Heading><h2>Data Preparation and Publication</h2></Heading>
 
-<div aria-label="form" in:slide class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
-	<div class="md:flex items-center border-b pb-6 border-gray-200">
-		<ConfigurationStep
-			stepNumber="7"
-			stepName="Load Data"
-			isActive={$proofingStep == 1 && $badgeSetupStep > 3}
-		/>
-		<ConfigurationStep stepNumber="8" stepName="Final Edits" isActive={$proofingStep == 2} />
-		<ConfigurationStep stepNumber="9" stepName="Save to Publisher" isActive={$proofingStep == 3} />
-	</div>
-
-	{#if $proofingStep == 0}
-		<div transition:slide>
-			<Heading><h3 aria-label="source type">No data yet</h3></Heading>
-
-			<BodyText>
-				Connect your badge system to preview data and make final adjustments for publication.
-			</BodyText>
+{#if $proofingStep <= 3}
+	<div aria-label="form" in:slide class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
+		<div class="md:flex items-center border-b pb-6 border-gray-200">
+			<ConfigurationStep
+				stepNumber="7"
+				stepName="Load Data"
+				isActive={$proofingStep == 1 && $badgeSetupStep > 3}
+			/>
+			<ConfigurationStep stepNumber="8" stepName="Final Edits" isActive={$proofingStep == 2} />
+			<ConfigurationStep
+				stepNumber="9"
+				stepName="Save to Publisher"
+				isActive={$proofingStep == 3}
+			/>
 		</div>
-	{:else if $proofingStep == 1}
-		<div transition:slide>
-			<Heading><h3 aria-label="source type">Loading Data</h3></Heading>
 
-			<BodyText>Loading data from the publisher and your badge system.</BodyText>
+		{#if $proofingStep == 0}
+			<div transition:slide>
+				<Heading><h3 aria-label="source type">No data yet</h3></Heading>
 
-			<div class="w-full mt-2 bg-gray-200 rounded-full dark:bg-gray-700">
-				<div
-					class="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
-					style={`width: ${Math.round(100 - (numLoadsPending / numCredentialsTotal) * 100)}%`}
-				>
-					{Math.round(100 - (numLoadsPending / numCredentialsTotal) * 100)}%
+				<BodyText>
+					Connect your badge system to preview data and make final adjustments for publication.
+				</BodyText>
+			</div>
+		{:else if $proofingStep == 1}
+			<div transition:slide>
+				<Heading><h3 aria-label="source type">Loading Data</h3></Heading>
+
+				<BodyText>Loading data from the publisher and your badge system.</BodyText>
+
+				<div class="w-full mt-2 bg-gray-200 rounded-full dark:bg-gray-700">
+					<div
+						class="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
+						style={`width: ${Math.round(100 - (numLoadsPending / numCredentialsTotal) * 100)}%`}
+					>
+						{Math.round(100 - (numLoadsPending / numCredentialsTotal) * 100)}%
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<div class="md:flex items-center border-b pb-6 border-gray-200">
-			<NextPrevButton on:click={handleNextStep} isActive={numLoadsPending < 1} />
-		</div>
-	{:else if $proofingStep == 2}
-		<div transition:slide>
-			<Heading><h3 aria-label="source type">Final Edits</h3></Heading>
+			<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<NextPrevButton on:click={handleNextStep} isActive={numLoadsPending < 1} />
+			</div>
+		{:else if $proofingStep == 2}
+			<div transition:slide>
+				<Heading><h3 aria-label="source type">Final Edits</h3></Heading>
 
-			<CredentialProofingList />
-		</div>
+				<CredentialProofingList />
+			</div>
 
-		<div class="md:flex items-center border-b pb-6 border-gray-200">
-			<NextPrevButton on:click={handlePreviousStep} isNext={false} />
-			<NextPrevButton on:click={handleNextStep} />
-		</div>
-	{:else if $proofingStep == 3}
-		<div transition:slide>
-			<Heading><h3 aria-label="source type">Save to Publisher</h3></Heading>
+			<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<NextPrevButton on:click={handlePreviousStep} isNext={false} />
+				<NextPrevButton on:click={handleNextStep} />
+			</div>
+		{:else if $proofingStep == 3}
+			<div transition:slide>
+				<Heading><h3 aria-label="source type">Save to Publisher</h3></Heading>
 
-			<BodyText>
-				Ready to push badges to the publisher for your Organization's final review.
-			</BodyText>
+				<BodyText>
+					Ready to push badges to the publisher for your Organization's final review.
+				</BodyText>
 
-			<SaveToPublisher />
-		</div>
+				<SaveToPublisher />
+			</div>
 
-		<div class="md:flex items-center border-b pb-6 border-gray-200">
-			<NextPrevButton on:click={handlePreviousStep} isNext={false} />
-			<NextPrevButton on:click={handlePreviousStep} isActive={false} />
+			<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<NextPrevButton on:click={handlePreviousStep} isNext={false} />
+				<NextPrevButton
+					on:click={() => {
+						$proofingStep = 4;
+						$reviewingStep = 1;
+					}}
+					label="Finish Publication"
+					isActive={true}
+				/>
+			</div>
+		{/if}
+	</div>
+{:else}
+	<div
+		id="proofingContent"
+		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+		transition:slide
+	>
+		<div class="flex items-end flex-col justify-between md:flex-row">
+			<BodyText>Saving data complete.</BodyText>
+			<button
+				type="button"
+				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+				on:click={handlePreviousStep}
+			>
+				Edit
+			</button>
 		</div>
-	{/if}
-</div>
+	</div>
+{/if}

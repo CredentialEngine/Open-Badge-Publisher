@@ -157,7 +157,7 @@
 				</div>
 			</div>
 
-		<!-- STEP 1: Show connected account data or allow user to connect account -->
+			<!-- STEP 1: Show connected account data or allow user to connect account -->
 		{:else if $publisherSetupStep == 1}
 			<div id="registrysetup-step1" in:slide out:fly={{ x: -400 }}>
 				{#if !$publisherUser.user}
@@ -275,7 +275,7 @@
 				{/if}
 			</div>
 
-		<!-- STEP 2: Choose which of a user's organizations to use -->
+			<!-- STEP 2: Choose which of a user's organizations to use -->
 		{:else if $publisherSetupStep == 2}
 			<div id="registrysetup-step2" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 				<Heading><h3>Choose Organization</h3></Heading>
@@ -285,7 +285,7 @@
 				</BodyText>
 
 				{#if $publisherUser.user?.Organizations?.length}
-					{#each $publisherUser.user?.Organizations.sort((a, b) => a.Name.localeCompare(b.Name)) as org}
+					{#each $publisherUser.user?.Organizations.sort( (a, b) => a.Name.localeCompare(b.Name) ) as org}
 						<div class="flex items-center mb-4">
 							<input
 								id={`orgSelect-${org.CTID}`}
@@ -314,7 +314,7 @@
 				</div>
 			</div>
 
-		<!-- Preview Org Data and Credentials -->
+			<!-- Preview Org Data and Credentials -->
 		{:else if $publisherSetupStep == 3}
 			<div id="registrysetup-step3" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 				<Heading><h3>Selected Organization</h3></Heading>

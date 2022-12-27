@@ -1,7 +1,12 @@
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import { PUBLIC_BASEURL, PUBLIC_UI_API_BASEURL } from '$env/static/public';
-import type { BadgeClassBasic, Alignment } from '$lib/stores/badgeSourceStore.js';
+import {
+	PUBLIC_BASEURL,
+	PUBLIC_UI_API_BASEURL,
+	PUBLIC_PUBLISHER_API_BASEURL,
+	PUBLIC_PUBLISHER_API_ENV_LABEL
+} from '$env/static/public';
+import type { BadgeClassBasic, Alignment } from '$lib/utils/badges.js';
 import { normalizedBadges, checkedBadges } from '$lib/stores/badgeSourceStore.js';
 import { haveSameDomain } from '$lib/utils/urls.js';
 
@@ -189,6 +194,7 @@ export const publisherOptions = writable<PublisherOptions>({
 // Governs which step is displayed
 export const publisherSetupStep = writable<Number>(0);
 export const proofingStep = writable(0);
+export const reviewingStep = writable(0);
 
 export const getUser = async () => {
 	if (!browser || get(publisherUser).user) return null;
@@ -542,4 +548,13 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 			messages: responseData['Messages']
 		});
 	}
+};
+
+export const alignmentUrlForCredential = (ctid: string | undefined): string => {
+	if (!ctid) return '';
+	else if (PUBLIC_PUBLISHER_API_BASEURL.includes('sandbox'))
+		return `https://sandbox.credentialengine.org/finder/resources/${ctid}`;
+	else if (PUBLIC_PUBLISHER_API_BASEURL.includes('staging'))
+		return `https://staging.credentialengine.org/finder/resources/${ctid}`;
+	else return `https://credentialfinder.org/resources/${ctid}`;
 };
