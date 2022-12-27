@@ -57,7 +57,7 @@
 			URL: `https://www.credly.com/organizations/${$credlySelectedIssuer}/badges?sort=most_popular&page=1`,
 			Method: 'GET',
 			Body: null,
-			Headers: [{Name: 'Accept', Value: 'application/json'}]
+			Headers: [{ Name: 'Accept', Value: 'application/json' }]
 		};
 
 		let proxyRequestHeaders = new Headers();

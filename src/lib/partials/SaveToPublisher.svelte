@@ -77,7 +77,13 @@
 							</button>
 						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveSuccess}
 							<span class="text-sm px-5 py-2.5 text-center font-medium">
-								<a href={`${PUBLIC_PUBLISHER_API_BASEURL}/detail/Credential/${$ctdlPublicationResultStore[draft.Credential.CredentialId]?.Id}`} class="text-indigo-700 dark:text-superaqua" target="new">
+								<a
+									href={`${PUBLIC_PUBLISHER_API_BASEURL}/detail/Credential/${
+										$ctdlPublicationResultStore[draft.Credential.CredentialId]?.Id
+									}`}
+									class="text-indigo-700 dark:text-superaqua"
+									target="new"
+								>
 									View Credential
 								</a>
 							</span>

@@ -1,3 +1,11 @@
+import type { BadgeClassBasic } from '$lib/utils/badges.js';
+import {
+	badgeclassFromCanvasApiBadge,
+	canvasRegions,
+	type CanvasBadge,
+	type CanvasIssuer
+} from '$lib/utils/canvas.js';
+import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
 import { writable, derived, get } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
@@ -12,122 +20,7 @@ enum BadgeSourceTypeOptions {
 export const badgeSourceType = writable(BadgeSourceTypeOptions['None']);
 export const badgeSetupStep = writable(0);
 
-export interface Alignment {
-	targetName: string;
-	targetUrl: string;
-	targetDescription: string;
-	targetFramework?: string;
-	targetCode?: string;
-}
-
-export interface BadgeClassBasic {
-	id: string;
-	name: string;
-	image: string;
-	description: string;
-	issuer: string;
-	achievementType?: string | null;
-	tags: string[];
-	criteria: {
-		id?: string | null;
-		narrative?: string | null;
-	};
-	alignment: Alignment[];
-}
-
-// Canvas Options
-interface CanvasIssuer {
-	entityId: string;
-	openBadgeId: string;
-	name: string;
-	image?: string;
-	email: string;
-	description: string;
-	url: string;
-}
-
-interface CanvasBadge {
-	entityId: string;
-	openBadgeId: string;
-	createdAt: string;
-	createdBy: string;
-	issuer: string;
-	issuerOpenBadgeId: string;
-	name: string;
-	image: string;
-	description: string;
-	achievementType?: string;
-	criteriaUrl?: string;
-	criteriaNarrative?: string;
-	alignments: Alignment[];
-	tags: string[];
-}
-
-const badgeclassFromCanvasApiBadge = (cb: CanvasBadge): BadgeClassBasic => {
-	return {
-		id: cb.openBadgeId,
-		name: cb.name,
-		description: cb.description,
-		issuer: cb.issuerOpenBadgeId,
-		image: cb.image,
-		achievementType: cb.achievementType,
-		tags: cb.tags,
-		alignment: cb.alignments,
-		criteria: {
-			id: cb.criteriaUrl,
-			narrative: cb.criteriaNarrative
-		}
-	};
-};
-
-export const canvasRegions = new Map([
-	[
-		'us',
-		{
-			id: 'us',
-			domain: 'https://badgr.com',
-			apiDomain: 'https://api.badgr.io',
-			name: 'United States'
-		}
-	],
-	[
-		'ca',
-		{
-			id: 'ca',
-			domain: 'https://ca.badgr.com',
-			apiDomain: 'https://api.ca.badgr.io',
-			name: 'Canada'
-		}
-	],
-	[
-		'eu',
-		{
-			id: 'eu',
-			domain: 'https://eu.badgr.com',
-			apiDomain: 'https://api.eu.badgr.io',
-			name: 'Europe'
-		}
-	],
-	[
-		'au',
-		{
-			id: 'au',
-			domain: 'https://au.badgr.com',
-			apiDomain: 'https://api.au.badgr.io',
-			name: 'Australia'
-		}
-	],
-	[
-		'test',
-		{
-			id: 'test',
-			domain: 'https://test.badgr.com',
-			apiDomain: 'https://api.test.badgr.com',
-			name: 'Test (test.badgr.com)'
-		}
-	]
-]);
-
+// Canvas configuration
 export const canvasAccessToken = writable<string>('');
 export const canvasAgreeTerms = writable(false);
 export const canvasSelectedRegion = writable('');
@@ -158,8 +51,8 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 
 	let proxyRequestHeaders = new Headers();
 	proxyRequestHeaders.append('Content-Type', 'application/json');
-		if (get(publisherUser).user?.Token)
-			proxyRequestHeaders.append('Authorization', `Bearer ${get(publisherUser).user?.Token}`);
+	if (get(publisherUser).user?.Token)
+		proxyRequestHeaders.append('Authorization', `Bearer ${get(publisherUser).user?.Token}`);
 
 	const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
 		method: 'POST',
@@ -178,38 +71,6 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 };
 
 // Credly Options
-interface CredlyIssuerBasic {
-	id: string;
-	name: string;
-	vanity_url: string;
-	badge_count: number;
-}
-export interface CredlyBadgeBasic {
-	id: string;
-	name: string;
-	description: string;
-	image_url: string;
-	alignments: Array<{
-		id: string;
-		name: string;
-		description: string;
-		url: string;
-	}>;
-	skills: Array<{
-		id: string;
-		name: string;
-		vanity_slug: string;
-	}>;
-	badge_template_activities: Array<{
-		id: string;
-		activity_type: string;
-		required_badge_template_id?: string | null;
-		title: string;
-		url?: string | null;
-	}>;
-	url?: string | null;
-}
-
 export const credlySelectedIssuer = writable<string>('');
 export const credlyAgreeTerms = writable<boolean>(false);
 export const credlyIssuerData = writable<CredlyIssuerBasic | undefined>();
