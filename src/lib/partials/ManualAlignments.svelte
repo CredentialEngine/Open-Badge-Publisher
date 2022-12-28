@@ -4,7 +4,7 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import {
-		type CtdlApiCredential,
+		alignmentExistsForCredential,
 		alignmentUrlForCredential,
 		credentialDrafts,
 		ctdlPublicationResultStore,
@@ -17,16 +17,7 @@
 		return status?.publicationStatus == PubStatuses.SaveSuccess;
 	});
 
-	const alignmentExistsForCredential = (credential: CtdlApiCredential): boolean => {
-		const targetUrl = alignmentUrlForCredential($ctdlPublicationResultStore[credential.Credential.CredentialId]?.CTID);
-		let existingAlignmentUrls: string[] = [];
-		credential.Credential.Requires.filter(r => r.Description.includes('Open Badges')).map(a => {
-			a.TargetCompetency.map(tc => {
-				existingAlignmentUrls.push(tc.TargetNode);
-			})
-		});
-		return existingAlignmentUrls.includes(targetUrl);
-	}
+	
 </script>
 
 <Heading><h3>Update badge alignments</h3></Heading>
@@ -56,7 +47,7 @@
 						{credential.Credential.Name}
 					</th>
 					<td class="py-4 px-6">
-						{#if !alignmentExistsForCredential(credential)}
+						{#if alignmentExistsForCredential(credential)}
 							<div class="inline-block"><Check height="16" width="16" /></div> Alignment has been previously added.
 						{:else}
 							<BodyText

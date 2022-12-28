@@ -3,6 +3,8 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
+	
+	import CanvasAlignments from './CanvasAlignments.svelte';
 	import ManualAlignments from './ManualAlignments.svelte';
 	import { badgeSourceType } from '$lib/stores/badgeSourceStore.js';
 	import {
@@ -11,6 +13,7 @@
 		proofingStep,
 		reviewingStep
 	} from '$lib/stores/publisherStore.js';
+	
 </script>
 
 <Heading><h2>Summary</h2></Heading>
@@ -39,7 +42,7 @@
 		</div>
 	{:else if $reviewingStep == 1}
 		{#if $badgeSourceType == 'canvas'}
-			<BodyText>Update your canvas alignments...</BodyText>
+			<CanvasAlignments />
 		{:else}
 			<ManualAlignments />
 		{/if}

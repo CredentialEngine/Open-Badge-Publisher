@@ -386,7 +386,8 @@ export enum PubStatuses {
 	'PendingUpdate' = 'Pending Update',
 	'SaveInProgress' = 'Save in Progress',
 	'SaveError' = 'Error',
-	'SaveSuccess' = 'Success'
+	'SaveSuccess' = 'Success',
+	'SourceUpdated' = 'Source Updated'
 }
 
 export interface CredentialPublicationStatus {
@@ -558,3 +559,14 @@ export const alignmentUrlForCredential = (ctid: string | undefined): string => {
 		return `https://staging.credentialengine.org/finder/resources/${ctid}`;
 	else return `https://credentialfinder.org/resources/${ctid}`;
 };
+
+export const alignmentExistsForCredential = (credential: CtdlApiCredential): boolean => {
+	const targetUrl = alignmentUrlForCredential(get(ctdlPublicationResultStore)[credential.Credential.CredentialId]?.CTID);
+	let existingAlignmentUrls: string[] = [];
+	credential.Credential.Requires.filter(r => r.Description.includes('Open Badges')).map(a => {
+		a.TargetCompetency.map(tc => {
+			existingAlignmentUrls.push(tc.TargetNode);
+		})
+	});
+	return existingAlignmentUrls.includes(targetUrl);
+}

@@ -1,4 +1,8 @@
 import type { Alignment, BadgeClassBasic } from '$lib/utils/badges.js';
+import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
+import {
+	PUBLIC_UI_API_BASEURL, PUBLIC_PUBLISHER_API_ENV_LABEL
+} from '$env/static/public';
 
 // Canvas Options
 export interface CanvasIssuer {
@@ -92,3 +96,6 @@ export const badgeclassFromCanvasApiBadge = (cb: CanvasBadge): BadgeClassBasic =
 		}
 	};
 };
+
+
+	

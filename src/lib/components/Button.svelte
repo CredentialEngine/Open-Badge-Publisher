@@ -2,11 +2,11 @@
 	let klass = '';
 	export { klass as class };
 	export let disabled: boolean = false;
-	export let type = 'button';
+	export let type: "button" | "submit" | "reset" = 'button';
 	export let buttonType: 'primary' | 'default' | 'danger' = 'default';
 
 	const baseClass =
-		'text-sm focus:ring-4 focus:outline-none rounded-lg text-center font-medium px-5 py-2.5';
+		'text-sm focus:ring-4 focus:outline-none rounded-lg text-center font-medium px-5 py-2.5 ' + klass;
 	const defaultClasses = {
 		default:
 			'text-gray-900 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-gray-200 rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 dark:focus:ring-gray-700',
