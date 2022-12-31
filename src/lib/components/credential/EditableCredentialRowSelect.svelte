@@ -10,6 +10,7 @@
 		EditStatus
 	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
@@ -109,15 +110,13 @@
 		</td>
 		<td class="py-4 px-6">
 			{#if editable}
-				<button
-					type="button"
-					class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
+				<Button
 					on:click={() => {
 						isEditing = true;
 					}}
 				>
 					Edit
-				</button>
+				</Button>
 			{/if}
 		</td>
 	</tr>
@@ -161,20 +160,8 @@
 			{/if}
 		</td>
 		<td class="flex flex-col py-4 px-6 space-y-3">
-			<button
-				type="button"
-				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
-				on:click={handleCancelRowEdit}
-			>
-				Cancel
-			</button>
-			<button
-				type="button"
-				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
-				on:click={handleSaveRow}
-			>
-				Save
-			</button>
+			<Button on:click={handleCancelRowEdit}>Cancel</Button>
+			<Button buttonType="primary" on:click={handleSaveRow}>Save</Button>
 		</td>
 	</tr>
 {/if}

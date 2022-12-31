@@ -16,13 +16,14 @@
 		saveCredential
 	} from '$lib/stores/publisherStore.js';
 	import CredentialProofingList from './CredentialProofingList.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Alert from '$lib/components/Alert.svelte';
 </script>
 
 <Heading><h4>Summary</h4></Heading>
 
 <!-- <BodyText>
-	
+	TODO: summarize saves.
 	There are <span class="font-bold">4 new pending credentials</span> ready to be saved.
 	<span class="font-bold">3 updates</span> to existing credentials are pending.
 	<span class="font-bold">1 new credential</span> and <span class="font-bold">2 new updates</span>
@@ -59,19 +60,9 @@
 					</td>
 					<td class="py-4 px-6 flex flex-row py-4 space-x-3">
 						{#if [PubStatuses.PendingNew, PubStatuses.PendingUpdate, PubStatuses.SaveError].includes($ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus)}
-							<button
-								class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
-								on:click={() => saveCredential(draft)}
-							>
-								Save
-							</button>
+							<Button on:click={() => saveCredential(draft)}>Save</Button>
 						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
-							<button
-								class="cursor-not-allowed text-gray-700 w-full text-sm px-5 py-2.5 bg-white focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
-								disabled
-							>
-								Save
-							</button>
+							<Button disabled={true}>Save</Button>
 						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveSuccess}
 							<span class="text-sm px-5 py-2.5 text-center font-medium">
 								<a

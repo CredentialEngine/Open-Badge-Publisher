@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { slide, fly } from 'svelte/transition'; // TODO: implement left-right fly-in instead of slide for next/prev steps
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
@@ -38,11 +39,16 @@
 	}
 </script>
 
-<Heading><h2>Data Preparation and Publication</h2></Heading>
+<Heading
+	><h2>
+		{#if $proofingStep == 4}☑{/if}
+		Data Preparation and Publication
+	</h2></Heading
+>
 
 {#if $proofingStep <= 3}
 	<div aria-label="form" in:slide class="focus:outline-none w-full bg-white p-10">
-		<div class="md:flex items-center border-b pb-6 border-gray-200">
+		<div class="md:flex items-center pb-6">
 			<ConfigurationStep
 				stepNumber="7"
 				stepName="Load Data"
@@ -70,7 +76,7 @@
 
 				<BodyText>Loading data from the publisher and your badge system.</BodyText>
 
-				<div class="w-full mt-2 bg-gray-200 rounded-full">
+				<div class="w-full mt-2 mb-8 bg-gray-200 rounded-full">
 					<div
 						class="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
 						style={`width: ${Math.round(100 - (numLoadsPending / numCredentialsTotal) * 100)}%`}
@@ -80,7 +86,7 @@
 				</div>
 			</div>
 
-			<div class="md:flex items-center border-b pb-6 border-gray-200">
+			<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 				<NextPrevButton on:click={handleNextStep} isActive={numLoadsPending < 1} />
 			</div>
 		{:else if $proofingStep == 2}
@@ -90,7 +96,7 @@
 				<CredentialProofingList />
 			</div>
 
-			<div class="md:flex items-center border-b pb-6 border-gray-200">
+			<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 				<NextPrevButton on:click={handlePreviousStep} isNext={false} />
 				<NextPrevButton on:click={handleNextStep} />
 			</div>
@@ -105,7 +111,7 @@
 				<SaveToPublisher />
 			</div>
 
-			<div class="md:flex items-center border-b pb-6 border-gray-200">
+			<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 				<NextPrevButton on:click={handlePreviousStep} isNext={false} />
 				<NextPrevButton
 					on:click={() => {
@@ -122,13 +128,12 @@
 	<div id="proofingContent" class="focus:outline-none w-full bg-white p-10" transition:slide>
 		<div class="flex items-end flex-col justify-between md:flex-row">
 			<BodyText>Saving data complete.</BodyText>
-			<button
-				type="button"
-				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
-				on:click={handlePreviousStep}
+			<Button
+				on:click={() => {
+					handlePreviousStep();
+					$reviewingStep = 0;
+				}}>Edit</Button
 			>
-				Edit
-			</button>
 		</div>
 	</div>
 {/if}

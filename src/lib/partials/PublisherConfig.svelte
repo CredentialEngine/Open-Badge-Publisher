@@ -45,6 +45,7 @@
 		email: yup.string().email().required(),
 		password: yup.string().required()
 	});
+	let userIsLoading = false;
 	const submitRegistryForm = () => {
 		if (!registryAgreeTerms) {
 			setAlert('error', 'You must agree to the terms to proceed.', 'Terms of Service');
@@ -62,6 +63,7 @@
 				return;
 			})
 			.then(async (valid) => {
+				userIsLoading = true;
 				const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Login`;
 				const response = await fetch(url, {
 					method: 'POST',
@@ -80,14 +82,16 @@
 					}
 
 					setAlert('error', errorMessage, 'Authentication error:');
+					userIsLoading = false;
 					return;
 				}
 
 				// reset form and save user
-				let registryEmailAddress = '';
-				let registryPassword = '';
-				let registryAgreeTerms = false;
+				registryEmailAddress = '';
+				registryPassword = '';
+				registryAgreeTerms = false;
 				publisherUser.set({ user: responseData['Data'] });
+				userIsLoading = false;
 			});
 	};
 
@@ -117,7 +121,7 @@
 
 <Heading>
 	<h2>
-		{#if $publisherSetupStep == 3}☑ {/if}
+		{#if panelIsHidden}☑{/if}
 		Publisher Configuration
 	</h2>
 </Heading>
@@ -163,7 +167,7 @@
 			<!-- STEP 1: Show connected account data or allow user to connect account -->
 		{:else if $publisherSetupStep == 1}
 			<div id="registrysetup-step1" in:slide out:fly={{ x: -400 }}>
-				{#if !$publisherUser.user}
+				{#if !$publisherUser.user && !userIsLoading}
 					<!-- auto-loading the user not possible, but they can authenticate manually -->
 					<Heading><h3>Connect your Publisher Account</h3></Heading>
 					<BodyText gray={true}>
@@ -232,12 +236,14 @@
 						/>
 					{/if}
 
-					<div
-						class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4"
-					>
+					<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 						<NextPrevButton on:click={submitRegistryForm} isNext={true} isActive={true} />
 					</div>
-				{:else}
+				{:else if userIsLoading}
+					<div class="my-4 flex flex-col items-center justify-center w-full h-40">
+						<LoadingSpinner />
+					</div>
+				{:else if !!$publisherUser.user}
 					<!-- User is authenticated -->
 					<Heading><h3>Authenticated User</h3></Heading>
 					<BodyText gray={true}>
@@ -260,9 +266,7 @@
 						</BodyText>
 					{/if}
 
-					<div
-						class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4"
-					>
+					<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 						<NextPrevButton
 							on:click={() => publisherUser.set({})}
 							isNext={false}
@@ -304,7 +308,7 @@
 					{/each}
 				{/if}
 
-				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton on:click={() => publisherSetupStep.set(1)} isNext={false} />
 					<NextPrevButton
 						on:click={() => handlePreviewCredentials()}
@@ -358,7 +362,7 @@
 					{/if}
 				{/await}
 
-				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton
 						on:click={() => {
 							resetPublisherSelection();

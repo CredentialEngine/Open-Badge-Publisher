@@ -31,7 +31,7 @@
 
 <Heading>
 	<h2>
-		{#if $badgeSetupStep == 3}☑ {/if}
+		{#if panelIsHidden}☑{/if}
 		Badge Source Data
 	</h2>
 </Heading>
@@ -93,7 +93,7 @@
 						description="Paste an array of Open Badges achievements in JSON format. (Advanced)"
 					/>
 				</ul>
-				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton
 						on:click={() => badgeSetupStep.update((n) => n + 1)}
 						isActive={$badgeSourceType !== ''}
@@ -112,7 +112,7 @@
 					<BodyText>Advanced JSON not yet implemented...</BodyText>
 				{/if}
 
-				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
 					<NextPrevButton on:click={handleAdvanceToBadgeSelection} isActive={$badgeSetupComplete} />
 				</div>
@@ -123,7 +123,7 @@
 			<div id="badgesetup-step3">
 				<BadgeSelection />
 
-				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
 					<NextPrevButton
 						on:click={() => {

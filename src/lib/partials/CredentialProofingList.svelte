@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
+	import Button from '$lib/components/Button.svelte';
 	import Icon from 'svelte-icons-pack/Icon.svelte';
 	import FaSolidExternalLinkAlt from 'svelte-icons-pack/fa/FaSolidExternalLinkAlt.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -117,13 +118,9 @@
 							<span class="text-sm">{abbreviate(credential.Credential.Description, 280)}</span>
 						</BodyText>
 						{#if [PubStatuses.PendingUpdate, PubStatuses.PendingNew, PubStatuses.SaveError].includes($ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus)}
-							<button
-								type="button"
-								class="text-gray-900 text-sm px-5 mt-2 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
-								on:click={() => handleEditCredential(credential.Credential.CredentialId)}
-							>
+							<Button on:click={() => handleEditCredential(credential.Credential.CredentialId)}>
 								Edit
-							</button>
+							</Button>
 						{/if}
 						{#each $ctdlPublicationResultStore[credential.Credential.CredentialId]?.messages || [] as message}
 							<div class="mt-2">

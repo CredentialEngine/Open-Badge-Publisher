@@ -8,6 +8,7 @@
 	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
 	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
 	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import Tag from '$lib/components/Tag.svelte';
@@ -214,16 +215,14 @@
 			</tbody>
 		</table>
 
-		<div class="flex flex-row-reverse">
-			<button
-				type="button"
-				class="text-gray-900 text-sm mt-6 px-5 py-2.5 b mr-6 mb-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
+		<div class="flex flex-row-reverse my-4 px-4">
+			<Button
 				on:click={() => {
 					handleFinish();
 				}}
 			>
 				Finished Editing
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>

@@ -7,6 +7,7 @@
 		canvasIssuers,
 		canvasSelectedIssuer
 	} from '$lib/stores/badgeSourceStore.js';
+	import abbreviate from '$lib/utils/abbreviate.js';
 	import { publisherUser } from '$lib/stores/publisherStore.js';
 	import { canvasRegions } from '$lib/utils/canvas.js';
 	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
@@ -92,9 +93,11 @@
 	let usePassword = true;
 	let canvasEmail = '';
 	let canvasPassword = '';
+	let canvasErrorMessage = '';
 	let debounceObtainAuth = false;
 
 	const handleObtainCanvasAuthToken = async (): Promise<boolean> => {
+		canvasErrorMessage = '';
 		const formData = `username=${encodeURIComponent(canvasEmail)}&password=${encodeURIComponent(
 			canvasPassword
 		)}`;
@@ -126,14 +129,14 @@
 		const proxyResponseData = await proxyResponse.json();
 
 		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200') {
-			let canvasErrorMessage = '';
+			canvasErrorMessage = '';
 			try {
 				const errorData = JSON.parse(proxyResponseData.Data?.Body);
-				canvasErrorMessage = errorData.error_description;
+				canvasErrorMessage = 'Error fetching Canvas access token. ' + errorData.error_description;
 			} catch {
 				canvasErrorMessage = 'Unknown error.';
 			}
-			throw new Error('Error fetching Canvas access token. ' + canvasErrorMessage);
+			return false;
 		}
 		const tokenData = JSON.parse(proxyResponseData.Data?.Body);
 		$canvasAccessToken = tokenData.access_token;
@@ -267,9 +270,13 @@
 					<div class="mt-4">
 						<Button buttonType="primary" on:click={handleObtainCanvasAuthToken}>Submit</Button>
 					</div>
+
+					{#if canvasErrorMessage}
+						<div class="mt-4" transition:slide>
+							<Alert level="error" message={canvasErrorMessage} />
+						</div>
+					{/if}
 				{/if}
-			{:catch error}
-				<Alert level="error" message={error.message} />
 			{/await}
 		</div>
 	{:else}
@@ -378,10 +385,10 @@
 						groupValue={$canvasSelectedIssuer?.entityId}
 						value={issuer.entityId}
 						on:select={(e) => ($canvasSelectedIssuer = issuer)}
-						description={issuer.description}
+						description={abbreviate(issuer.description, 200)}
 					>
 						<span slot="label"
-							><span class="text-sm font-light text-gray-500">
+							><span class="text-base font-medium text-midnight">
 								<a
 									href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${
 										issuer.entityId
@@ -398,15 +405,13 @@
 			<div
 				class="my-4 flex flex-col items-center justify-center w-full h-64 rounded-lg border-2 border-gray-300 border-dashed"
 			>
-				<button
-					type="button"
-					class="text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 focus:outline-none"
-					class:bg-blue-700={!debounceRefreshIssuers}
-					class:bg-gray-200={debounceRefreshIssuers}
+				<Button
+					buttonType="primary"
+					disabled={!!debounceRefreshIssuers}
 					on:click={handleRefreshIssuers}
 				>
 					Load issuers
-				</button>
+				</Button>
 			</div>
 		{/if}
 	{:catch error}
