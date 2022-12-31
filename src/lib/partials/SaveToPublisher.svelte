@@ -2,14 +2,14 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
+	import { pluralize, pluralizeFrom } from '$lib/utils/pluralize.js';
+	import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
 	import {
 		type CtdlApiCredential,
 		type CredentialPublicationStatus,
-		PubStatuses
-	} from '$lib/stores/publisherStore.js';
-	import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
-	import {
+		PubStatuses,
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		publisherCredentials,
@@ -18,20 +18,72 @@
 	import CredentialProofingList from './CredentialProofingList.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Alert from '$lib/components/Alert.svelte';
+
+	interface Counts {
+		pendingNew: number;
+		pendingUpdate: number;
+		saveError: number;
+		saveSuccess: number;
+	}
+
+	let counts: Counts = {
+		pendingNew: 0,
+		pendingUpdate: 0,
+		saveError: 0,
+		saveSuccess: 0
+	};
+	const updateCounts = (results: { [key: string]: CredentialPublicationStatus }) => {
+		counts = Object.values(results).reduce(
+			(acc: Counts, v) => {
+				const isSuccess = [PubStatuses.SaveSuccess, PubStatuses.SourceUpdated].includes(
+					v.publicationStatus
+				);
+				return {
+					pendingNew:
+						v.publicationStatus == PubStatuses.PendingNew ? acc.pendingNew + 1 : acc.pendingNew,
+					pendingUpdate:
+						v.publicationStatus == PubStatuses.PendingUpdate
+							? acc.pendingUpdate + 1
+							: acc.pendingUpdate,
+					saveError:
+						v.publicationStatus == PubStatuses.SaveError ? acc.saveError + 1 : acc.saveError,
+					saveSuccess: isSuccess ? acc.saveSuccess + 1 : acc.saveSuccess
+				};
+			},
+			{
+				pendingNew: 0,
+				pendingUpdate: 0,
+				saveError: 0,
+				saveSuccess: 0
+			}
+		);
+		console.log('Updated counts!');
+		console.log(Object.values(results));
+		console.log(counts);
+	};
+
+	onMount(() => {
+		updateCounts($ctdlPublicationResultStore);
+	});
+
+	$: updateCounts($ctdlPublicationResultStore);
 </script>
 
-<Heading><h4>Summary</h4></Heading>
+<BodyText>
+	There {pluralizeFrom(counts.pendingNew, 'are', 'is', 'are')}
+	<span class="font-bold">
+		{counts.pendingNew} new {pluralize(counts.pendingNew, 'credential')}
+	</span>
+	ready to be saved.
+	<span class="font-bold">{counts.pendingUpdate} {pluralize(counts.pendingUpdate, 'update')}</span>
+	to existing credentials {pluralizeFrom(counts.pendingUpdate, 'are', 'is', 'are')} pending.
+	<span class="font-bold">{counts.saveSuccess} {pluralize(counts.saveSuccess, 'credential')}</span>
+	have been successfully saved.
+	<span class="font-bold">{counts.saveError} {pluralize(counts.saveError, 'error')}</span> resulted from
+	this batch of saves. Detailed results below.
+</BodyText>
 
-<!-- <BodyText>
-	TODO: summarize saves.
-	There are <span class="font-bold">4 new pending credentials</span> ready to be saved.
-	<span class="font-bold">3 updates</span> to existing credentials are pending.
-	<span class="font-bold">1 new credential</span> and <span class="font-bold">2 new updates</span>
-	have been successfully saved. There were <span class="font-bold">2 errors</span> from this batch of
-	saves that you can review below.
-</BodyText> -->
-
-<div class="overflow-x-auto relative rounded-lg" transition:slide>
+<div class="mt-4 overflow-x-auto relative rounded-lg" transition:slide>
 	<table class="w-full text-sm text-left text-gray-500">
 		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 			<tr>
