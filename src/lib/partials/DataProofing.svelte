@@ -110,24 +110,12 @@
 
 				<SaveToPublisher />
 			</div>
-
-			<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
-				<NextPrevButton on:click={handlePreviousStep} isNext={false} />
-				<NextPrevButton
-					on:click={() => {
-						$proofingStep = 4;
-						$reviewingStep = 1;
-					}}
-					label="Finish Publication"
-					isActive={true}
-				/>
-			</div>
 		{/if}
 	</div>
 {:else}
 	<div id="proofingContent" class="focus:outline-none w-full bg-white p-10" transition:slide>
 		<div class="flex items-center md:items-end flex-col justify-between md:flex-row">
-			<BodyText>Saving data complete.</BodyText>
+			<BodyText>Saving selected data to publisher complete.</BodyText>
 			<Button
 				on:click={() => {
 					handlePreviousStep();

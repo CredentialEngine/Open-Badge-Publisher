@@ -551,6 +551,25 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 	}
 };
 
+export const saveAllCredentials = async () => {
+	let doneYet = false;
+	let nextCredential: CtdlApiCredential | undefined;
+	let currentResults: { [key: string]: CredentialPublicationStatus };
+
+	while (!doneYet) {
+		currentResults = get(ctdlPublicationResultStore);
+		nextCredential = get(credentialDrafts).find((c) =>
+			[PubStatuses.PendingNew, PubStatuses.PendingUpdate].includes(
+				currentResults[c.Credential.CredentialId]?.publicationStatus
+			)
+		);
+		if (!nextCredential) doneYet = true;
+		else {
+			await saveCredential(nextCredential);
+		}
+	}
+};
+
 export const alignmentUrlForCredential = (ctid: string | undefined): string => {
 	if (!ctid) return '';
 	else if (PUBLIC_PUBLISHER_API_BASEURL.includes('sandbox'))
@@ -561,12 +580,14 @@ export const alignmentUrlForCredential = (ctid: string | undefined): string => {
 };
 
 export const alignmentExistsForCredential = (credential: CtdlApiCredential): boolean => {
-	const targetUrl = alignmentUrlForCredential(get(ctdlPublicationResultStore)[credential.Credential.CredentialId]?.CTID);
+	const targetUrl = alignmentUrlForCredential(
+		get(ctdlPublicationResultStore)[credential.Credential.CredentialId]?.CTID
+	);
 	let existingAlignmentUrls: string[] = [];
-	credential.Credential.Requires.filter(r => r.Description.includes('Open Badges')).map(a => {
-		a.TargetCompetency.map(tc => {
+	credential.Credential.Requires.filter((r) => r.Description.includes('Open Badges')).map((a) => {
+		a.TargetCompetency.map((tc) => {
 			existingAlignmentUrls.push(tc.TargetNode);
-		})
+		});
 	});
 	return existingAlignmentUrls.includes(targetUrl);
-}
+};

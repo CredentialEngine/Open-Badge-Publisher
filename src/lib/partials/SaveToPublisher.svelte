@@ -1,7 +1,9 @@
 <script lang="ts">
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import { pluralize, pluralizeFrom } from '$lib/utils/pluralize.js';
@@ -13,31 +15,35 @@
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		publisherCredentials,
-		saveCredential
+		saveAllCredentials,
+		saveCredential,
+		proofingStep,
+		reviewingStep
 	} from '$lib/stores/publisherStore.js';
 	import CredentialProofingList from './CredentialProofingList.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Alert from '$lib/components/Alert.svelte';
+
+	let modalVisible = false;
 
 	interface Counts {
 		pendingNew: number;
 		pendingUpdate: number;
 		saveError: number;
 		saveSuccess: number;
+		saveInProgress: number;
 	}
 
 	let counts: Counts = {
 		pendingNew: 0,
 		pendingUpdate: 0,
 		saveError: 0,
-		saveSuccess: 0
+		saveSuccess: 0,
+		saveInProgress: 0
 	};
 	const updateCounts = (results: { [key: string]: CredentialPublicationStatus }) => {
 		counts = Object.values(results).reduce(
 			(acc: Counts, v) => {
-				const isSuccess = [PubStatuses.SaveSuccess, PubStatuses.SourceUpdated].includes(
-					v.publicationStatus
-				);
 				return {
 					pendingNew:
 						v.publicationStatus == PubStatuses.PendingNew ? acc.pendingNew + 1 : acc.pendingNew,
@@ -47,19 +53,42 @@
 							: acc.pendingUpdate,
 					saveError:
 						v.publicationStatus == PubStatuses.SaveError ? acc.saveError + 1 : acc.saveError,
-					saveSuccess: isSuccess ? acc.saveSuccess + 1 : acc.saveSuccess
+					saveSuccess: [PubStatuses.SaveSuccess, PubStatuses.SourceUpdated].includes(
+						v.publicationStatus
+					)
+						? acc.saveSuccess + 1
+						: acc.saveSuccess,
+					saveInProgress:
+						v.publicationStatus == PubStatuses.SaveInProgress
+							? acc.saveInProgress + 1
+							: acc.saveInProgress
 				};
 			},
 			{
 				pendingNew: 0,
 				pendingUpdate: 0,
 				saveError: 0,
-				saveSuccess: 0
+				saveSuccess: 0,
+				saveInProgress: 0
 			}
 		);
 		console.log('Updated counts!');
 		console.log(Object.values(results));
 		console.log(counts);
+	};
+
+	const handleClickFinish = () => {
+		if (counts.pendingNew + counts.pendingUpdate > 0) {
+			modalVisible = true;
+		} else {
+			$proofingStep = 4;
+			$reviewingStep = 1;
+		}
+	};
+
+	const handleSaveAll = () => {
+		saveAllCredentials();
+		modalVisible = false;
 	};
 
 	onMount(() => {
@@ -134,3 +163,56 @@
 		</tbody>
 	</table>
 </div>
+
+<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
+	<NextPrevButton
+		on:click={() => {
+			$proofingStep = $proofingStep - 1;
+		}}
+		isNext={false}
+	/>
+	<NextPrevButton
+		on:click={handleClickFinish}
+		label="Finish Publication"
+		isActive={counts.saveInProgress == 0}
+	/>
+</div>
+
+<Modal
+	visible={modalVisible}
+	id={`badgesourcepanel-warning`}
+	on:close={() => {
+		modalVisible = false;
+	}}
+	title="Save All Badges?"
+	actions={[
+		{
+			label: 'Cancel',
+			buttonType: 'default',
+			onClick: () => {
+				modalVisible = false;
+			}
+		},
+		{
+			label: 'Continue without saving',
+			buttonType: 'danger',
+			onClick: () => {
+				$proofingStep = 4;
+				$reviewingStep = 1;
+			}
+		},
+		{ label: 'Save all', buttonType: 'primary', onClick: handleSaveAll }
+	]}
+>
+	<BodyText
+		>There {pluralizeFrom(counts.pendingNew, 'are', 'is', 'are')}
+		<span class="font-bold">
+			{counts.pendingNew} new {pluralize(counts.pendingNew, 'credential')}
+		</span>
+		ready to be saved.
+		<span class="font-bold">{counts.pendingUpdate} {pluralize(counts.pendingUpdate, 'update')}</span
+		>
+		to existing credentials {pluralizeFrom(counts.pendingUpdate, 'are', 'is', 'are')} pending. Would
+		you like to save all pending badges to the Publisher?</BodyText
+	>
+</Modal>
