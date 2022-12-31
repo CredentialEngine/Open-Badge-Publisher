@@ -4,6 +4,7 @@
 	import { fade, fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import * as yup from 'yup';
+	import Button from '$lib/components/Button.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
@@ -125,7 +126,7 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+		class="focus:outline-none w-full bg-white p-10"
 		transition:slide
 	>
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
@@ -150,7 +151,9 @@
 		{#if $publisherSetupStep == 0}
 			<div id="publishersetup-step0" transition:slide>
 				<Heading><h3>Connect your Publisher Account</h3></Heading>
-				<BodyText>Checking to see if your publisher account is already connected.</BodyText>
+				<BodyText gray={true}
+					>Checking to see if your publisher account is already connected.</BodyText
+				>
 
 				<div class="my-4 flex flex-col items-center justify-center w-full h-48">
 					<LoadingSpinner />
@@ -163,11 +166,11 @@
 				{#if !$publisherUser.user}
 					<!-- auto-loading the user not possible, but they can authenticate manually -->
 					<Heading><h3>Connect your Publisher Account</h3></Heading>
-					<BodyText>
+					<BodyText gray={true}>
 						Connect to the
 						<a
 							href={PUBLIC_PUBLISHER_API_BASEURL}
-							class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+							class="font-medium text-midnight underline hover:no-underline"
 						>
 							Credential Engine Publisher {PUBLIC_PUBLISHER_API_ENV_LABEL}
 						</a>
@@ -176,9 +179,8 @@
 
 					<div class="mt-8 md:flex items-center">
 						<div class="flex flex-col">
-							<label
-								for="input_registryemail"
-								class="mb-3 text-sm leading-none text-gray-800 dark:text-white">Email</label
+							<label for="input_registryemail" class="mb-3 text-sm leading-none text-gray-800"
+								>Email</label
 							>
 							<input
 								id="input_registryemail"
@@ -191,9 +193,8 @@
 					</div>
 					<div class="mt-8 md:flex items-center">
 						<div class="flex flex-col">
-							<label
-								for="input_registrypassword"
-								class="mb-3 text-sm leading-none text-gray-800 dark:text-white">Password</label
+							<label for="input_registrypassword" class="mb-3 text-sm leading-none text-gray-800"
+								>Password</label
 							>
 							<input
 								id="input_registrypassword"
@@ -212,14 +213,12 @@
 								id="registryAgreeTerms"
 								type="checkbox"
 								value=""
-								class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+								class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
 							/>
-							<label
-								for="registryAgreeTerms"
-								class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+							<label for="registryAgreeTerms" class="ml-2 text-sm font-medium text-gray-900"
 								>I agree with the Credential Engine <a
 									href="http://credentialengine.org/terms/"
-									class="text-indigo-700 dark:text-superaqua">terms of service</a
+									class="text-midnight underline hover:no-underline">terms of service</a
 								>
 							</label>
 						</div>
@@ -233,13 +232,15 @@
 						/>
 					{/if}
 
-					<div class="md:flex items-center border-b pb-6 border-gray-200">
+					<div
+						class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4"
+					>
 						<NextPrevButton on:click={submitRegistryForm} isNext={true} isActive={true} />
 					</div>
 				{:else}
 					<!-- User is authenticated -->
 					<Heading><h3>Authenticated User</h3></Heading>
-					<BodyText>
+					<BodyText gray={true}>
 						Your API Key will be used to interact with the publisher and upload credentials.
 					</BodyText>
 
@@ -259,7 +260,9 @@
 						</BodyText>
 					{/if}
 
-					<div class="md:flex items-center border-b pb-6 border-gray-200">
+					<div
+						class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4"
+					>
 						<NextPrevButton
 							on:click={() => publisherUser.set({})}
 							isNext={false}
@@ -279,7 +282,7 @@
 		{:else if $publisherSetupStep == 2}
 			<div id="registrysetup-step2" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 				<Heading><h3>Choose Organization</h3></Heading>
-				<BodyText>
+				<BodyText gray={true}>
 					Credentials will be saved to this organization in the Publisher, where you can finalize
 					them.
 				</BodyText>
@@ -292,24 +295,21 @@
 								type="radio"
 								bind:group={selectedOrg}
 								value={org.CTID}
-								class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+								class="w-4 h-4 text-tahiti bg-gray-100 border-gray-300 focus:ring-tahiti focus:ring-2"
 							/>
-							<label
-								for={`orgSelect-${org.CTID}`}
-								class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-							>
+							<label for={`orgSelect-${org.CTID}`} class="ml-2 text-sm font-medium text-gray-900">
 								{org.Name} ({org.CTID})
 							</label>
 						</div>
 					{/each}
 				{/if}
 
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
 					<NextPrevButton on:click={() => publisherSetupStep.set(1)} isNext={false} />
 					<NextPrevButton
 						on:click={() => handlePreviewCredentials()}
 						isNext={true}
-						isActive={!!selectedOrg}
+						isActive={selectedOrg != ''}
 					/>
 				</div>
 			</div>
@@ -318,7 +318,7 @@
 		{:else if $publisherSetupStep == 3}
 			<div id="registrysetup-step3" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 				<Heading><h3>Selected Organization</h3></Heading>
-				<BodyText>
+				<BodyText gray={true}>
 					Credentials will be saved to this organization in the publisher, where you can finalize
 					them.
 				</BodyText>
@@ -336,16 +336,18 @@
 				{:then value}
 					<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 						{#each $publisherCredentials.credentials.slice(0, 9) as credential}
-							<li class="mb-2 md:md-0 border border-gray-200 dark:border-gray-700 p-2">
+							<li class="mb-2 md:md-0 border border-gray-200 p-2">
 								<BodyText>
 									<a
 										href={`${PUBLIC_PUBLISHER_API_BASEURL}/credential/${credential.Id}`}
 										target="new"
-										class="font-bold text-blue-600 dark:text-blue-500 hover:underline"
+										class="font-bold text-midnight underline hover:no-underline"
 										>{credential.Name}</a
 									>
-									({credential.CTID})
 									<br />
+									({credential.CTID})
+								</BodyText>
+								<BodyText gray={true}>
 									{credential.Description}
 								</BodyText>
 							</li>
@@ -356,7 +358,7 @@
 					{/if}
 				{/await}
 
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
 					<NextPrevButton
 						on:click={() => {
 							resetPublisherSelection();
@@ -383,7 +385,7 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+		class="focus:outline-none w-full bg-white p-10"
 		transition:slide
 	>
 		<div class="flex items-end flex-col justify-between md:flex-row">
@@ -393,16 +395,15 @@
 				{$publisherOrganization.org?.Name} ({$publisherCredentials.credentials.length}
 				{$publisherCredentials.credentials.length == 1 ? 'credential' : 'credentials'})
 			</BodyText>
-			<button
-				type="button"
-				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+			<Button
+				buttonType="default"
 				on:click={() => {
 					panelIsHidden = false;
 					$publisherSetupStep = 3;
 				}}
 			>
 				Edit
-			</button>
+			</Button>
 		</div>
 	</div>
 {/if}

@@ -55,7 +55,7 @@
                 {RequirementProfiles}
                 -->
 				<div
-					class="flex flex-col md:flex-row w-full bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700"
+					class="flex flex-col md:flex-row w-full bg-white border border-gray-200 rounded-lg shadow-md"
 					transition:slide
 				>
 					<div class="flex-initial max-w-xs mx-auto p-6">
@@ -72,25 +72,25 @@
 								{credential.Credential.Name}
 								{#if $ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus == PubStatuses.PendingUpdate}
 									<span
-										class="bg-supermint text-blue-800 text-sm font-medium mx-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
+										class="bg-supermint text-blue-800 text-sm font-medium mx-2 px-2.5 py-0.5 rounded"
 									>
 										Update Pending
 									</span>
 								{:else if $ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
 									<span
-										class="bg-supermint text-blue-800 text-sm font-medium mx-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
+										class="bg-supermint text-blue-800 text-sm font-medium mx-2 px-2.5 py-0.5 rounded"
 									>
 										Updating...
 									</span>
 								{:else if $ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveError}
 									<span
-										class="bg-red-100 text-red-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-200 dark:text-red-900"
+										class="bg-red-100 text-red-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded"
 									>
 										Error Saving Credential
 									</span>
 								{:else if $ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveSuccess}
 									<span
-										class="bg-tahiti text-midnight text-sm font-medium mx-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
+										class="bg-tahiti text-midnight text-sm font-medium mx-2 px-2.5 py-0.5 rounded"
 									>
 										Successfully updated
 									</span>
@@ -119,7 +119,7 @@
 						{#if [PubStatuses.PendingUpdate, PubStatuses.PendingNew, PubStatuses.SaveError].includes($ctdlPublicationResultStore[credential.Credential.CredentialId]?.publicationStatus)}
 							<button
 								type="button"
-								class="text-gray-900 text-sm px-5 mt-2 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+								class="text-gray-900 text-sm px-5 mt-2 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
 								on:click={() => handleEditCredential(credential.Credential.CredentialId)}
 							>
 								Edit

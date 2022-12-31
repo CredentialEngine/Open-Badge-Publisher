@@ -149,7 +149,8 @@
 <BodyText>
 	<a
 		href="https://www.instructure.com/higher-education/products/canvas/canvas-credentials-digital-badges"
-		target="new">Canvas Credentials</a
+		target="new"
+		class="text-midnight underline hover:no-underline">Canvas Credentials</a
 	>, formerly known as Badgr, is an Open Badges issuing platform offering LMS integration, skills
 	alignment, learning pathways, social sharing and analytics. Client environments are hosted in four
 	regions internationally.
@@ -171,12 +172,9 @@
 				type="radio"
 				bind:group={$canvasSelectedRegion}
 				value={region.id}
-				class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+				class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
 			/>
-			<label
-				for={`canvasRegionSelect-${region.id}`}
-				class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-			>
+			<label for={`canvasRegionSelect-${region.id}`} class="ml-2 text-sm font-medium text-gray-900">
 				{region.name}
 			</label>
 		</div>
@@ -198,14 +196,12 @@
 				id="canvasAgreeTerms"
 				type="checkbox"
 				value=""
-				class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+				class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
 			/>
-			<label
-				for="canvasAgreeTerms"
-				class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+			<label for="canvasAgreeTerms" class="ml-2 text-sm font-medium text-gray-900"
 				>I agree with the Canvas Credentials (Badgr) <a
 					href="https://www.instructure.com/policies/badgr-terms-of-service"
-					class="text-indigo-700 dark:text-superaqua">terms of service</a
+					class="text-midnight underline hover:no-underline">terms of service</a
 				></label
 			>
 		</div>
@@ -228,7 +224,7 @@
 				Authenticate with Canvas Credentials (Badgr) to load badges by entering your email address
 				and password. We do not retain password data, but you may also
 				<button
-					class="text-blue-600 dark:text-blue-500 hover:underline"
+					class="text-midnight underline hover:no-underline"
 					on:click={() => {
 						usePassword = false;
 					}}>obtain an auth token manually</button
@@ -242,9 +238,8 @@
 				{:else}
 					<div class="mt-8 md:flex items-center" transition:slide>
 						<div class="flex flex-col">
-							<label
-								for="input_canvasemail"
-								class="mb-3 text-sm leading-none text-gray-800 dark:text-white">Email</label
+							<label for="input_canvasemail" class="mb-3 text-sm leading-none text-gray-800"
+								>Email</label
 							>
 							<input
 								id="input_canvasemail"
@@ -257,9 +252,8 @@
 					</div>
 					<div class="mt-4 md:flex items-center">
 						<div class="flex flex-col">
-							<label
-								for="input_canvaspassword"
-								class="mb-3 text-sm leading-none text-gray-800 dark:text-white">Password</label
+							<label for="input_canvaspassword" class="mb-3 text-sm leading-none text-gray-800"
+								>Password</label
 							>
 							<input
 								id="input_canvaspassword"
@@ -288,7 +282,7 @@
 			and
 			<code>YOUREMAIL</code> with your credentials for this server.
 			<button
-				class="text-blue-600 dark:text-blue-500 hover:underline"
+				class="text-midnight underline hover:no-underline"
 				on:click={() => {
 					usePassword = true;
 				}}>Use password instead</button
@@ -300,9 +294,7 @@
 			></pre>
 		<div class="mt-8 md:flex items-center">
 			<div class="flex flex-col w-full">
-				<label
-					for="input_canvasapikey"
-					class="mb-3 text-sm leading-none text-gray-800 dark:text-white"
+				<label for="input_canvasapikey" class="mb-3 text-sm leading-none text-gray-800"
 					>Canvas Credentials API Access Token</label
 				>
 				<div class="relative w-full max-w-lg">
@@ -312,7 +304,7 @@
 							autocomplete="off"
 							type="password"
 							id="input_canvasapikey"
-							class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"
+							class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
 							placeholder="Access Token"
 							required
 						/>
@@ -322,7 +314,7 @@
 							autocomplete="off"
 							type="text"
 							id="input_canvasapikey"
-							class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"
+							class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
 							placeholder="Access Token"
 							required
 						/>
@@ -332,7 +324,7 @@
 						tabindex="-1"
 						on:click={() => (canvasAccessTokenHidden = !canvasAccessTokenHidden)}
 						aria-hidden="true"
-						class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white rounded-r-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+						class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white rounded-r-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-blue-300"
 					>
 						{#if canvasAccessTokenHidden}
 							<ClosedEye />
@@ -378,9 +370,7 @@
 		</div>
 	{:then}
 		{#if $canvasIssuers?.length}
-			<ul
-				class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3 text-gray-500 dark:text-gray-400"
-			>
+			<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3 text-gray-500">
 				{#each $canvasIssuers as issuer (issuer.entityId)}
 					<RadioCard
 						label={issuer.name}
@@ -391,14 +381,13 @@
 						description={issuer.description}
 					>
 						<span slot="label"
-							><span class="text-sm font-light text-gray-500 dark:text-gray-400">
+							><span class="text-sm font-light text-gray-500">
 								<a
 									href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${
 										issuer.entityId
 									}`}
 									target="new"
-									class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-									>{issuer.name}</a
+									class="text-midnight underline hover:no-underline">{issuer.name}</a
 								>
 							</span></span
 						>
@@ -411,7 +400,7 @@
 			>
 				<button
 					type="button"
-					class="text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+					class="text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 focus:outline-none"
 					class:bg-blue-700={!debounceRefreshIssuers}
 					class:bg-gray-200={debounceRefreshIssuers}
 					on:click={handleRefreshIssuers}

@@ -16,8 +16,6 @@
 		const status = $ctdlPublicationResultStore[c.Credential.CredentialId];
 		return status?.publicationStatus == PubStatuses.SaveSuccess;
 	});
-
-	
 </script>
 
 <Heading><h3>Update badge alignments</h3></Heading>
@@ -30,8 +28,8 @@
 </BodyText>
 
 <div class="overflow-x-auto relative rounded-lg" transition:slide>
-	<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-		<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+	<table class="w-full text-sm text-left text-gray-500">
+		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 			<tr>
 				<th scope="col" class="py-3 px-6">Badge Name</th>
 				<th scope="col" class="py-3 px-6">Alignments</th>
@@ -39,16 +37,14 @@
 		</thead>
 		<tbody>
 			{#each credentials as credential}
-				<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-					<th
-						scope="row"
-						class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-					>
+				<tr class="bg-white border-b">
+					<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 						{credential.Credential.Name}
 					</th>
 					<td class="py-4 px-6">
 						{#if alignmentExistsForCredential(credential)}
-							<div class="inline-block"><Check height="16" width="16" /></div> Alignment has been previously added.
+							<div class="inline-block"><Check height="16" width="16" /></div>
+							Alignment has been previously added.
 						{:else}
 							<BodyText
 								><span class="font-bold">targetName</span>: {credential.Credential.Name}</BodyText

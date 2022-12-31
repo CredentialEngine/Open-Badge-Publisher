@@ -119,15 +119,15 @@
 
 {#if !isEditing}
 	<!-- Display the Value -->
-	<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+	<tr class="bg-white border-b">
+		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			{fieldName || fieldId}
 		</th>
 		<td class="py-4 px-6">
 			{#if isValueUpdated}
 				<div class="w-full mb-2" transition:slide>
 					<span
-						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded dark:bg-blue-200 dark:text-blue-800"
+						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
 					>
 						Updated
 					</span>
@@ -147,7 +147,7 @@
 			{#if editable}
 				<button
 					type="button"
-					class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+					class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
 					on:click={() => {
 						isEditing = true;
 					}}
@@ -159,8 +159,8 @@
 	</tr>
 {:else}
 	<!-- Show Edit Form-->
-	<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+	<tr class="bg-white border-b">
+		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
 		<td class="py-4 px-6">
@@ -169,14 +169,14 @@
 					{#if isValueUpdated}
 						<span
 							transition:scale
-							class="bg-supermint text-blue-800 text-sm font-medium mr-2 mb-2 px-2 py-1 whitespace-nowrap rounded dark:bg-blue-200 dark:text-blue-800"
+							class="bg-supermint text-blue-800 text-sm font-medium mr-2 mb-2 px-2 py-1 whitespace-nowrap rounded"
 						>
 							Updated:
 						</span>
 					{/if}
 					{#each value as valueEntry (valueEntry)}
 						<span
-							class="inline-flex items-center py-1 px-2 mr-2 mb-2 text-sm font-medium text-gray-800 bg-gray-100 rounded dark:bg-gray-200 dark:text-gray-800"
+							class="inline-flex items-center py-1 px-2 mr-2 mb-2 text-sm font-medium text-gray-800 bg-gray-100 rounded"
 						>
 							{abbreviate(valueEntry, 25)}
 							<button
@@ -184,7 +184,7 @@
 									handleRemoveValue(valueEntry);
 								}}
 								type="button"
-								class="inline-flex items-center p-0.5 ml-2 text-sm text-gray-400 bg-transparent rounded-sm hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-300 dark:hover:text-gray-900"
+								class="inline-flex items-center p-0.5 ml-2 text-sm text-gray-400 bg-transparent rounded-sm hover:bg-gray-200 hover:text-gray-900"
 								data-dismiss-target="#badge-dismiss-dark"
 								aria-label="Remove"
 							>
@@ -205,7 +205,7 @@
 					/>
 					<button
 						type="submit"
-						class="text-gray-900 text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+						class="text-gray-900 text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
 					>
 						Add
 					</button>
@@ -214,9 +214,7 @@
 			{#if isValueUpdated}
 				<div transition:slide>
 					<BodyText>
-						<span class="text-xs text-gray-600 dark:gray-400"
-							>On publisher: {publisherFieldData.join(', ')}</span
-						>
+						<span class="text-xs text-gray-600">On publisher: {publisherFieldData.join(', ')}</span>
 					</BodyText>
 				</div>
 			{/if}
@@ -227,14 +225,14 @@
 		<td class="flex flex-col py-4 px-6 space-y-3">
 			<button
 				type="button"
-				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
 				on:click={handleCancelRowEdit}
 			>
 				Cancel
 			</button>
 			<button
 				type="button"
-				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
 				on:click={handleSaveRow}
 			>
 				Save

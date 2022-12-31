@@ -6,7 +6,12 @@ module.exports = {
 		extend: {
 			colors: {
 				tahiti: '#00a0ff',
-				midnight: '#0a2942',
+				midnight: {
+					DEFAULT: '#0a2942',
+					500: 'hsla(207, 74%, 50%, 1)',
+					600: 'hsla(207, 74%, 40%, 1)',
+					700: 'hsla(207, 74%, 17%, 1)'
+				},
 				superaqua: '#4ee5e1',
 				supermint: '#d3f8f7',
 				midgray: '#8494a0',

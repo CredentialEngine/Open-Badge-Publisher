@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { updated } from '$app/stores';
+	import Button from '$lib/components/Button.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
@@ -36,7 +37,7 @@
 </Heading>
 
 {#if !panelIsHidden}
-	<div aria-label="form" class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
+	<div aria-label="form" class="focus:outline-none w-full bg-white p-10">
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
 			<ConfigurationStep
 				stepNumber="4"
@@ -61,7 +62,7 @@
 		{:else if $badgeSetupStep == 1}
 			<div id="badgesetup-step1">
 				<Heading><h3>Choose Source Type</h3></Heading>
-				<BodyText>
+				<BodyText gray={true}>
 					Common badge platforms are supported directly, or you can paste Open Badges data in JSON
 					directly.
 				</BodyText>
@@ -92,7 +93,7 @@
 						description="Paste an array of Open Badges achievements in JSON format. (Advanced)"
 					/>
 				</ul>
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
 					<NextPrevButton
 						on:click={() => badgeSetupStep.update((n) => n + 1)}
 						isActive={$badgeSourceType !== ''}
@@ -111,7 +112,7 @@
 					<BodyText>Advanced JSON not yet implemented...</BodyText>
 				{/if}
 
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
 					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
 					<NextPrevButton on:click={handleAdvanceToBadgeSelection} isActive={$badgeSetupComplete} />
 				</div>
@@ -122,7 +123,7 @@
 			<div id="badgesetup-step3">
 				<BadgeSelection />
 
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center border-b pb-6 border-gray-200 sm:space-x-4">
 					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
 					<NextPrevButton
 						on:click={() => {
@@ -147,7 +148,7 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+		class="focus:outline-none w-full bg-white p-10"
 		transition:slide
 	>
 		<div class="flex items-end flex-col justify-between md:flex-row">
@@ -158,16 +159,14 @@
 					{Object.keys($checkedBadges).length == 1 ? 'badge' : 'badges'} selected.
 				</span>
 			</BodyText>
-			<button
-				type="button"
-				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+			<Button
 				on:click={() => {
 					panelIsHidden = false;
 					$badgeSetupStep = 3;
 				}}
 			>
 				Edit
-			</button>
+			</Button>
 		</div>
 	</div>
 {/if}

@@ -1,21 +1,38 @@
 <script lang="ts">
+	import { PUBLIC_BASEURL, PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
 	import '../app.css';
-	import Icon from 'svelte-icons-pack/Icon.svelte';
-	import FiSquare from 'svelte-icons-pack/fi/FiSquare.js';
-	import FiCheckSquare from 'svelte-icons-pack/fi/FiCheckSquare.js';
-	import FiChevronRight from 'svelte-icons-pack/fi/FiChevronRight';
-	import FiChevronDown from 'svelte-icons-pack/fi/FiChevronDown';
+	import Button from '$lib/components/Button.svelte';
+
+	let showReturnToPublisher = PUBLIC_BASEURL?.includes('credentialengine.org') || false;
 </script>
 
 <div class="rainbow" />
 <div class="bg-gold drop-shadow-md">
-	<div class="max-w-5xl conatiner mx-auto p-6">
-		<h1 class="text-midnight text-xl md:text-3xl font-extrabold lg:text-4xl dark:text-white">
-			Publish Badges to the Credential Registry
-		</h1>
-	</div>
+	{#if showReturnToPublisher}
+		<div class="max-w-5xl container mx-auto p-6 md:flex flex-row justify-between">
+			<div>
+				<h1 class="block text-midnight text-xl md:text-3xl font-extrabold lg:text-4xl">
+					Publish Badges to the Credential Registry
+				</h1>
+			</div>
+			<div>
+				<a
+					href={PUBLIC_PUBLISHER_API_BASEURL || '#'}
+					class="block text-midnight text-sm underline hover:no-underline md:text-base"
+				>
+					Exit <span class="md:sr-only">Return to Publisher</span>
+				</a>
+			</div>
+		</div>
+	{:else}
+		<div class="max-w-5xl container mx-auto p-6">
+			<h1 class="text-midnight text-xl md:text-3xl font-extrabold lg:text-4xl">
+				Publish Badges to the Credential Registry
+			</h1>
+		</div>
+	{/if}
 </div>
-<div class="dark:bg-gray-900">
+<div>
 	<div class="max-w-5xl container mx-auto p-2 sm:p-6">
 		<main class="w-full h-full">
 			<slot />

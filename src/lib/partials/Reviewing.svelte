@@ -3,7 +3,7 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	
+
 	import CanvasAlignments from './CanvasAlignments.svelte';
 	import ManualAlignments from './ManualAlignments.svelte';
 	import { badgeSourceType } from '$lib/stores/badgeSourceStore.js';
@@ -13,16 +13,11 @@
 		proofingStep,
 		reviewingStep
 	} from '$lib/stores/publisherStore.js';
-	
 </script>
 
 <Heading><h2>Summary</h2></Heading>
 
-<div
-	aria-label="form"
-	transition:slide
-	class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
->
+<div aria-label="form" transition:slide class="focus:outline-none w-full bg-white p-10">
 	<div class="md:flex items-center border-b pb-6 border-gray-200">
 		<ConfigurationStep
 			stepNumber="10"

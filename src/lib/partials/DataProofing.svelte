@@ -41,7 +41,7 @@
 <Heading><h2>Data Preparation and Publication</h2></Heading>
 
 {#if $proofingStep <= 3}
-	<div aria-label="form" in:slide class="focus:outline-none w-full bg-white dark:bg-midnight p-10">
+	<div aria-label="form" in:slide class="focus:outline-none w-full bg-white p-10">
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
 			<ConfigurationStep
 				stepNumber="7"
@@ -70,7 +70,7 @@
 
 				<BodyText>Loading data from the publisher and your badge system.</BodyText>
 
-				<div class="w-full mt-2 bg-gray-200 rounded-full dark:bg-gray-700">
+				<div class="w-full mt-2 bg-gray-200 rounded-full">
 					<div
 						class="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
 						style={`width: ${Math.round(100 - (numLoadsPending / numCredentialsTotal) * 100)}%`}
@@ -119,16 +119,12 @@
 		{/if}
 	</div>
 {:else}
-	<div
-		id="proofingContent"
-		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
-		transition:slide
-	>
+	<div id="proofingContent" class="focus:outline-none w-full bg-white p-10" transition:slide>
 		<div class="flex items-end flex-col justify-between md:flex-row">
 			<BodyText>Saving data complete.</BodyText>
 			<button
 				type="button"
-				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 focus:outline-none"
 				on:click={handlePreviousStep}
 			>
 				Edit
