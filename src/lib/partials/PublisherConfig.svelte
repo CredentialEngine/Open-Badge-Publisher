@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { updated } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import * as yup from 'yup';
@@ -10,6 +10,7 @@
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import Alert from '$lib/components/Alert.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import {
 		PUBLIC_UI_API_BASEURL,
 		PUBLIC_PUBLISHER_API_BASEURL,
@@ -26,7 +27,7 @@
 		publisherSetupStep,
 		getOrgCredentialList
 	} from '$lib/stores/publisherStore.js';
-	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
+	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let currentMessage = {
@@ -116,7 +117,17 @@
 		publisherSetupStep.set(3);
 	};
 
+	let modalVisible = false;
 	let panelIsHidden = false;
+
+	const handleReopenPanel = async () => {
+		panelIsHidden = false;
+		modalVisible = false;
+		$publisherSetupStep = 3;
+		resetBadgeData();
+		await tick();
+		document.getElementById('publisher-destination-configuration')?.scrollIntoView();
+	};
 </script>
 
 <Heading>
@@ -402,14 +413,34 @@
 			<Button
 				buttonType="default"
 				on:click={() => {
-					panelIsHidden = false;
-					$publisherSetupStep = 3;
+					modalVisible = true;
 				}}
 			>
 				Edit
 			</Button>
 		</div>
 	</div>
+
+	<Modal
+		visible={modalVisible}
+		id={`badgesourcepanel-warning`}
+		on:close={() => {
+			modalVisible = false;
+		}}
+		title="Unsaved Changes"
+		actions={[
+			{
+				label: 'Cancel',
+				buttonType: 'default',
+				onClick: () => {
+					modalVisible = false;
+				}
+			},
+			{ label: 'Proceed', buttonType: 'danger', onClick: handleReopenPanel }
+		]}
+	>
+		<BodyText>If you change your publisher settings, any loaded badge data will be reset.</BodyText>
+	</Modal>
 {/if}
 
 <style lang="postcss">

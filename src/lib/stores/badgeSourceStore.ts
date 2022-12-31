@@ -10,7 +10,7 @@ import { writable, derived, get } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
 
-enum BadgeSourceTypeOptions {
+export enum BadgeSourceTypeOptions {
 	None = '',
 	Canvas = 'canvas',
 	Credly = 'credly',
@@ -25,7 +25,7 @@ export const canvasAccessToken = writable<string>('');
 export const canvasAgreeTerms = writable(false);
 export const canvasSelectedRegion = writable('');
 export const canvasIssuers = writable<CanvasIssuer[]>();
-export const canvasSelectedIssuer = writable<CanvasIssuer>();
+export const canvasSelectedIssuer = writable<CanvasIssuer | undefined>();
 export const canvasSelectedIssuerBadges = writable<CanvasBadge[]>([]);
 
 export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
@@ -190,3 +190,16 @@ export const normalizedBadges = derived(
 );
 
 export const checkedBadges = writable<{ [key: string]: boolean }>({});
+
+export const resetBadgeData = () => {
+	badgeSetupStep.set(0);
+	checkedBadges.set({});
+	badgeSourceType.set(BadgeSourceTypeOptions['None']);
+	credlyIssuerBadges.set([]);
+	credlySelectedIssuer.set('');
+	credlyIssuerData.set(undefined);
+
+	canvasIssuers.set([]);
+	canvasSelectedIssuer.set(undefined);
+	canvasSelectedIssuerBadges.set([]);
+};

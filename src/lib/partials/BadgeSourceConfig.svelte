@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
+	import { tick } from 'svelte';
 	import { updated } from '$app/stores';
 	import Button from '$lib/components/Button.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
@@ -15,17 +17,31 @@
 		checkedBadges,
 		fetchCanvasIssuerBadges
 	} from '$lib/stores/badgeSourceStore.js';
-	import { ctdlPublicationResultStore, publisherSetupStep } from '$lib/stores/publisherStore.js';
-	import { credentialDrafts, proofingStep } from '$lib/stores/publisherStore.js';
+	import {
+		credentialDrafts,
+		ctdlPublicationResultStore,
+		publisherSetupStep,
+		proofingStep
+	} from '$lib/stores/publisherStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	// panelIsHidden = true when data has been saved and this panel is no longer active.
 	let panelIsHidden = false;
+	let modalVisible = false;
 
 	const handleAdvanceToBadgeSelection = () => {
 		if ($badgeSourceType == 'canvas') fetchCanvasIssuerBadges();
 		$badgeSetupStep = 3;
+	};
+
+	const handleReopenPanel = async () => {
+		modalVisible = false;
+		panelIsHidden = false;
+		$badgeSetupStep = 3;
+		$proofingStep = 0;
+		await tick();
+		document.getElementById('badge-source-configuration')?.scrollIntoView();
 	};
 </script>
 
@@ -161,12 +177,33 @@
 			</BodyText>
 			<Button
 				on:click={() => {
-					panelIsHidden = false;
-					$badgeSetupStep = 3;
-				}}
+					modalVisible = true;
+				}}>Edit</Button
 			>
-				Edit
-			</Button>
 		</div>
 	</div>
+
+	<Modal
+		visible={modalVisible}
+		id={`badgesourcepanel-warning`}
+		on:close={() => {
+			modalVisible = false;
+		}}
+		title="Unsaved Changes"
+		actions={[
+			{
+				label: 'Cancel',
+				buttonType: 'default',
+				onClick: () => {
+					modalVisible = false;
+				}
+			},
+			{ label: 'Proceed', buttonType: 'danger', onClick: handleReopenPanel }
+		]}
+	>
+		<BodyText>
+			If you change your badge source selections, any pending changes you have made to credentials
+			may be lost.
+		</BodyText>
+	</Modal>
 {/if}
