@@ -21,10 +21,9 @@
 <Heading><h3>Update badge alignments</h3></Heading>
 
 <BodyText>
-	It is helpful to include links to registry resources within your badge to help users understand
-	the badges more clearly. Here is a summary of the badges you have saved and a Credential Finder
-	alignment you can add to each of them. The alignment URLs below will work once you have completed
-	publication of these Credentials in the Publisher.
+	It is helpful topdate your badges in Credly to add alignments to Credential Finder pages. This
+	helps users better understand the meaning and value of your badges. There is no automated way to
+	update these alignments, but the data to add is presented below.
 </BodyText>
 
 <div class="overflow-x-auto relative rounded-lg" transition:slide>

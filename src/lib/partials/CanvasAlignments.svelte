@@ -24,6 +24,8 @@
 	import { canvasRegions } from '$lib/utils/canvas.js';
 	import { PUBLIC_PUBLISHER_API_ENV_LABEL, PUBLIC_UI_API_BASEURL } from '$env/static/public';
 
+	let saveAllTriggered = false;
+
 	const updateCanvasCredential = async (c: CtdlApiCredential): Promise<boolean> => {
 		const canvasBadge = $canvasSelectedIssuerBadges.find(
 			(cb) => cb.openBadgeId == c.Credential.CredentialId
@@ -75,6 +77,11 @@
 		if ($publisherUser.user?.Token)
 			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user.Token}`);
 
+		ctdlPublicationResultStore.updateCredentialStatus(c.Credential.CredentialId, {
+			...$ctdlPublicationResultStore[c.Credential.CredentialId],
+			publicationStatus: PubStatuses.SourceUpdateInProgress
+		});
+
 		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
 			method: 'POST',
 			body: JSON.stringify(requestData),
@@ -85,6 +92,10 @@
 		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
 			throw new Error('Error fetching badge data from Canvas Credentials.');
 
+		ctdlPublicationResultStore.updateCredentialStatus(c.Credential.CredentialId, {
+			...$ctdlPublicationResultStore[c.Credential.CredentialId],
+			publicationStatus: PubStatuses.SourceUpdated
+		});
 		return true;
 	};
 
@@ -93,9 +104,11 @@
 	$: {
 		credentials = $credentialDrafts.filter((c) => {
 			const status = $ctdlPublicationResultStore[c.Credential.CredentialId];
-			return [PubStatuses.SaveSuccess, PubStatuses.SourceUpdated].includes(
-				status?.publicationStatus
-			);
+			return [
+				PubStatuses.SaveSuccess,
+				PubStatuses.SourceUpdateInProgress,
+				PubStatuses.SourceUpdated
+			].includes(status?.publicationStatus);
 		});
 		credentials.map((c) => {
 			updatePromises[c.Credential.CredentialId] = new Promise((resolve, reject) => {
@@ -103,16 +116,37 @@
 			});
 		});
 	}
+
+	const processNextCredential = () => {
+		let nextCredential = credentials.find(
+			(c) =>
+				PubStatuses.SaveSuccess ==
+				$ctdlPublicationResultStore[c.Credential.CredentialId]?.publicationStatus
+		);
+		if (!!nextCredential) {
+			updatePromises[nextCredential.Credential.CredentialId] =
+				updateCanvasCredential(nextCredential);
+			updatePromises[nextCredential.Credential.CredentialId].then(processNextCredential);
+		}
+	};
 </script>
 
 <Heading><h3>Update badge alignments</h3></Heading>
 
 <BodyText>
-	It is helpful to include links to registry resources within your badge to help users understand
-	the badges more clearly. Here is a summary of the badges you have saved and a Credential Finder
-	alignment you can add to each of them. The alignment URLs below will work once you have completed
-	publication of these Credentials in the Publisher.
+	Update your badges in Canvas Credentials to add alignments to Credential Finder pages. This helps
+	users better understand the meaning and value of your badges.
 </BodyText>
+<div class="py-4">
+	<Button
+		buttonType="primary"
+		on:click={() => {
+			saveAllTriggered = true;
+			processNextCredential();
+		}}
+		disabled={saveAllTriggered}>Save all alignments to Canvas</Button
+	>
+</div>
 
 <div class="overflow-x-auto relative rounded-lg" transition:slide>
 	<table class="w-full text-sm text-left text-gray-500">

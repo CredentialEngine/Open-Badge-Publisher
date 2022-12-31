@@ -387,6 +387,7 @@ export enum PubStatuses {
 	'SaveInProgress' = 'Save in Progress',
 	'SaveError' = 'Error',
 	'SaveSuccess' = 'Success',
+	'SourceUpdateInProgress' = 'Source Update in Progress',
 	'SourceUpdated' = 'Source Updated'
 }
 

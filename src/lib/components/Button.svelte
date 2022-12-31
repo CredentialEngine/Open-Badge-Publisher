@@ -14,9 +14,9 @@
 		danger: 'text-red-600 focus:ring-red-200 border-2 border-red-600 focus:outline-none'
 	};
 	const disabledClasses = {
-		default: 'text-midgray border-midgray bg-white',
-		primary: 'text-white bg-midgray',
-		danger: 'bg-gray-100'
+		default: 'text-midgray border-midgray bg-white cursor-not-allowed',
+		primary: 'text-white bg-midgray border-midgray cursor-not-allowed',
+		danger: 'bg-gray-100 cursor-not-allowed'
 	};
 	const activeClasses = {
 		default: 'text-midnight bg-white border-midnight hover:bg-gray-100',
