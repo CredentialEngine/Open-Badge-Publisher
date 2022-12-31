@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, tick } from 'svelte';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
@@ -81,6 +81,11 @@
 		else if (isEditing && editStatus == EditStatus.Reject) handleCancelRowEdit();
 		else if (isEditing && editStatus == EditStatus.Accept) handleSaveRow();
 	}
+
+	const handleRowKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') handleCancelRowEdit();
+		else if (event.key === 'Enter') handleSaveRow();
+	};
 </script>
 
 {#if !isEditing}
@@ -104,8 +109,10 @@
 		<td class="py-4 px-6">
 			{#if editable}
 				<Button
-					on:click={() => {
+					on:click={async () => {
 						isEditing = true;
+						await tick();
+						document.getElementById(inputId)?.focus();
 					}}
 				>
 					Edit
@@ -115,7 +122,7 @@
 	</tr>
 {:else}
 	<!-- Show Edit Form-->
-	<tr class="bg-white border-b">
+	<tr class="bg-white border-b" on:keydown={handleRowKeydown}>
 		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
@@ -134,7 +141,6 @@
 					id={inputId}
 					rows="7"
 					class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-					type="text"
 					bind:value
 				/>
 			{:else}

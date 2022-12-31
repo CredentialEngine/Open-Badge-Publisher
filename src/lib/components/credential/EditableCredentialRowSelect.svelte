@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, tick } from 'svelte';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
@@ -72,6 +72,11 @@
 		isEditing = false;
 	};
 
+	const handleRowKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') handleCancelRowEdit();
+		else if (event.key === 'Enter') handleSaveRow();
+	};
+
 	const prettyNameForValue = (v: string | undefined): string => {
 		const option = options.find((o) => o.value == v);
 		if (!option) return v || '';
@@ -111,8 +116,10 @@
 		<td class="py-4 px-6">
 			{#if editable}
 				<Button
-					on:click={() => {
+					on:click={async () => {
 						isEditing = true;
+						await tick();
+						document.getElementById(inputId)?.focus();
 					}}
 				>
 					Edit
@@ -122,7 +129,7 @@
 	</tr>
 {:else}
 	<!-- Show Edit Form-->
-	<tr class="bg-white border-b">
+	<tr class="bg-white border-b" on:keydown={handleRowKeydown}>
 		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
@@ -137,7 +144,7 @@
 				</div>
 			{/if}
 			<select
-				id="countries"
+				id={inputId}
 				bind:value
 				class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
 			>

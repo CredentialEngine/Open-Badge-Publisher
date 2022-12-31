@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, tick } from 'svelte';
 	import { scale, slide } from 'svelte/transition';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
@@ -147,8 +147,10 @@
 		<td class="py-4 px-6">
 			{#if editable}
 				<Button
-					on:click={() => {
+					on:click={async () => {
 						isEditing = true;
+						await tick();
+						document.getElementById(inputId)?.focus();
 					}}
 				>
 					Edit
