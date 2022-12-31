@@ -51,7 +51,7 @@
 {#if $reviewingStep > 0}
 	<section id="reviewing" class="mt-10">
 		<div id="allDone" class="focus:outline-none w-full bg-white p-10" transition:slide>
-			<div class="flex items-end flex-col justify-between md:flex-row">
+			<div class="flex items-center md:items-end flex-col justify-between md:flex-row">
 				<div>
 					<Heading><h3>Badge import complete.</h3></Heading>
 					<BodyText

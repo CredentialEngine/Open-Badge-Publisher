@@ -126,7 +126,7 @@
 	</div>
 {:else}
 	<div id="proofingContent" class="focus:outline-none w-full bg-white p-10" transition:slide>
-		<div class="flex items-end flex-col justify-between md:flex-row">
+		<div class="flex items-center md:items-end flex-col justify-between md:flex-row">
 			<BodyText>Saving data complete.</BodyText>
 			<Button
 				on:click={() => {
