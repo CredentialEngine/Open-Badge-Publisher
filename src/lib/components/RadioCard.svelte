@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import Tag from '$lib/components/Tag.svelte';
 
 	export let formName: string | undefined = undefined;
 	export let name: string;
@@ -34,11 +35,16 @@
 	<label
 		tabindex="-1"
 		for={name}
-		class="inline-flex justify-between items-center p-5 w-full h-full text-gray-500 bg-white rounded-lg border border-gray-200 cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
+		class="inline-flex justify-between items-center p-5 w-full h-full text-midnight	bg-white rounded-lg border border-gray-200 cursor-pointer peer-checked:border-midnight hover:text-gray-600 hover:bg-gray-100"
 	>
 		<div class="block">
-			<div class="w-full text-lg font-semibold"><slot name="label">{label}</slot></div>
-			<div class="w-full">
+			<div class="w-full text-lg font-semibold">
+				<slot name="label">{label}</slot>
+				{#if value == groupValue}
+					<Tag class="bg-superaqua text-midnight">Selected</Tag>
+				{/if}
+			</div>
+			<div class="w-full text-sm">
 				<slot name="content">{description}</slot>
 			</div>
 		</div>

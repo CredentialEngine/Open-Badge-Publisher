@@ -1,35 +1,29 @@
 <script lang="ts">
+	import { slide } from 'svelte/transition';
 	import {
-		canvasRegions,
 		canvasAccessToken,
 		canvasAgreeTerms,
 		canvasSelectedRegion,
 		canvasIssuers,
 		canvasSelectedIssuer
 	} from '$lib/stores/badgeSourceStore.js';
-	import {
-		publisherUser
-	} from '$lib/stores/publisherStore.js';
+	import abbreviate from '$lib/utils/abbreviate.js';
+	import { publisherUser } from '$lib/stores/publisherStore.js';
+	import { canvasRegions } from '$lib/utils/canvas.js';
 	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import Alert from '$lib/components/Alert.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import OpenEye from '$lib/icons/eye.svelte';
 	import ClosedEye from '$lib/icons/closed-eye.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
+	import { error } from '@sveltejs/kit';
 
 	let canvasAccessTokenHidden = true;
 	let getCanvasIssuers = async (): Promise<boolean> => {
-		if (
-			debounceRefreshIssuers ||
-			!$canvasSelectedRegion ||
-			!$canvasAgreeTerms ||
-			!$canvasAccessToken
-		)
-			return false;
-
 		const requestData = {
 			URL: `${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/v2/issuers?num=100`,
 			Method: 'GET',
@@ -81,7 +75,13 @@
 
 	let debounceRefreshIssuers = false;
 	const handleRefreshIssuers = () => {
-		if (debounceRefreshIssuers) return;
+		if (
+			debounceRefreshIssuers ||
+			!$canvasSelectedRegion ||
+			!$canvasAgreeTerms ||
+			!$canvasAccessToken
+		)
+			return false;
 
 		canvasIssuersPromise = getCanvasIssuers();
 		debounceRefreshIssuers = true;
@@ -89,6 +89,62 @@
 			debounceRefreshIssuers = false;
 		}, 5000);
 	};
+
+	let usePassword = true;
+	let canvasEmail = '';
+	let canvasPassword = '';
+	let canvasErrorMessage = '';
+	let debounceObtainAuth = false;
+
+	const handleObtainCanvasAuthToken = async (): Promise<boolean> => {
+		canvasErrorMessage = '';
+		const formData = `username=${encodeURIComponent(canvasEmail)}&password=${encodeURIComponent(
+			canvasPassword
+		)}`;
+		const requestData = {
+			URL: `${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/o/token`,
+			Method: 'POST',
+			Body: formData,
+			Headers: [
+				{
+					Name: 'Accept',
+					Value: 'application/json'
+				},
+				{
+					Name: 'Content-Type',
+					Value: 'application/x-www-form-urlencoded'
+				}
+			]
+		};
+
+		let proxyRequestHeaders = new Headers();
+		proxyRequestHeaders.append('Content-Type', 'application/json');
+		if ($publisherUser.user?.Token)
+			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
+		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+			method: 'POST',
+			body: JSON.stringify(requestData),
+			headers: proxyRequestHeaders
+		});
+		const proxyResponseData = await proxyResponse.json();
+
+		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200') {
+			canvasErrorMessage = '';
+			try {
+				const errorData = JSON.parse(proxyResponseData.Data?.Body);
+				canvasErrorMessage = 'Error fetching Canvas access token. ' + errorData.error_description;
+			} catch {
+				canvasErrorMessage = 'Unknown error.';
+			}
+			return false;
+		}
+		const tokenData = JSON.parse(proxyResponseData.Data?.Body);
+		$canvasAccessToken = tokenData.access_token;
+		return true;
+	};
+	let canvasAuthTokenPromise = new Promise((resolve, reject) => {
+		resolve(true);
+	});
 </script>
 
 <Heading><h3>Configure Canvas Credentials connection</h3></Heading>
@@ -96,7 +152,8 @@
 <BodyText>
 	<a
 		href="https://www.instructure.com/higher-education/products/canvas/canvas-credentials-digital-badges"
-		target="new">Canvas Credentials</a
+		target="new"
+		class="text-midnight underline hover:no-underline">Canvas Credentials</a
 	>, formerly known as Badgr, is an Open Badges issuing platform offering LMS integration, skills
 	alignment, learning pathways, social sharing and analytics. Client environments are hosted in four
 	regions internationally.
@@ -118,12 +175,9 @@
 				type="radio"
 				bind:group={$canvasSelectedRegion}
 				value={region.id}
-				class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+				class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
 			/>
-			<label
-				for={`canvasRegionSelect-${region.id}`}
-				class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-			>
+			<label for={`canvasRegionSelect-${region.id}`} class="ml-2 text-sm font-medium text-gray-900">
 				{region.name}
 			</label>
 		</div>
@@ -145,14 +199,12 @@
 				id="canvasAgreeTerms"
 				type="checkbox"
 				value=""
-				class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+				class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
 			/>
-			<label
-				for="canvasAgreeTerms"
-				class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+			<label for="canvasAgreeTerms" class="ml-2 text-sm font-medium text-gray-900"
 				>I agree with the Canvas Credentials (Badgr) <a
 					href="https://www.instructure.com/policies/badgr-terms-of-service"
-					class="text-indigo-700 dark:text-superaqua">terms of service</a
+					class="text-midnight underline hover:no-underline">terms of service</a
 				></label
 			>
 		</div>
@@ -169,69 +221,135 @@
 			/>
 		</div>
 	</div>
-	<BodyText>
-		Obtain an access token by requesting one from the Badgr API. You can obtain a token with your
-		email address and password using <code>cUrl</code> with the code below, or another tool. Replace
-		<code>YOUREMAIL</code>
-		and
-		<code>YOUREMAIL</code> with your credentials for this server.
-	</BodyText>
-	<pre class="overflow-scroll"><code class="text-xs"
-			>curl -X POST '{canvasRegions.get($canvasSelectedRegion)
-				?.apiDomain}/o/token' -d "username=YOUREMAIL&password=YOURPASSWORD"</code
-		></pre>
-	<div class="mt-8 md:flex items-center">
-		<div class="flex flex-col w-full">
-			<label
-				for="input_canvasapikey"
-				class="mb-3 text-sm leading-none text-gray-800 dark:text-white"
-				>Canvas Credentials API Access Token</label
-			>
-			<div class="relative w-full max-w-lg">
-				{#if canvasAccessTokenHidden}
-					<input
-						bind:value={$canvasAccessToken}
-						autocomplete="off"
-						type="password"
-						id="input_canvasapikey"
-						class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"
-						placeholder="Access Token"
-						required
-					/>
-				{:else}
-					<input
-						bind:value={$canvasAccessToken}
-						autocomplete="off"
-						type="text"
-						id="input_canvasapikey"
-						class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"
-						placeholder="Access Token"
-						required
-					/>
-				{/if}
+	{#if usePassword}
+		<div>
+			<BodyText>
+				Authenticate with Canvas Credentials (Badgr) to load badges by entering your email address
+				and password. We do not retain password data, but you may also
 				<button
-					type="button"
-					tabindex="-1"
-					on:click={() => (canvasAccessTokenHidden = !canvasAccessTokenHidden)}
-					aria-hidden="true"
-					class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white rounded-r-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-				>
-					{#if canvasAccessTokenHidden}
-						<ClosedEye />
-					{:else}
-						<OpenEye />
+					class="text-midnight underline hover:no-underline"
+					on:click={() => {
+						usePassword = false;
+					}}>obtain an auth token manually</button
+				>.
+			</BodyText>
+			{#await canvasAuthTokenPromise}
+				<div transition:slide><LoadingSpinner /></div>
+			{:then success}
+				{#if $canvasAccessToken}
+					<BodyText>Successfully obtained Canvas Auth Token.</BodyText>
+				{:else}
+					<div class="mt-8 md:flex items-center" transition:slide>
+						<div class="flex flex-col">
+							<label for="input_canvasemail" class="mb-3 text-sm leading-none text-gray-800"
+								>Email</label
+							>
+							<input
+								id="input_canvasemail"
+								type="email"
+								aria-label="Enter publisher account email"
+								class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
+								bind:value={canvasEmail}
+							/>
+						</div>
+					</div>
+					<div class="mt-4 md:flex items-center">
+						<div class="flex flex-col">
+							<label for="input_canvaspassword" class="mb-3 text-sm leading-none text-gray-800"
+								>Password</label
+							>
+							<input
+								id="input_canvaspassword"
+								type="password"
+								aria-label="Enter publisher account password"
+								class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
+								bind:value={canvasPassword}
+							/>
+						</div>
+					</div>
+					<div class="mt-4">
+						<Button buttonType="primary" on:click={handleObtainCanvasAuthToken}>Submit</Button>
+					</div>
+
+					{#if canvasErrorMessage}
+						<div class="mt-4" transition:slide>
+							<Alert level="error" message={canvasErrorMessage} />
+						</div>
 					{/if}
-				</button>
+				{/if}
+			{/await}
+		</div>
+	{:else}
+		<!-- usePassword: false -- obtain auth token manually. -->
+		<BodyText>
+			Obtain an access token by requesting one from the Badgr API. You can obtain a token with your
+			email address and password using <code>cUrl</code> with the code below, or another tool.
+			Replace
+			<code>YOUREMAIL</code>
+			and
+			<code>YOUREMAIL</code> with your credentials for this server.
+			<button
+				class="text-midnight underline hover:no-underline"
+				on:click={() => {
+					usePassword = true;
+				}}>Use password instead</button
+			>.
+		</BodyText>
+		<pre class="overflow-scroll"><code class="text-xs"
+				>curl -X POST '{canvasRegions.get($canvasSelectedRegion)
+					?.apiDomain}/o/token' -d "username=YOUREMAIL&password=YOURPASSWORD"</code
+			></pre>
+		<div class="mt-8 md:flex items-center">
+			<div class="flex flex-col w-full">
+				<label for="input_canvasapikey" class="mb-3 text-sm leading-none text-gray-800"
+					>Canvas Credentials API Access Token</label
+				>
+				<div class="relative w-full max-w-lg">
+					{#if canvasAccessTokenHidden}
+						<input
+							bind:value={$canvasAccessToken}
+							autocomplete="off"
+							type="password"
+							id="input_canvasapikey"
+							class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Access Token"
+							required
+						/>
+					{:else}
+						<input
+							bind:value={$canvasAccessToken}
+							autocomplete="off"
+							type="text"
+							id="input_canvasapikey"
+							class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Access Token"
+							required
+						/>
+					{/if}
+					<button
+						type="button"
+						tabindex="-1"
+						on:click={() => (canvasAccessTokenHidden = !canvasAccessTokenHidden)}
+						aria-hidden="true"
+						class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white rounded-r-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-blue-300"
+					>
+						{#if canvasAccessTokenHidden}
+							<ClosedEye />
+						{:else}
+							<OpenEye />
+						{/if}
+					</button>
+				</div>
 			</div>
 		</div>
-	</div>
-	{#if $canvasAccessToken.trim().length && $canvasAccessToken.trim().length != 30}
-		<div class="my-2">
-			<Alert
-				level="warning"
-				message="Access token appears to be the wrong length. Check it before proceeding."
-			/>
-		</div>
+		{#if $canvasAccessToken.trim().length && $canvasAccessToken.trim().length != 30}
+			<div class="my-2">
+				<Alert
+					level="warning"
+					message="Access token appears to be the wrong length. Check it before proceeding."
+				/>
+			</div>
+		{/if}
 	{/if}
 {/if}
 
@@ -259,9 +377,7 @@
 		</div>
 	{:then}
 		{#if $canvasIssuers?.length}
-			<ul
-				class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3 text-gray-500 dark:text-gray-400"
-			>
+			<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3 text-gray-500">
 				{#each $canvasIssuers as issuer (issuer.entityId)}
 					<RadioCard
 						label={issuer.name}
@@ -269,17 +385,16 @@
 						groupValue={$canvasSelectedIssuer?.entityId}
 						value={issuer.entityId}
 						on:select={(e) => ($canvasSelectedIssuer = issuer)}
-						description={issuer.description}
+						description={abbreviate(issuer.description, 200)}
 					>
 						<span slot="label"
-							><span class="text-sm font-light text-gray-500 dark:text-gray-400">
+							><span class="text-base font-medium text-midnight">
 								<a
 									href={`${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/public/issuers/${
 										issuer.entityId
 									}`}
 									target="new"
-									class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-									>{issuer.name}</a
+									class="text-midnight underline hover:no-underline">{issuer.name}</a
 								>
 							</span></span
 						>
@@ -290,15 +405,13 @@
 			<div
 				class="my-4 flex flex-col items-center justify-center w-full h-64 rounded-lg border-2 border-gray-300 border-dashed"
 			>
-				<button
-					type="button"
-					class="text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-					class:bg-blue-700={!debounceRefreshIssuers}
-					class:bg-gray-200={debounceRefreshIssuers}
+				<Button
+					buttonType="primary"
+					disabled={!!debounceRefreshIssuers}
 					on:click={handleRefreshIssuers}
 				>
 					Load issuers
-				</button>
+				</Button>
 			</div>
 		{/if}
 	{:catch error}

@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { updated } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import * as yup from 'yup';
+	import Button from '$lib/components/Button.svelte';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import Alert from '$lib/components/Alert.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import {
 		PUBLIC_UI_API_BASEURL,
 		PUBLIC_PUBLISHER_API_BASEURL,
@@ -25,7 +27,7 @@
 		publisherSetupStep,
 		getOrgCredentialList
 	} from '$lib/stores/publisherStore.js';
-	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
+	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let currentMessage = {
@@ -44,6 +46,7 @@
 		email: yup.string().email().required(),
 		password: yup.string().required()
 	});
+	let userIsLoading = false;
 	const submitRegistryForm = () => {
 		if (!registryAgreeTerms) {
 			setAlert('error', 'You must agree to the terms to proceed.', 'Terms of Service');
@@ -61,6 +64,7 @@
 				return;
 			})
 			.then(async (valid) => {
+				userIsLoading = true;
 				const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Login`;
 				const response = await fetch(url, {
 					method: 'POST',
@@ -79,14 +83,16 @@
 					}
 
 					setAlert('error', errorMessage, 'Authentication error:');
+					userIsLoading = false;
 					return;
 				}
 
 				// reset form and save user
-				let registryEmailAddress = '';
-				let registryPassword = '';
-				let registryAgreeTerms = false;
+				registryEmailAddress = '';
+				registryPassword = '';
+				registryAgreeTerms = false;
 				publisherUser.set({ user: responseData['Data'] });
+				userIsLoading = false;
 			});
 	};
 
@@ -111,12 +117,22 @@
 		publisherSetupStep.set(3);
 	};
 
+	let modalVisible = false;
 	let panelIsHidden = false;
+
+	const handleReopenPanel = async () => {
+		panelIsHidden = false;
+		modalVisible = false;
+		$publisherSetupStep = 3;
+		resetBadgeData();
+		await tick();
+		document.getElementById('publisher-destination-configuration')?.scrollIntoView();
+	};
 </script>
 
 <Heading>
 	<h2>
-		{#if $publisherSetupStep == 3}☑ {/if}
+		{#if panelIsHidden}☑{/if}
 		Publisher Configuration
 	</h2>
 </Heading>
@@ -125,7 +141,7 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+		class="focus:outline-none w-full bg-white p-10"
 		transition:slide
 	>
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
@@ -150,7 +166,9 @@
 		{#if $publisherSetupStep == 0}
 			<div id="publishersetup-step0" transition:slide>
 				<Heading><h3>Connect your Publisher Account</h3></Heading>
-				<BodyText>Checking to see if your publisher account is already connected.</BodyText>
+				<BodyText gray={true}
+					>Checking to see if your publisher account is already connected.</BodyText
+				>
 
 				<div class="my-4 flex flex-col items-center justify-center w-full h-48">
 					<LoadingSpinner />
@@ -160,14 +178,14 @@
 			<!-- STEP 1: Show connected account data or allow user to connect account -->
 		{:else if $publisherSetupStep == 1}
 			<div id="registrysetup-step1" in:slide out:fly={{ x: -400 }}>
-				{#if !$publisherUser.user}
+				{#if !$publisherUser.user && !userIsLoading}
 					<!-- auto-loading the user not possible, but they can authenticate manually -->
 					<Heading><h3>Connect your Publisher Account</h3></Heading>
-					<BodyText>
+					<BodyText gray={true}>
 						Connect to the
 						<a
 							href={PUBLIC_PUBLISHER_API_BASEURL}
-							class="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+							class="font-medium text-midnight underline hover:no-underline"
 						>
 							Credential Engine Publisher {PUBLIC_PUBLISHER_API_ENV_LABEL}
 						</a>
@@ -176,9 +194,8 @@
 
 					<div class="mt-8 md:flex items-center">
 						<div class="flex flex-col">
-							<label
-								for="input_registryemail"
-								class="mb-3 text-sm leading-none text-gray-800 dark:text-white">Email</label
+							<label for="input_registryemail" class="mb-3 text-sm leading-none text-gray-800"
+								>Email</label
 							>
 							<input
 								id="input_registryemail"
@@ -191,9 +208,8 @@
 					</div>
 					<div class="mt-8 md:flex items-center">
 						<div class="flex flex-col">
-							<label
-								for="input_registrypassword"
-								class="mb-3 text-sm leading-none text-gray-800 dark:text-white">Password</label
+							<label for="input_registrypassword" class="mb-3 text-sm leading-none text-gray-800"
+								>Password</label
 							>
 							<input
 								id="input_registrypassword"
@@ -212,14 +228,12 @@
 								id="registryAgreeTerms"
 								type="checkbox"
 								value=""
-								class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+								class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
 							/>
-							<label
-								for="registryAgreeTerms"
-								class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+							<label for="registryAgreeTerms" class="ml-2 text-sm font-medium text-gray-900"
 								>I agree with the Credential Engine <a
 									href="http://credentialengine.org/terms/"
-									class="text-indigo-700 dark:text-superaqua">terms of service</a
+									class="text-midnight underline hover:no-underline">terms of service</a
 								>
 							</label>
 						</div>
@@ -233,13 +247,17 @@
 						/>
 					{/if}
 
-					<div class="md:flex items-center border-b pb-6 border-gray-200">
+					<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 						<NextPrevButton on:click={submitRegistryForm} isNext={true} isActive={true} />
 					</div>
-				{:else}
+				{:else if userIsLoading}
+					<div class="my-4 flex flex-col items-center justify-center w-full h-40">
+						<LoadingSpinner />
+					</div>
+				{:else if !!$publisherUser.user}
 					<!-- User is authenticated -->
 					<Heading><h3>Authenticated User</h3></Heading>
-					<BodyText>
+					<BodyText gray={true}>
 						Your API Key will be used to interact with the publisher and upload credentials.
 					</BodyText>
 
@@ -259,7 +277,7 @@
 						</BodyText>
 					{/if}
 
-					<div class="md:flex items-center border-b pb-6 border-gray-200">
+					<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 						<NextPrevButton
 							on:click={() => publisherUser.set({})}
 							isNext={false}
@@ -279,37 +297,34 @@
 		{:else if $publisherSetupStep == 2}
 			<div id="registrysetup-step2" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 				<Heading><h3>Choose Organization</h3></Heading>
-				<BodyText>
+				<BodyText gray={true}>
 					Credentials will be saved to this organization in the Publisher, where you can finalize
 					them.
 				</BodyText>
 
 				{#if $publisherUser.user?.Organizations?.length}
-					{#each $publisherUser.user?.Organizations as org}
+					{#each $publisherUser.user?.Organizations.sort( (a, b) => a.Name.localeCompare(b.Name) ) as org}
 						<div class="flex items-center mb-4">
 							<input
 								id={`orgSelect-${org.CTID}`}
 								type="radio"
 								bind:group={selectedOrg}
 								value={org.CTID}
-								class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+								class="w-4 h-4 text-tahiti bg-gray-100 border-gray-300 focus:ring-tahiti focus:ring-2"
 							/>
-							<label
-								for={`orgSelect-${org.CTID}`}
-								class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-							>
+							<label for={`orgSelect-${org.CTID}`} class="ml-2 text-sm font-medium text-gray-900">
 								{org.Name} ({org.CTID})
 							</label>
 						</div>
 					{/each}
 				{/if}
 
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton on:click={() => publisherSetupStep.set(1)} isNext={false} />
 					<NextPrevButton
 						on:click={() => handlePreviewCredentials()}
 						isNext={true}
-						isActive={!!selectedOrg}
+						isActive={selectedOrg != ''}
 					/>
 				</div>
 			</div>
@@ -318,7 +333,7 @@
 		{:else if $publisherSetupStep == 3}
 			<div id="registrysetup-step3" in:fade={{ duration: 200, delay: 401 }} out:fly={{ x: -400 }}>
 				<Heading><h3>Selected Organization</h3></Heading>
-				<BodyText>
+				<BodyText gray={true}>
 					Credentials will be saved to this organization in the publisher, where you can finalize
 					them.
 				</BodyText>
@@ -336,16 +351,18 @@
 				{:then value}
 					<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 						{#each $publisherCredentials.credentials.slice(0, 9) as credential}
-							<li class="mb-2 md:md-0 border border-gray-200 dark:border-gray-700 p-2">
+							<li class="mb-2 md:md-0 border border-gray-200 p-2">
 								<BodyText>
 									<a
 										href={`${PUBLIC_PUBLISHER_API_BASEURL}/credential/${credential.Id}`}
 										target="new"
-										class="font-bold text-blue-600 dark:text-blue-500 hover:underline"
+										class="font-bold text-midnight underline hover:no-underline"
 										>{credential.Name}</a
 									>
-									({credential.CTID})
 									<br />
+									({credential.CTID})
+								</BodyText>
+								<BodyText gray={true}>
 									{credential.Description}
 								</BodyText>
 							</li>
@@ -356,7 +373,7 @@
 					{/if}
 				{/await}
 
-				<div class="md:flex items-center border-b pb-6 border-gray-200">
+				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton
 						on:click={() => {
 							resetPublisherSelection();
@@ -383,28 +400,47 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white dark:bg-midnight p-10"
+		class="focus:outline-none w-full bg-white p-10"
 		transition:slide
 	>
-		<div class="flex items-end flex-col justify-between md:flex-row">
+		<div class="flex items-center md:items-end flex-col justify-between md:flex-row">
 			<BodyText>
 				Publisher setup complete. <br />
 				<span class="font-bold">Selected Organization:</span>
 				{$publisherOrganization.org?.Name} ({$publisherCredentials.credentials.length}
 				{$publisherCredentials.credentials.length == 1 ? 'credential' : 'credentials'})
 			</BodyText>
-			<button
-				type="button"
-				class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
+			<Button
+				buttonType="default"
 				on:click={() => {
-					panelIsHidden = false;
-					$publisherSetupStep = 3;
+					modalVisible = true;
 				}}
 			>
 				Edit
-			</button>
+			</Button>
 		</div>
 	</div>
+
+	<Modal
+		visible={modalVisible}
+		id={`badgesourcepanel-warning`}
+		on:close={() => {
+			modalVisible = false;
+		}}
+		title="Unsaved Changes"
+		actions={[
+			{
+				label: 'Cancel',
+				buttonType: 'default',
+				onClick: () => {
+					modalVisible = false;
+				}
+			},
+			{ label: 'Proceed', buttonType: 'danger', onClick: handleReopenPanel }
+		]}
+	>
+		<BodyText>If you change your publisher settings, any loaded badge data will be reset.</BodyText>
+	</Modal>
 {/if}
 
 <style lang="postcss">

@@ -27,8 +27,8 @@
 </BodyText>
 
 <div class="overflow-x-auto relative">
-	<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-		<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+	<table class="w-full text-sm text-left text-gray-500">
+		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 			<tr>
 				<th scope="col" class="py-3 px-6">
 					☑ <span class="sr-only">Should this badge be published?</span>
@@ -40,7 +40,7 @@
 		</thead>
 		<tbody>
 			{#each $normalizedBadges as badge (badge.id)}
-				<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+				<tr class="bg-white border-b">
 					<td class="py-4 px-6">
 						<input
 							checked={!!$checkedBadges[badge.id]}
@@ -50,22 +50,17 @@
 							id={'includeBadge-' + badge.id}
 							type="checkbox"
 							value=""
-							class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+							class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
 						/>
 					</td>
-					<th
-						scope="row"
-						class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white"
-					>
+					<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 						{badge.name}
 					</th>
 					<td class="py-4 px-6">
 						{abbreviate(badge.description)}
 					</td>
 					<td class="py-4 px-6">
-						<a class="text-indigo-700 dark:text-superaqua" href={badge.id} target="new"
-							>View source</a
-						>
+						<a class="text-midnight underline" href={badge.id} target="new">View source</a>
 					</td>
 				</tr>
 			{/each}

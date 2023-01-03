@@ -1,7 +1,12 @@
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import { PUBLIC_BASEURL, PUBLIC_UI_API_BASEURL } from '$env/static/public';
-import type { BadgeClassBasic, Alignment } from '$lib/stores/badgeSourceStore.js';
+import {
+	PUBLIC_BASEURL,
+	PUBLIC_UI_API_BASEURL,
+	PUBLIC_PUBLISHER_API_BASEURL,
+	PUBLIC_PUBLISHER_API_ENV_LABEL
+} from '$env/static/public';
+import type { BadgeClassBasic, Alignment } from '$lib/utils/badges.js';
 import { normalizedBadges, checkedBadges } from '$lib/stores/badgeSourceStore.js';
 import { haveSameDomain } from '$lib/utils/urls.js';
 
@@ -189,6 +194,7 @@ export const publisherOptions = writable<PublisherOptions>({
 // Governs which step is displayed
 export const publisherSetupStep = writable<Number>(0);
 export const proofingStep = writable(0);
+export const reviewingStep = writable(0);
 
 export const getUser = async () => {
 	if (!browser || get(publisherUser).user) return null;
@@ -380,7 +386,9 @@ export enum PubStatuses {
 	'PendingUpdate' = 'Pending Update',
 	'SaveInProgress' = 'Save in Progress',
 	'SaveError' = 'Error',
-	'SaveSuccess' = 'Success'
+	'SaveSuccess' = 'Success',
+	'SourceUpdateInProgress' = 'Source Update in Progress',
+	'SourceUpdated' = 'Source Updated'
 }
 
 export interface CredentialPublicationStatus {
@@ -542,4 +550,45 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 			messages: responseData['Messages']
 		});
 	}
+};
+
+export const saveAllCredentials = async () => {
+	let doneYet = false;
+	let nextCredential: CtdlApiCredential | undefined;
+	let currentResults: { [key: string]: CredentialPublicationStatus };
+
+	while (!doneYet) {
+		currentResults = get(ctdlPublicationResultStore);
+		nextCredential = get(credentialDrafts).find((c) =>
+			[PubStatuses.PendingNew, PubStatuses.PendingUpdate].includes(
+				currentResults[c.Credential.CredentialId]?.publicationStatus
+			)
+		);
+		if (!nextCredential) doneYet = true;
+		else {
+			await saveCredential(nextCredential);
+		}
+	}
+};
+
+export const alignmentUrlForCredential = (ctid: string | undefined): string => {
+	if (!ctid) return '';
+	else if (PUBLIC_PUBLISHER_API_BASEURL.includes('sandbox'))
+		return `https://sandbox.credentialengine.org/finder/resources/${ctid}`;
+	else if (PUBLIC_PUBLISHER_API_BASEURL.includes('staging'))
+		return `https://staging.credentialengine.org/finder/resources/${ctid}`;
+	else return `https://credentialfinder.org/resources/${ctid}`;
+};
+
+export const alignmentExistsForCredential = (credential: CtdlApiCredential): boolean => {
+	const targetUrl = alignmentUrlForCredential(
+		get(ctdlPublicationResultStore)[credential.Credential.CredentialId]?.CTID
+	);
+	let existingAlignmentUrls: string[] = [];
+	credential.Credential.Requires.filter((r) => r.Description.includes('Open Badges')).map((a) => {
+		a.TargetCompetency.map((tc) => {
+			existingAlignmentUrls.push(tc.TargetNode);
+		});
+	});
+	return existingAlignmentUrls.includes(targetUrl);
 };

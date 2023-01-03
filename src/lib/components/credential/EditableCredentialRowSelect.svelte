@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, tick } from 'svelte';
 	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
@@ -10,6 +10,7 @@
 		EditStatus
 	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Tag from '$lib/components/Tag.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
@@ -71,6 +72,11 @@
 		isEditing = false;
 	};
 
+	const handleRowKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') handleCancelRowEdit();
+		else if (event.key === 'Enter') handleSaveRow();
+	};
+
 	const prettyNameForValue = (v: string | undefined): string => {
 		const option = options.find((o) => o.value == v);
 		if (!option) return v || '';
@@ -91,15 +97,15 @@
 
 {#if !isEditing}
 	<!-- Display the Value -->
-	<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+	<tr class="bg-white border-b">
+		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			{fieldName || fieldId}
 		</th>
 		<td class="py-4 px-6">
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div class="w-full mb-2" transition:slide>
 					<span
-						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded dark:bg-blue-200 dark:text-blue-800"
+						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
 					>
 						Updated
 					</span>
@@ -109,38 +115,38 @@
 		</td>
 		<td class="py-4 px-6">
 			{#if editable}
-				<button
-					type="button"
-					class="text-gray-900 text-sm px-5 py-2.5 ml-3 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-					on:click={() => {
+				<Button
+					on:click={async () => {
 						isEditing = true;
+						await tick();
+						document.getElementById(inputId)?.focus();
 					}}
 				>
 					Edit
-				</button>
+				</Button>
 			{/if}
 		</td>
 	</tr>
 {:else}
 	<!-- Show Edit Form-->
-	<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+	<tr class="bg-white border-b" on:keydown={handleRowKeydown}>
+		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
 		<td class="py-4 px-6">
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div class="w-full mb-2">
 					<span
-						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded dark:bg-blue-200 dark:text-blue-800"
+						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
 					>
 						Updated
 					</span>
 				</div>
 			{/if}
 			<select
-				id="countries"
+				id={inputId}
 				bind:value
-				class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+				class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
 			>
 				<option selected={!value}>Choose option</option>
 				{#each options as option (option)}
@@ -150,7 +156,7 @@
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div transition:slide>
 					<BodyText>
-						<span class="text-xs text-gray-600 dark:gray-400"
+						<span class="text-xs text-gray-600"
 							>On publisher: {prettyNameForValue(publisherFieldData)}</span
 						>
 					</BodyText>
@@ -161,20 +167,8 @@
 			{/if}
 		</td>
 		<td class="flex flex-col py-4 px-6 space-y-3">
-			<button
-				type="button"
-				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-				on:click={handleCancelRowEdit}
-			>
-				Cancel
-			</button>
-			<button
-				type="button"
-				class="text-gray-900 w-full text-sm px-5 py-2.5 bg-white hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:border-gray-600 focus:outline-none dark:focus:ring-gray-700"
-				on:click={handleSaveRow}
-			>
-				Save
-			</button>
+			<Button on:click={handleCancelRowEdit}>Cancel</Button>
+			<Button buttonType="primary" on:click={handleSaveRow}>Save</Button>
 		</td>
 	</tr>
 {/if}
