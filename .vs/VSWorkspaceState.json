@@ -1,6 +1,17 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\src",
+    "\\src\\routes",
+    "\\src\\routes\\patternlibrary",
+    "\\src\\routes\\publisher",
+    "\\src\\routes\\publisher\\StagingApi",
+    "\\src\\routes\\publisher\\StagingApi\\Credential",
+    "\\src\\routes\\publisher\\StagingApi\\Credential\\Save",
+    "\\src\\routes\\publisher\\StagingApi\\Load",
+    "\\src\\routes\\publisher\\StagingApi\\Load\\Credential",
+    "\\src\\routes\\publisher\\StagingApi\\Load\\Credential\\[id]"
   ],
+  "SelectedNode": "\\.env",
   "PreviewInSolutionExplorer": false
 }
