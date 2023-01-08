@@ -295,13 +295,6 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 			Image: b.image,
 			Keyword: b.tags,
 			InLanguage: ['en-US'],
-			Identifier: [
-				{
-					IdentifierType: 'id',
-					IdentifierTypeName: 'Open Badges ID',
-					IdentifierValueCode: b.id
-				}
-			],
 			Requires: requiresData
 		}
 	};
