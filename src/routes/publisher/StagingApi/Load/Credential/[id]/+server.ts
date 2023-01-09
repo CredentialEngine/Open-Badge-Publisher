@@ -1,4 +1,3 @@
-import * as dotenv from 'dotenv';
 import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
 import type { RequestHandler } from './$types';
 
