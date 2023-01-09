@@ -93,6 +93,7 @@
 				registryAgreeTerms = false;
 				publisherUser.set({ user: responseData['Data'] });
 				userIsLoading = false;
+				$publisherSetupStep = 2;
 			});
 	};
 
