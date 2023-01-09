@@ -9,6 +9,7 @@
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
 	import CredlyConfig from '$lib/partials/CredlyConfig.svelte';
+	import AdvancedBadgeInput from './AdvancedBadgeInput.svelte';
 	import BadgeSelection from '$lib/partials/BadgeSelection.svelte';
 	import {
 		badgeSourceType,
@@ -125,7 +126,7 @@
 				{:else if $badgeSourceType == 'credly'}
 					<CredlyConfig />
 				{:else if $badgeSourceType == 'json'}
-					<BodyText>Advanced JSON not yet implemented...</BodyText>
+					<AdvancedBadgeInput />
 				{/if}
 
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">

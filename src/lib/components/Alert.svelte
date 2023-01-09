@@ -7,6 +7,7 @@
 <div class="p-4 mb-4 text-sm rounded-lg {level}" role="alert">
 	{#if heading}<span class="font-medium">{heading}</span>{/if}
 	{message}
+	<slot name="detail" />
 </div>
 
 <style lang="postcss">

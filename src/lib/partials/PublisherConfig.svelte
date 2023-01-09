@@ -28,6 +28,7 @@
 		getOrgCredentialList
 	} from '$lib/stores/publisherStore.js';
 	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
+	import abbreviate from '$lib/utils/abbreviate.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let currentMessage = {
@@ -350,6 +351,10 @@
 						<LoadingSpinner />
 					</div>
 				{:then value}
+					<BodyText gray={true}>
+						Successfully loaded existing credentials and drafts from Publisher. A preview of this
+						data is shown below, to ensure you have selected the right organization.
+					</BodyText>
 					<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 						{#each $publisherCredentials.credentials.slice(0, 9) as credential}
 							<li class="mb-2 md:md-0 border border-gray-200 p-2">
@@ -364,7 +369,7 @@
 									({credential.CTID})
 								</BodyText>
 								<BodyText gray={true}>
-									{credential.Description}
+									{abbreviate(credential.Description)}
 								</BodyText>
 							</li>
 						{/each}
