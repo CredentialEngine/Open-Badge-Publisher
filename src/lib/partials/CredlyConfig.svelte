@@ -91,7 +91,8 @@
 					name: b.name,
 					description: b.description,
 					image_url: b.image_url,
-					alignments: b.alignments
+					alignments: b.alignments,
+					skills: b.skills
 				};
 			});
 		} catch (err) {
