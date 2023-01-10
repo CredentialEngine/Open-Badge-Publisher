@@ -154,7 +154,11 @@
 					helpText="If there is an external badge criteria URL, that is used. Otherwise id is used. This URL must be resolvable at publication time."
 					validator={yup.string().required().url()}
 				>
-					<a href={credential.Credential.SubjectWebpage} target="new">
+					<a
+						href={credential.Credential.SubjectWebpage}
+						target="new"
+						class="underline hover:no-underline"
+					>
 						{credential.Credential.SubjectWebpage}
 					</a>
 				</EditableCredentialRowText>

@@ -28,7 +28,7 @@
 		getOrgCredentialList
 	} from '$lib/stores/publisherStore.js';
 	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
-	import abbreviate from '$lib/utils/abbreviate.js';
+	import { pluralize } from '$lib/utils/pluralize.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	let currentMessage = {
@@ -352,31 +352,15 @@
 					</div>
 				{:then value}
 					<BodyText gray={true}>
-						Successfully loaded existing credentials and drafts from Publisher. A preview of this
-						data is shown below, to ensure you have selected the right organization.
+						View {$publisherCredentials.credentials.length} existing
+						{pluralize($publisherCredentials.credentials.length, 'credential')}
+						credentials via your
+						<a
+							href={`${PUBLIC_PUBLISHER_API_BASEURL}/summary/organization/${$publisherOrganization.org?.Id}`}
+							class="text-midnight text-underline hover:no-underline"
+							target="new">organization summary page</a
+						>.
 					</BodyText>
-					<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
-						{#each $publisherCredentials.credentials.slice(0, 9) as credential}
-							<li class="mb-2 md:md-0 border border-gray-200 p-2">
-								<BodyText>
-									<a
-										href={`${PUBLIC_PUBLISHER_API_BASEURL}/credential/${credential.Id}`}
-										target="new"
-										class="font-bold text-midnight underline hover:no-underline"
-										>{credential.Name}</a
-									>
-									<br />
-									({credential.CTID})
-								</BodyText>
-								<BodyText gray={true}>
-									{abbreviate(credential.Description)}
-								</BodyText>
-							</li>
-						{/each}
-					</ul>
-					{#if $publisherCredentials.credentials.length > 9}
-						<BodyText>({$publisherCredentials.credentials.length - 9} more)</BodyText>
-					{/if}
 				{/await}
 
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
