@@ -40,7 +40,7 @@
 			targetDescription: `Additional information powered by the Credential Registry${
 				PUBLIC_PUBLISHER_API_ENV_LABEL ? ' ' + PUBLIC_PUBLISHER_API_ENV_LABEL : ''
 			}.`,
-			targetFramework: 'Credentials Transparency Description Language',
+			targetFramework: 'Credential Transparency Description Language',
 			targetCode: ctid
 		};
 
