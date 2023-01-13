@@ -518,6 +518,12 @@ export const OB_V3_CONTEXT = {
 	}
 };
 
+/*  This hybrid context enables us to not need to make any network requests
+in order to use JSON-LD compact operation to get JSON-LD badge data into a 
+predictable format. Because this context is forcibly inserted into input data
+some input data may be lost, and it is not possible to import data that was not 
+crafted using roughly the OB 2.0 or 3.0 context.
+ */
 export const OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT = {
 	'@context': {
 		...OB_V2_CONTEXT['@context'],
