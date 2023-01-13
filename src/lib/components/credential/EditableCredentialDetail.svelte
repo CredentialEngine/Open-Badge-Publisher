@@ -214,7 +214,7 @@
 					{credential}
 					fieldId="Requires"
 					fieldName="Alignment(s)"
-					helpText="A set of alignments that represent the competencies this badge requires."
+					helpText="The Credential Registry allows you to specify which competencies are required for the award of this badge. You may remove any alignments that don't make sense in this context."
 				/>
 			</tbody>
 		</table>

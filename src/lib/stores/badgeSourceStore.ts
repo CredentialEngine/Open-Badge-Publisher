@@ -103,31 +103,15 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 };
 
 // Advanced JSON setup
-export const advancedBadgeInputJson = writable<string>('');
-const badgeclassFromAdvancedJson = (b: BadgeClassBasic): BadgeClassBasic => {
-	const destructured = ({
-		id,
-		name,
-		description,
-		issuer,
-		image,
-		achievementType,
-		tags,
-		alignment,
-		criteria
-	} = b);
-	return destructured;
-};
-const badgeclassesFromAdvancedJson = (): BadgeClassBasic[] => {
-	const parsed = JSON.parse(get(advancedBadgeInputJson));
-	if (Array.isArray(parsed)) return parsed.map(badgeclassFromAdvancedJson);
-	else if (typeof parsed === 'object') return [badgeclassFromAdvancedJson(parsed)];
-	return [];
-};
+export const advancedBadges = writable<Array<BadgeClassBasic | null>>([]);
+export const advancedBadgesFound = derived(advancedBadges, ($advancedBadges) =>
+	$advancedBadges.filter((e) => e != null)
+);
 
 // Is Badge Setup Complete?
 export const badgeSetupComplete = derived(
 	[
+		advancedBadgesFound,
 		badgeSourceType,
 		canvasAccessToken,
 		canvasAgreeTerms,
@@ -139,6 +123,7 @@ export const badgeSetupComplete = derived(
 		credlyIssuerBadges
 	],
 	([
+		$advancedBadgesFound,
 		$badgeSourceType,
 		$canvasAccessToken,
 		$canvasAgreeTerms,
@@ -163,6 +148,8 @@ export const badgeSetupComplete = derived(
 				!!$credlyIssuerData &&
 				!!$credlyIssuerBadges.length
 			);
+		} else {
+			return !!$advancedBadgesFound.length;
 		}
 
 		// JSON not implemented
@@ -171,8 +158,20 @@ export const badgeSetupComplete = derived(
 );
 
 export const normalizedBadges = derived(
-	[badgeSetupComplete, badgeSourceType, canvasSelectedIssuerBadges, credlyIssuerBadges],
-	([$badgeSetupComplete, $badgeSourceType, $canvasSelectedIssuerBadges, $credlyIssuerBadges]) => {
+	[
+		badgeSetupComplete,
+		badgeSourceType,
+		canvasSelectedIssuerBadges,
+		credlyIssuerBadges,
+		advancedBadgesFound
+	],
+	([
+		$badgeSetupComplete,
+		$badgeSourceType,
+		$canvasSelectedIssuerBadges,
+		$credlyIssuerBadges,
+		$advancedBadgesFound
+	]) => {
 		if (!$badgeSetupComplete) {
 			console.log('Error: attempted to get list of badges while setup is incomplete');
 			return [];
@@ -183,8 +182,7 @@ export const normalizedBadges = derived(
 		} else if (get(badgeSourceType) == BadgeSourceTypeOptions['Credly']) {
 			return $credlyIssuerBadges.map(badgeclassFromCredlyApiBadge);
 		} else {
-			// TODO add advanced JSON badges
-			return [];
+			return $advancedBadgesFound;
 		}
 	}
 );

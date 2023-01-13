@@ -13,8 +13,7 @@ const config = {
 	kit: {
 		adapter: adapterStatic({
 			fallback: '200.html'
-		}),
-		trailingSlash: 'always'
+		})
 	}
 };
 
