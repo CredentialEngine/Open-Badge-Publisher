@@ -41,16 +41,19 @@ interface OrganizationDataStore {
 	org?: PublisherOrganization;
 }
 
+export interface TargetCompetency {
+	// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
+	FrameworkName?: string; // targetFramework -- Optional Framework Name
+	TargetNodeName: string; // targetName -- Required Competency Name
+	TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
+	TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
+	CodedNotation?: string; // targetCode
+	SKIP?: boolean; // Not part of CTDL, this enables non-destructive hiding of competencies in edit mode. Skipped nodes are not saved.
+}
+
 export interface AlignmentObject {
 	Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
-	TargetCompetency: Array<{
-		// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
-		FrameworkName?: string; // targetFramework -- Optional Framework Name
-		TargetNodeName: string; // targetName -- Required Competency Name
-		TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
-		TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
-		CodedNotation?: string; // targetCode
-	}>;
+	TargetCompetency: TargetCompetency[];
 }
 
 export interface CtdlCredential {
@@ -499,6 +502,32 @@ const createPublicationResultStore = () => {
 // {[key: CredentialId]: CredentialPublicationStatus}
 export const ctdlPublicationResultStore = createPublicationResultStore();
 
+const credentialWithFilteredCompetencies = (credential: CtdlApiCredential): CtdlApiCredential => {
+	const filterAlignmentObject = (ao: AlignmentObject[]): AlignmentObject[] => {
+		let result: AlignmentObject[] = [];
+		ao.forEach((a: AlignmentObject) => {
+			if (a.Description == 'Open Badges Alignment') {
+				result.push({
+					Description: a.Description,
+					TargetCompetency: a.TargetCompetency.filter((tc) => !tc.SKIP)
+				});
+			} else {
+				result.push(a);
+			}
+		});
+		return result;
+	};
+
+	let ret = {
+		Credential: { ...credential.Credential },
+		PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
+	};
+	const newRequires = filterAlignmentObject(credential.Credential.Requires || []);
+	if (newRequires.length) ret.Credential.Requires = newRequires;
+
+	return ret;
+};
+
 export const saveCredential = async (credential: CtdlApiCredential) => {
 	const status = get(ctdlPublicationResultStore)[credential.Credential.CredentialId];
 
@@ -518,10 +547,11 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Credential/Save`;
 	const orgCtid = get(publisherOrganization).org?.CTID;
+	const competencyFilteredCredential = credentialWithFilteredCompetencies(credential);
 
 	const response = await fetch(url, {
 		method: 'POST',
-		body: JSON.stringify(credential),
+		body: JSON.stringify(competencyFilteredCredential),
 		headers: {
 			Authorization: `Bearer ${get(publisherUser).user?.Token}`,
 			'Content-Type': 'application/json'

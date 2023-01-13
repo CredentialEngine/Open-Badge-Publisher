@@ -3,9 +3,11 @@
 	import {
 		credentialDrafts,
 		type CtdlApiCredential,
-		type AlignmentObject
+		type AlignmentObject,
+		type TargetCompetency
 	} from '$lib/stores/publisherStore.js';
 	import Button from '$lib/components/Button.svelte';
+	import BodyText from '$lib/components/typography/BodyText.svelte';
 
 	export let credential: CtdlApiCredential;
 	export let fieldName = '';
@@ -18,23 +20,25 @@
 		(v) => v.Description == 'Open Badges Alignment'
 	);
 
-	const handleDeleteItem = async (deletedAlignmentNode: string) => {
-		const pruneList = (a: AlignmentObject[]): AlignmentObject[] => {
+	const handleToggleItem = async (nodeToToggle: string) => {
+		const updatedListWithToggledItem = (a: AlignmentObject[]): AlignmentObject[] => {
 			let pruned: AlignmentObject[] = [];
-			console.log('Pruning...');
-			console.log(value);
 			value.forEach((ao) => {
 				if (ao.Description != 'Open Badges Alignment')
 					pruned.push(ao); // Ignore other Requires alignments on the Credential
 				else {
-					const filteredTargets = ao.TargetCompetency.filter(
-						(c) => c.TargetNode != deletedAlignmentNode
-					);
-					if (filteredTargets.length) pruned.push({ ...ao, TargetCompetency: filteredTargets });
+					let tcList: TargetCompetency[] = [];
+					ao.TargetCompetency.forEach((tc) => {
+						if (tc.TargetNode == nodeToToggle) {
+							tcList.push({
+								...tc,
+								SKIP: !tc.SKIP
+							});
+						} else tcList.push(tc);
+					});
+					if (tcList.length) pruned.push({ ...ao, TargetCompetency: tcList });
 				}
 			});
-			console.log(pruned);
-			console.log('....Pruned!');
 			return pruned;
 		};
 
@@ -44,7 +48,9 @@
 			},
 			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
 		};
-		editedCredential.Credential[fieldId] = pruneList(editedCredential.Credential[fieldId]);
+		editedCredential.Credential[fieldId] = updatedListWithToggledItem(
+			editedCredential.Credential[fieldId]
+		);
 		credentialDrafts.updateCredential(editedCredential);
 		await tick();
 		value = credential.Credential[fieldId] || [];
@@ -52,56 +58,66 @@
 	};
 </script>
 
-<!-- Display the Value -->
-<tr class="bg-white border-b">
+<tr class="bg-white">
 	<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 		{fieldName || fieldId}
 	</th>
 	<td class="py-4 px-6" colspan="2">
-		<slot>
-			<div>
-				{#each filteredValues as valueEntry, i (i)}
-					<div>
-						{#each valueEntry.TargetCompetency as targetCompetency (targetCompetency.TargetNode)}
-							<div class="flex flex-col md:flex-row">
-								<div>
-									<p class="my-1">
-										<span class="font-bold">URI:</span>
-										{targetCompetency.TargetNode}
-										{#if targetCompetency.CodedNotation}
-											({targetCompetency.CodedNotation})
-										{/if}
-									</p>
-									<p class="my-1">
-										<span class="font-bold">Name:</span>
-										{targetCompetency.TargetNodeName}
-										{#if targetCompetency.TargetNodeDescription}
-											<br /><span class="font-bold">Description:</span>
-											{targetCompetency.TargetNodeDescription}
-										{/if}
-									</p>
-									{#if targetCompetency.FrameworkName}
-										<p class="my-1">
-											<span class="font-bold">In Framework:</span>
-											{targetCompetency.FrameworkName}
-										</p>
-									{/if}
-								</div>
-								<div>
-									<Button
-										buttonType="default"
-										on:click={() => {
-											handleDeleteItem(targetCompetency.TargetNode);
-										}}
-									>
-										Delete
-									</Button>
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/each}
-			</div>
-		</slot>
+		{helpText}
 	</td>
 </tr>
+<!-- Display the Value -->
+{#each filteredValues as valueEntry, i (i)}
+	{#each valueEntry.TargetCompetency as targetCompetency, j (targetCompetency.TargetNode)}
+		<tr class="bg-white" class:border-b={j + 1 == valueEntry.TargetCompetency.length}>
+			<td class="py-4 px-6" colspan="2">
+				<div>
+					<div>
+						<div>
+							<p class="my-1">
+								<span class="font-bold">URI:</span>
+								{targetCompetency.TargetNode}
+								{#if targetCompetency.CodedNotation}
+									({targetCompetency.CodedNotation})
+								{/if}
+							</p>
+							<p class="my-1">
+								<span class="font-bold">Name:</span>
+								{targetCompetency.TargetNodeName}
+								{#if targetCompetency.TargetNodeDescription}
+									<br /><span class="font-bold">Description:</span>
+									{targetCompetency.TargetNodeDescription}
+								{/if}
+							</p>
+							{#if targetCompetency.FrameworkName}
+								<p class="my-1">
+									<span class="font-bold">In Framework:</span>
+									{targetCompetency.FrameworkName}
+								</p>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</td>
+			<td class="py-4 px-6">
+				<label class="relative inline-flex items-center cursor-pointer">
+					<input
+						type="checkbox"
+						value=""
+						class="sr-only peer"
+						checked={!targetCompetency.SKIP}
+						on:click={() => {
+							handleToggleItem(targetCompetency.TargetNode);
+						}}
+					/>
+					<div
+						class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+					/>
+					<span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+						>{targetCompetency.SKIP ? 'Skipped' : 'Included'}</span
+					>
+				</label>
+			</td>
+		</tr>
+	{/each}
+{/each}

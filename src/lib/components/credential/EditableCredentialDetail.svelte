@@ -213,8 +213,8 @@
 				<EditableCredentialRowAlignment
 					{credential}
 					fieldId="Requires"
-					fieldName="Alignment(s)"
-					helpText="The Credential Registry allows you to specify which competencies are required for the award of this badge. You may remove any alignments that don't make sense in this context."
+					fieldName="Competencies"
+					helpText="The Credential Registry allows you to specify which competencies are required for the award of this badge. You may skip any badge alignments that don't make sense as required competencies."
 				/>
 			</tbody>
 		</table>
