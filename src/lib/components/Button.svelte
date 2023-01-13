@@ -6,8 +6,9 @@
 	export let buttonType: 'primary' | 'default' | 'danger' = 'default';
 
 	let finishedClass = '';
-	const baseClass =
-		'text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2 ' + klass;
+	const baseClass = klass
+		? klass
+		: 'text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2';
 	const defaultClasses = {
 		default: 'focus:ring-gray-200 border',
 		primary: 'focus:ring-midnight-600 border border-midnight',

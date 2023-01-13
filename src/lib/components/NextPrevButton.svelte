@@ -6,7 +6,11 @@
 </script>
 
 {#if isNext}
-	<Button on:click disabled={!isActive} class="flex items-center justify-center">
+	<Button
+		on:click
+		disabled={!isActive}
+		class="text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2 flex items-center justify-center"
+	>
 		<span class="text-base font-bold text-center capitalize"
 			>{#if label}{label}{:else}Next Step{/if}</span
 		>
@@ -21,7 +25,11 @@
 		>
 	</Button>
 {:else}
-	<Button on:click disabled={!isActive} class="flex items-center justify-center">
+	<Button
+		on:click
+		disabled={!isActive}
+		class="text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2 flex items-center justify-center"
+	>
 		<svg
 			class="mt-1 mr-3 isPrev"
 			width="12"

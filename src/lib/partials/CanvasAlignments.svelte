@@ -206,7 +206,6 @@
 									Saved
 								{:else}
 									<Button
-										class="ughbutton"
 										on:click={() => {
 											updatePromises[credential.Credential.CredentialId] =
 												updateCanvasCredential(credential);
