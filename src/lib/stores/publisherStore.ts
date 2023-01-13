@@ -95,7 +95,7 @@ export interface CtdlCredential {
 		IdentifierValueCode: string; // "https://example.com/e198bbd5"
 	}>;
 
-	Image: string; // "https://placekitten.com/400/400" //image URL
+	Image?: string; // "https://placekitten.com/400/400" //image URL
 
 	Keyword?: string[]; // ["tag1", "tag two"] // list of keywords for the credential
 	// "Subject": string[];  // ["Subject1", "Subject2"], // not used at this time. list of subjects for the credential
@@ -271,18 +271,19 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 		Description: 'Open Badges Alignment',
 		TargetCompetency: []
 	};
-	badgeAlignments.map((a: Alignment) => {
+	badgeAlignments.forEach((a: Alignment) => {
 		destinationAlignment.TargetCompetency.push({
 			FrameworkName: a.targetFramework,
 			TargetNode: a.targetUrl,
 			TargetNodeName: a.targetName,
 			TargetNodeDescription: a.targetDescription,
-			CodedNotation: a.targetCode
+			CodedNotation: a.targetCode,
+			SKIP: a.targetUrl == 'abc123' // todo check if it contains the ctid? How?
 		});
 	});
-	const requiresData = destinationAlignment.TargetCompetency.length ? [destinationAlignment] : [];
 
-	return {
+	const requiresData = destinationAlignment.TargetCompetency.length ? [destinationAlignment] : [];
+	let result: CtdlApiCredential = {
 		PublishForOrganizationIdentifier: publisherOrgId,
 		Credential: {
 			CredentialType: defaultAchievementTypeForBadgeAchievementType(
@@ -295,23 +296,34 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 			OfferedBy: [{ CTID: publisherOrgId }],
 			CredentialId: b.id,
 			SubjectWebpage: b.criteria.id || b.id, // Fall back to primary ID if no criteria URL set.
-			Image: b.image,
 			Keyword: b.tags,
 			InLanguage: ['en-US'],
 			Requires: requiresData
 		}
 	};
+	if (b.image) result.Credential.Image = b.image;
+
+	return result;
 };
 
 const reconcileAlignments = (
 	publisherRequires: AlignmentObject[],
-	badgeSystemAlignments: AlignmentObject[]
+	badgeSystemAlignments: AlignmentObject[],
+	ctid: string | undefined
 ): AlignmentObject[] => {
 	let representation: AlignmentObject[] = [];
 	publisherRequires.forEach((pa) => {
 		if (pa.Description != 'Open Badges Alignment') representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
 	});
-	if (badgeSystemAlignments.length) representation.push(badgeSystemAlignments[0]);
+	if (badgeSystemAlignments.length) {
+		const filteredAlignments: AlignmentObject = {
+			Description: badgeSystemAlignments[0].Description,
+			TargetCompetency: badgeSystemAlignments[0].TargetCompetency.filter(
+				(a) => !!ctid && !a.TargetNode?.includes(ctid)
+			)
+		};
+		representation.push(filteredAlignments);
+	}
 
 	return representation;
 };
@@ -357,10 +369,11 @@ const createCredentialDraftStore = () => {
 					if ('Requires' == key)
 						updated.Credential[key] = reconcileAlignments(
 							updated.Credential[key],
-							credential.Credential[key]
+							credential.Credential[key],
+							publisherData.CTID
 						);
 					else if (credential.Credential[key as keyof CtdlCredential] != undefined)
-						updated.Credential[key] = credential.Credential[key];
+						updated.Credential[key as keyof CtdlCredential] = credential.Credential[key];
 				});
 
 				const filteredList = credentialList.filter(

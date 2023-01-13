@@ -58,7 +58,7 @@
 	};
 </script>
 
-{#if filteredValues.length}
+{#if filteredValues.length && filteredValues[0].TargetCompetency.length}
 	<tr class="bg-white">
 		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 			{fieldName || fieldId}
