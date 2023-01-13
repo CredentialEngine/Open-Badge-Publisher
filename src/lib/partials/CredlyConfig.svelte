@@ -36,7 +36,7 @@
 				$credlySelectedIssuer = match?.groups?.orgslug || '';
 			})
 			.catch((err) => {
-				issuerUrlValidationMessage = `URL doesn't match expected format. Try adjusting your URL to look like https://www.credly.com/organizations/ibm/badges`;
+				issuerUrlValidationMessage = `URL doesn't match expected format. Try adjusting your URL to look like https://www.credly.com/organizations/credly-demo/badges`;
 				debounceRefreshIssuer = false;
 			});
 	};
@@ -47,6 +47,7 @@
 
 	let debounceLoadIssuer = false;
 	let credlyLoadMessage = '';
+	let responseCredlyData: unknown;
 
 	const loadCredlyIssuer = async (): Promise<boolean> => {
 		if (debounceLoadIssuer) return false;
@@ -54,53 +55,72 @@
 		debounceLoadIssuer = true;
 		setTimeout(() => (debounceLoadIssuer = false), 5000);
 
-		const requestData = {
-			URL: `https://www.credly.com/organizations/${$credlySelectedIssuer}/badges?sort=most_popular&page=1`,
-			Method: 'GET',
-			Body: null,
-			Headers: [{ Name: 'Accept', Value: 'application/json' }]
+		let nextPageUrl = `https://www.credly.com/organizations/${$credlySelectedIssuer}/badges?sort=most_popular&page=1`;
+		let badges: CredlyBadgeBasic[] = [];
+
+		const fetchAPage = async (pageUrl: string) => {
+			const requestData = {
+				URL: nextPageUrl,
+				Method: 'GET',
+				Body: null,
+				Headers: [{ Name: 'Accept', Value: 'application/json' }]
+			};
+
+			let proxyRequestHeaders = new Headers();
+			proxyRequestHeaders.append('Content-Type', 'application/json');
+			if ($publisherUser.user?.Token)
+				proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
+			const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+				method: 'POST',
+				body: JSON.stringify(requestData),
+				headers: proxyRequestHeaders
+			});
+			const proxyResponseData = await proxyResponse.json();
+
+			if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
+				throw new Error('Error fetching issuer data.');
+
+			return JSON.parse(proxyResponseData.Data?.Body);
 		};
 
-		let proxyRequestHeaders = new Headers();
-		proxyRequestHeaders.append('Content-Type', 'application/json');
-		if ($publisherUser.user?.Token)
-			proxyRequestHeaders.append('Authorization', `Bearer ${$publisherUser.user?.Token}`);
-		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
-			method: 'POST',
-			body: JSON.stringify(requestData),
-			headers: proxyRequestHeaders
-		});
-		const proxyResponseData = await proxyResponse.json();
+		while (nextPageUrl.length) {
+			let responseCredlyData = await fetchAPage(nextPageUrl);
 
-		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
-			throw new Error('Error fetching issuer data.');
+			if (nextPageUrl.endsWith('page=1')) {
+				// Do once
+				try {
+					const iss = responseCredlyData.data[0].issuer.entities[0].entity;
+					$credlyIssuerData = {
+						id: iss.id,
+						name: iss.name,
+						vanity_url: iss.vanity_url,
+						badge_count: responseCredlyData.metadata.total_count
+					};
+				} catch (err) {
+					credlyLoadMessage =
+						'Issuer & badges not found with this URL. Please check the URL and try again.';
+					return false;
+				}
+			}
 
-		const responseCredlyData = JSON.parse(proxyResponseData.Data?.Body);
+			badges = [
+				...badges,
+				...responseCredlyData.data.map((b: CredlyBadgeBasic) => {
+					return {
+						id: b.id,
+						name: b.name,
+						description: b.description,
+						image_url: b.image_url,
+						alignments: b.alignments,
+						skills: b.skills
+					};
+				})
+			];
 
-		try {
-			const iss = responseCredlyData.data[0].issuer.entities[0].entity;
-			$credlyIssuerData = {
-				id: iss.id,
-				name: iss.name,
-				vanity_url: iss.vanity_url,
-				badge_count: responseCredlyData.metadata.total_count
-			};
-			$credlyIssuerBadges = responseCredlyData.data.map((b: CredlyBadgeBasic) => {
-				return {
-					id: b.id,
-					name: b.name,
-					description: b.description,
-					image_url: b.image_url,
-					alignments: b.alignments,
-					skills: b.skills
-				};
-			});
-		} catch (err) {
-			credlyLoadMessage =
-				'Issuer & badges not found with this URL. Please check the URL and try again.';
-			return false;
+			nextPageUrl = responseCredlyData.metadata?.next_page_url || '';
 		}
 
+		$credlyIssuerBadges = badges;
 		return true;
 	};
 	let loadIssuerPromise: Promise<boolean> = new Promise((resolve, reject) => {
@@ -118,11 +138,11 @@
 	/>
 </div>
 <BodyText>
-	Enter the URL of your Credly issuer. For an example, see
+	Enter the URL of your Credly issuer. See
 	<a
-		href="https://www.credly.com/organizations/ibm/badges"
+		href="https://www.credly.com/organizations/credly-demo/badges"
 		target="new"
-		class="font-medium text-midnight underline hover:no-underline">IBM</a
+		class="font-medium text-midnight underline hover:no-underline">example</a
 	>.
 </BodyText>
 

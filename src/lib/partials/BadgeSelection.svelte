@@ -11,12 +11,18 @@
 	import abbreviate from '$lib/utils/abbreviate.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	const handleChange = (badgeId: string) => {
 		$checkedBadges[badgeId] = !$checkedBadges[badgeId];
 		$checkedBadges = Object.fromEntries(
 			Object.entries($checkedBadges).filter(([key, value]) => value === true)
 		);
+	};
+
+	const handleSelectAllOrNone = () => {
+		if (Object.keys($checkedBadges).length > 0) $checkedBadges = {};
+		else $checkedBadges = Object.fromEntries($normalizedBadges.map((e) => [e.id, true]));
 	};
 </script>
 
@@ -31,7 +37,17 @@
 		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 			<tr>
 				<th scope="col" class="py-3 px-6">
-					☑ <span class="sr-only">Should this badge be published?</span>
+					<Button
+						class="text-sm focus:ring-4 focus:outline-none rounded text-center font-medium border-0 bg-transparent"
+						on:click={handleSelectAllOrNone}
+						>☑
+						<span class="sr-only">
+							This option selects or deselects all the badges for publishing.
+						</span>
+					</Button>
+					<span class="sr-only"
+						>First column in the table is a checkbox allowing you to select a row for publishing.</span
+					>
 				</th>
 				<th scope="col" class="py-3 px-6"> Badge Name </th>
 				<th scope="col" class="py-3 px-6"> Description </th>

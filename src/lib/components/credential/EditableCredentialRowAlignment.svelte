@@ -58,15 +58,17 @@
 	};
 </script>
 
-<tr class="bg-white">
-	<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
-		{fieldName || fieldId}
-	</th>
-	<td class="py-4 px-6" colspan="2">
-		{helpText}
-	</td>
-</tr>
-<!-- Display the Value -->
+{#if filteredValues.length}
+	<tr class="bg-white">
+		<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
+			{fieldName || fieldId}
+		</th>
+		<td class="py-4 px-6" colspan="2">
+			{helpText}
+		</td>
+	</tr>
+{/if}
+
 {#each filteredValues as valueEntry, i (i)}
 	{#each valueEntry.TargetCompetency as targetCompetency, j (targetCompetency.TargetNode)}
 		<tr class="bg-white" class:border-b={j + 1 == valueEntry.TargetCompetency.length}>

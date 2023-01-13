@@ -104,8 +104,10 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 
 // Advanced JSON setup
 export const advancedBadges = writable<Array<BadgeClassBasic | null>>([]);
-export const advancedBadgesFound = derived(advancedBadges, ($advancedBadges) =>
-	$advancedBadges.filter((e) => e != null)
+export const advancedBadgesFound = derived(
+	advancedBadges,
+	($advancedBadges): BadgeClassBasic[] =>
+		$advancedBadges.filter((e) => e != null) as BadgeClassBasic[]
 );
 
 // Is Badge Setup Complete?
