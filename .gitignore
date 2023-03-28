@@ -8,3 +8,10 @@ node_modules
 !.env.example
 /.vs/Open-Badge-Publisher/v17/.suo
 /build-2
+/bp-23-01-12a
+/Examples/prodPublishError.png
+badgePublisher_*
+/.vs/Open-Badge-Publisher/FileContentIndex
+/full.env
+/backup.env
+/.vs/Open-Badge-Publisher/v17

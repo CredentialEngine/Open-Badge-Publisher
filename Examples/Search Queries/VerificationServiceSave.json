@@ -1,0 +1,32 @@
+//example request one. See comments for requirements/guidance
+{
+	//required CTID of the owning organization
+    "PublishForOrganizationIdentifier": "ce-696ea290-249a-4f99-9ed1-419f000d8472",
+    "VerificationServiceProfile": {
+		//required	  
+		"Description": "Description of verification service.",
+		//OfferedBy is required	
+		"OfferedBy": [
+		{
+			"CTID": "ce-696ea290-249a-4f99-9ed1-419f000d8472"
+		}
+		],
+		//The CTID is not included for an add. The generated CTID would be returned on a valid add and would be required for updates.,
+			"CTID": "ce-816cc650-f86d-4c08-9024-01c347e59b3d",
+		//============= OPTIONAL PROPERTIES ============= 
+		//SubjectWebpage is optional and must be resolvable.		
+			"SubjectWebpage": "http://www.hutchcc.edu/"
+    
+    }
+}
+
+
+//Example Successful Response. Includes the generated CTID required for updates
+{
+    "Valid": true,
+    "Messages": [],
+    "Data": {
+        "CTID": "ce-816cc650-f86d-4c08-9024-01c347e59b3d",
+        "Id": 6929
+    }
+}
