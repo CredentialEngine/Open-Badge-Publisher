@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { createEventDispatcher, tick } from 'svelte';
-	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
+	import {
+		PubStatuses,
+		type CtdlApiCredential,
+		type CtdlCredential
+	} from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
 	import {
@@ -16,17 +20,35 @@
 	export let credential: CtdlApiCredential;
 	export let editStatus: EditStatus;
 	export let fieldName = '';
-	export let fieldId: 'Name' | 'Description' | 'SubjectWebpage' | 'Image' | 'CTID';
+	export let fieldId: 'Name' | 'Description' | 'SubjectWebpage' | 'Image' | 'CTID' | 'OTHER' =
+		'OTHER';
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;
 	export let longText = false;
+
+	// It is possible to hand in a custom getter that will pull the editable value
+	// of the field from a more complex source path in the credential.
+	// Example: Criteria URL appears as SubjectWebpage AND in a Requires ConditionProfile.
+	export let getter = (c: CtdlCredential): string => {
+		if (fieldId != 'OTHER') return c[fieldId] || '';
+		return '';
+	};
+
+	// When the value is stored in a more complex path, a custom transformer can be passed in.
+	// This allows the placement of the new value at the desired place(s) in the credential.
+	export let transformer = (c: CtdlCredential, newValue: string): CtdlCredential => {
+		let cc = { ...c };
+		if (fieldId != 'OTHER') cc[fieldId] = newValue;
+		return cc;
+	};
 	export let validator: BaseSchema = yup.string();
 
 	const dispatch = createEventDispatcher();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
-	let value: string = credential.Credential[fieldId] || ''; // Todo -- Image is nullable. Make sure not to send '' to server
+	let value: string = getter(credential.Credential);
+	let originalValue = value.slice();
 	let isEditing = false;
 	let validationErrorMessage = '';
 
@@ -38,7 +60,7 @@
 		$ctdlPublicationResultStore[credential.Credential.CredentialId]?.publisherData;
 	let publisherFieldData: string | undefined;
 	if (publisherData) {
-		publisherFieldData = publisherData[fieldId];
+		publisherFieldData = getter(publisherData);
 	} else {
 		publisherFieldData = undefined;
 	}
@@ -56,27 +78,22 @@
 		}
 
 		let editedCredential = {
-			Credential: {
-				...credential.Credential
-			},
+			Credential: transformer(credential.Credential, value),
 			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
 		};
-		editedCredential.Credential[fieldId] = value;
+
 		credentialDrafts.updateCredential(editedCredential);
+		originalValue = value.slice();
 		isEditing = false;
 	};
 
 	const handleCancelRowEdit = () => {
-		value = credential.Credential[fieldId] || '';
+		value = getter(credential.Credential);
 		isEditing = false;
 	};
 
 	$: {
-		if (
-			isEditing &&
-			editStatus == EditStatus.FinishRequested &&
-			value != credential.Credential[fieldId]
-		)
+		if (isEditing && editStatus == EditStatus.FinishRequested && value != originalValue)
 			dispatch('unsavedChanges', { fieldId: fieldId });
 		else if (isEditing && editStatus == EditStatus.Reject) handleCancelRowEdit();
 		else if (isEditing && editStatus == EditStatus.Accept) handleSaveRow();
@@ -127,14 +144,8 @@
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
 		<td class="py-4 px-6">
-			{#if isPendingUpdate && publisherFieldData != value}
-				<div class="w-full mb-2">
-					<span
-						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
-					>
-						Updated
-					</span>
-				</div>
+			{#if helpText}
+				<BodyText><span class="text-xs text-gray-600">{helpText}</span></BodyText>
 			{/if}
 			{#if longText}
 				<textarea
@@ -154,7 +165,14 @@
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div>
 					<BodyText>
-						<span class="text-xs text-gray-600">On publisher: {publisherFieldData}</span>
+						<span
+							class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
+						>
+							Updated
+						</span>
+						<span class="text-xs text-gray-600"
+							>On publisher: {publisherFieldData || 'No data'}</span
+						>
 					</BodyText>
 				</div>
 			{/if}

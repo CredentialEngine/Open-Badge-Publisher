@@ -1,3 +1,4 @@
+import { markdownToTxt } from 'markdown-to-txt';
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import {
@@ -54,6 +55,8 @@ export interface TargetCompetency {
 export interface AlignmentObject {
 	Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
 	TargetCompetency: TargetCompetency[];
+	SubjectWebpage?: string; // Used for the expression of the critieria ID, if present.
+	Name?: string; //
 }
 
 export interface CtdlCredential {
@@ -267,22 +270,22 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 	if (!publisherOrgId) throw new Error('Publishing org must be set before importing credentials.');
 
 	const badgeAlignments = b.alignment || [];
-	let destinationAlignment: AlignmentObject = {
-		Description: 'Open Badges Alignment',
+	let conditionProfile: AlignmentObject = {
+		Name: 'Open Badges Criteria',
+		Description: b.criteria.narrative ? markdownToTxt(b.criteria.narrative) : 'Earning criteria',
+		SubjectWebpage: b.criteria.id || undefined,
 		TargetCompetency: []
 	};
 	badgeAlignments.forEach((a: Alignment) => {
-		destinationAlignment.TargetCompetency.push({
+		conditionProfile.TargetCompetency.push({
 			FrameworkName: a.targetFramework,
 			TargetNode: a.targetUrl,
 			TargetNodeName: a.targetName,
 			TargetNodeDescription: a.targetDescription,
-			CodedNotation: a.targetCode,
-			SKIP: a.targetUrl == 'abc123' // todo check if it contains the ctid? How?
+			CodedNotation: a.targetCode
 		});
 	});
 
-	const requiresData = destinationAlignment.TargetCompetency.length ? [destinationAlignment] : [];
 	let result: CtdlApiCredential = {
 		PublishForOrganizationIdentifier: publisherOrgId,
 		Credential: {
@@ -298,7 +301,7 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 			SubjectWebpage: b.criteria.id || b.id, // Fall back to primary ID if no criteria URL set.
 			Keyword: b.tags,
 			InLanguage: ['en-US'],
-			Requires: requiresData
+			Requires: [conditionProfile]
 		}
 	};
 	if (b.image) result.Credential.Image = b.image;
@@ -306,6 +309,7 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 	return result;
 };
 
+// Combines the previously saved ConditionProfile found in the publisher with the potentially updated data from the badge system
 const reconcileAlignments = (
 	publisherRequires: AlignmentObject[],
 	badgeSystemAlignments: AlignmentObject[],
@@ -313,17 +317,18 @@ const reconcileAlignments = (
 ): AlignmentObject[] => {
 	let representation: AlignmentObject[] = [];
 	publisherRequires.forEach((pa) => {
-		if (pa.Description != 'Open Badges Alignment') representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
+		if (pa.Description != 'Open Badges Alignment' && pa.Name != 'Open Badges Criteria')
+			representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
 	});
-	if (badgeSystemAlignments.length) {
-		const filteredAlignments: AlignmentObject = {
-			Description: badgeSystemAlignments[0].Description,
-			TargetCompetency: badgeSystemAlignments[0].TargetCompetency.filter(
-				(a) => !!ctid && !a.TargetNode?.includes(ctid)
-			)
+	badgeSystemAlignments.forEach((bsa) => {
+		let filteredAlignment: AlignmentObject = {
+			Description: bsa.Description,
+			TargetCompetency: bsa.TargetCompetency.filter((a) => !!ctid && !a.TargetNode?.includes(ctid))
 		};
-		representation.push(filteredAlignments);
-	}
+		if (bsa.Name) filteredAlignment.Name = bsa.Name;
+		if (bsa.SubjectWebpage) filteredAlignment.SubjectWebpage = bsa.SubjectWebpage;
+		representation.push(filteredAlignment);
+	});
 
 	return representation;
 };
@@ -368,8 +373,8 @@ const createCredentialDraftStore = () => {
 					// If the badge system version has data for the key, set that value into the draft.
 					if ('Requires' == key)
 						updated.Credential[key] = reconcileAlignments(
-							updated.Credential[key],
-							credential.Credential[key],
+							updated.Credential[key], // current data on publisher
+							credential.Credential[key], // data from badge system
 							publisherData.CTID
 						);
 					else if (credential.Credential[key as keyof CtdlCredential] != undefined)

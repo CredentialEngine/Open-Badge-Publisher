@@ -19,7 +19,7 @@
 		credentialTypesStore,
 		prettyNameForCredentialType
 	} from '$lib/stores/credentialTypesStore.js';
-	import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
+	import type { CtdlApiCredential, CtdlCredential } from '$lib/stores/publisherStore.js';
 	import BodyText from '../typography/BodyText.svelte';
 
 	export let credential: CtdlApiCredential;
@@ -150,6 +150,7 @@
 					{editStatus}
 					on:unsavedChanges={handleUnsaved}
 					editable={true}
+					fieldName="Subject Webpage"
 					fieldId="SubjectWebpage"
 					helpText="If there is an external badge criteria URL, that is used. Otherwise id is used. This URL must be resolvable at publication time."
 					validator={yup.string().required().url()}
@@ -162,6 +163,33 @@
 						{credential.Credential.SubjectWebpage}
 					</a>
 				</EditableCredentialRowText>
+
+				<EditableCredentialRowText
+					{credential}
+					{editStatus}
+					on:unsavedChanges={handleUnsaved}
+					editable={true}
+					fieldName="Criteria Narrative"
+					getter={(c) => {
+						return c.Requires.find((cp) => cp.Name == 'Open Badges Criteria')?.Description || '';
+					}}
+					transformer={(c, newValue) => {
+						let cc = { ...c };
+
+						cc.Requires = c.Requires.map((ao) => {
+							if (ao.Name == 'Open Badges Criteria') {
+								return {
+									...ao,
+									Description: newValue
+								};
+							}
+							return ao;
+						});
+						return cc;
+					}}
+					longText={true}
+					validator={yup.string().required()}
+				/>
 
 				<EditableCredentialRowSelect
 					{credential}
