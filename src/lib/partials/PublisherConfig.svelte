@@ -116,6 +116,11 @@
 
 	const handlePreviewCredentials = () => {
 		credentialsLoading = getOrgCredentialList(); // eventually resolves to true once loaded
+		credentialsLoading.then(() => {
+			panelIsHidden = true;
+			$publisherSetupStep = 4;
+			if ($badgeSetupStep == 0) $badgeSetupStep = 1;
+		});
 		publisherSetupStep.set(3);
 	};
 
@@ -352,9 +357,9 @@
 					</div>
 				{:then value}
 					<BodyText gray={true}>
-						View {$publisherCredentials.credentials.length} existing
+						Successfully loaded {$publisherCredentials.credentials.length} existing
 						{pluralize($publisherCredentials.credentials.length, 'credential')}
-						credentials via your
+						credentials. View
 						<a
 							href={`${PUBLIC_PUBLISHER_API_BASEURL}/summary/organization/${$publisherOrganization.org?.Id}`}
 							class="text-midnight text-underline hover:no-underline"
