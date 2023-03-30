@@ -134,14 +134,8 @@
 			<label for={inputId}>{fieldName || fieldId}</label>
 		</th>
 		<td class="py-4 px-6">
-			{#if isPendingUpdate && publisherFieldData != value}
-				<div class="w-full mb-2">
-					<span
-						class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
-					>
-						Updated
-					</span>
-				</div>
+			{#if helpText}
+				<BodyText><span class="text-xs text-gray-600">{helpText}</span></BodyText>
 			{/if}
 			<select
 				id={inputId}
@@ -156,6 +150,11 @@
 			{#if isPendingUpdate && publisherFieldData != value}
 				<div transition:slide>
 					<BodyText>
+						<span
+							class="bg-supermint text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 whitespace-nowrap rounded"
+						>
+							Updated
+						</span>
 						<span class="text-xs text-gray-600"
 							>On publisher: {prettyNameForValue(publisherFieldData)}</span
 						>

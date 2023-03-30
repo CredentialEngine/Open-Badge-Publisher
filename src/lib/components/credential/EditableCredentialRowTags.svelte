@@ -166,6 +166,9 @@
 		</th>
 		<td class="py-4 px-6">
 			<div class="mb-3">
+				{#if helpText}
+					<BodyText><span class="text-xs text-gray-600">{helpText}</span></BodyText>
+				{/if}
 				<div class="flex flex-wrap flex-row">
 					{#if isValueUpdated}
 						<span

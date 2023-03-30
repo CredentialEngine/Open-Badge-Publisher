@@ -37,17 +37,28 @@
 		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 			<tr>
 				<th scope="col" class="py-3 px-6">
-					<Button
-						class="text-sm focus:ring-4 focus:outline-none rounded text-center font-medium border-0 bg-transparent"
-						on:click={handleSelectAllOrNone}
-						>☑
-						<span class="sr-only">
-							This option selects or deselects all the badges for publishing.
-						</span>
-					</Button>
-					<span class="sr-only"
-						>First column in the table is a checkbox allowing you to select a row for publishing.</span
-					>
+					<span class="sr-only" id="includeBadge-selectAll-label">
+						This option selects or deselects all the badges for publishing.
+					</span>
+					<input
+						checked={Object.keys($checkedBadges).length == $normalizedBadges.length}
+						on:change={(e) => {
+							handleSelectAllOrNone();
+							if (
+								e.target instanceof HTMLInputElement &&
+								e.target.checked != (Object.keys($checkedBadges).length == $normalizedBadges.length)
+							)
+								e.target.checked = !e.target.checked;
+						}}
+						id={'includeBadge-selectAll'}
+						type="checkbox"
+						value=""
+						aria-labelledby="includeBadge-selectAll-label"
+						class="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 focus:ring-2"
+					/>
+					<span class="sr-only">
+						The first cell in each row is a checkbox allowing you to select that row for publishing.
+					</span>
 				</th>
 				<th scope="col" class="py-3 px-6"> Badge Name </th>
 				<th scope="col" class="py-3 px-6"> Description </th>
