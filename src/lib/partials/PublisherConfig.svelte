@@ -104,6 +104,9 @@
 
 	onMount(() => {
 		userPromise = getUser();
+		userPromise.then(() => {
+			if ($publisherUser) $publisherSetupStep = 2;
+		});
 		publisherSetupStep.set(1);
 	});
 
