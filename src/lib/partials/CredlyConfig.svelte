@@ -160,7 +160,7 @@
 		/>
 		<Button
 			buttonType="primary"
-			class="mb-3"
+			class="mb-3 text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2"
 			disabled={debounceRefreshIssuer}
 			on:click={handleSaveCredlyIssuer}
 		>
@@ -183,7 +183,11 @@
 				disabled
 			/>
 		</div>
-		<Button buttonType="default" class="mb-3" on:click={handleClearCredlyIssuer}>Clear</Button>
+		<Button
+			buttonType="default"
+			class="mb-3 text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2"
+			on:click={handleClearCredlyIssuer}>Clear</Button
+		>
 	{/if}
 </div>
 
