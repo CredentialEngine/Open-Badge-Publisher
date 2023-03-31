@@ -190,7 +190,12 @@
 					}}
 					longText={true}
 					validator={yup.string().required()}
-				/>
+				>
+					<div class="whitespace-pre-line">
+						{credential.Credential.Requires.find((cp) => cp.Name == 'Open Badges Criteria')
+							?.Description || ''}
+					</div>
+				</EditableCredentialRowText>
 
 				<EditableCredentialRowSelect
 					{credential}

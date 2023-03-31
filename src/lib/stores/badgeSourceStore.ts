@@ -79,7 +79,7 @@ export const credlyIssuerBadges = writable<Array<CredlyBadgeBasic>>([]);
 const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => {
 	const issuerId = get(credlyIssuerData)?.id;
 	const criteriaComponents =
-		cb.badge_template_activities?.map((a) => `{$a.activity_type}: ${a.title}`).join(' \n') || '';
+		cb.badge_template_activities?.map((a) => `${a.activity_type}: ${a.title}`).join(' \n\n') || '';
 
 	const originalAlignments =
 		cb.alignments?.map((a) => {
@@ -109,7 +109,7 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 		tags: [], // CE requested that skills show up in alignments instead of tags
 		alignment: [...originalAlignments, ...skillsAlignments],
 		criteria: {
-			id: cb.url,
+			id: cb.url, // https://www.credly.com/org/education-design-lab/badge/resilience.7
 			narrative: criteriaComponents
 		}
 	};
