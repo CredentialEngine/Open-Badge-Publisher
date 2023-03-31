@@ -98,19 +98,32 @@
 	$: updateCounts($ctdlPublicationResultStore);
 </script>
 
-<BodyText>
-	There {pluralizeFrom(counts.pendingNew, 'are', 'is', 'are')}
-	<span class="font-bold">
-		{counts.pendingNew} new {pluralize(counts.pendingNew, 'credential')}
-	</span>
-	ready to be saved.
-	<span class="font-bold">{counts.pendingUpdate} {pluralize(counts.pendingUpdate, 'update')}</span>
-	to existing credentials {pluralizeFrom(counts.pendingUpdate, 'are', 'is', 'are')} pending.
-	<span class="font-bold">{counts.saveSuccess} {pluralize(counts.saveSuccess, 'credential')}</span>
-	have been successfully saved.
-	<span class="font-bold">{counts.saveError} {pluralize(counts.saveError, 'error')}</span> resulted from
-	this batch of saves. Detailed results below.
-</BodyText>
+<div class="flex items-center md:items-start flex-col justify-between md:flex-row">
+	<div>
+		<BodyText>
+			There {pluralizeFrom(counts.pendingNew, 'are', 'is', 'are')}
+			<span class="font-bold">
+				{counts.pendingNew} new {pluralize(counts.pendingNew, 'credential')}
+			</span>
+			ready to be saved.
+			<span class="font-bold"
+				>{counts.pendingUpdate} {pluralize(counts.pendingUpdate, 'update')}</span
+			>
+			to existing credentials {pluralizeFrom(counts.pendingUpdate, 'are', 'is', 'are')} pending.
+			<span class="font-bold"
+				>{counts.saveSuccess} {pluralize(counts.saveSuccess, 'credential')}</span
+			>
+			have been successfully saved.
+			<span class="font-bold">{counts.saveError} {pluralize(counts.saveError, 'error')}</span> resulted
+			from this batch of saves. Detailed results below.
+		</BodyText>
+	</div>
+	<div>
+		<Button on:click={handleSaveAll} disabled={counts.pendingNew + counts.pendingUpdate == 0}>
+			Save all
+		</Button>
+	</div>
+</div>
 
 <div class="mt-4 overflow-x-auto relative rounded-lg" transition:slide>
 	<table class="w-full text-sm text-left text-gray-500">
