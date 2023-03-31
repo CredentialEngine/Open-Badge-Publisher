@@ -80,6 +80,25 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 	const issuerId = get(credlyIssuerData)?.id;
 	const criteriaComponents =
 		cb.badge_template_activities?.map((a) => `{$a.activity_type}: ${a.title}`).join(' \n') || '';
+
+	const originalAlignments =
+		cb.alignments?.map((a) => {
+			return {
+				targetUrl: a.url,
+				targetName: a.name,
+				targetDescription: a.description
+			};
+		}) ?? [];
+	const skillsAlignments =
+		cb.skills?.map((s) => {
+			return {
+				targetUrl: `https://credly.com/skill/${s.vanity_slug}`,
+				targetName: s.name,
+				targetDescription:
+					'Credly Skill Alignment. Skill trends, top job titles, and related skills are available.'
+			};
+		}) ?? [];
+
 	return {
 		id: `https://api.credly.com/v1/obi/v2/issuers/${issuerId}/badge_classes/${cb.id}`,
 		name: cb.name,
@@ -87,14 +106,8 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 		issuer: `https://api.credly.com/v1/obi/v2/issuers/${issuerId}`,
 		image: cb.image_url,
 		achievementType: null,
-		tags: cb.skills?.map((s) => s.name),
-		alignment: cb.alignments?.map((a) => {
-			return {
-				targetUrl: a.url,
-				targetName: a.name,
-				targetDescription: a.description
-			};
-		}),
+		tags: [], // CE requested that skills show up in alignments instead of tags
+		alignment: [...originalAlignments, ...skillsAlignments],
 		criteria: {
 			id: cb.url,
 			narrative: criteriaComponents

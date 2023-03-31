@@ -17,7 +17,7 @@
 
 	let value: AlignmentObject[] = credential.Credential[fieldId] || [];
 	let filteredValues: AlignmentObject[] = value.filter(
-		(v) => v.Description == 'Open Badges Alignment'
+		(v) => v.Description == 'Open Badges Alignment' || v.Name == 'Open Badges Criteria'
 	);
 
 	const handleToggleItem = async (nodeToToggle: string) => {
