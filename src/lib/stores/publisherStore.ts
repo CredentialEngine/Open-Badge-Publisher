@@ -282,7 +282,10 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 			TargetNode: a.targetUrl,
 			TargetNodeName: a.targetName,
 			TargetNodeDescription: a.targetDescription,
-			CodedNotation: a.targetCode
+			CodedNotation:
+				!a.targetCode?.match(/^https?:\/\//) && a.targetCode != a.targetUrl
+					? a.targetCode
+					: undefined
 		});
 	});
 
