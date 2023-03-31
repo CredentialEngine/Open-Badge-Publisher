@@ -96,6 +96,7 @@
 					{editStatus}
 					on:unsavedChanges={handleUnsaved}
 					fieldId="CTID"
+					getter={(cred) => cred.CTID || 'To be assigned on save'}
 					editable={false}
 					helpText="A Credential Transparency Identifier (CTID) is assigned by Credential Engine upon creation."
 				/>
