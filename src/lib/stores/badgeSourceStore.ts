@@ -1,4 +1,4 @@
-import type { BadgeClassBasic } from '$lib/utils/badges.js';
+import type { BadgeClassBasic, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
 import {
 	badgeclassFromCanvasApiBadge,
 	canvasRegions,
@@ -6,7 +6,7 @@ import {
 	type CanvasIssuer
 } from '$lib/utils/canvas.js';
 import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
-import { writable, derived, get } from 'svelte/store';
+import { writable, derived, get, type Readable } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
 
@@ -79,7 +79,13 @@ export const credlyIssuerBadges = writable<Array<CredlyBadgeBasic>>([]);
 const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => {
 	const issuerId = get(credlyIssuerData)?.id;
 	const criteriaComponents =
-		cb.badge_template_activities?.map((a) => `${a.activity_type}: ${a.title}`).join(' \n\n') || '';
+		cb.badge_template_activities
+			?.map((a) => {
+				let ret = `${a.activity_type}: ${a.title}`;
+				if (a.url) ret += ` ( ${a.url} )`;
+				return ret;
+			})
+			.join(' \n\n') || '';
 
 	const originalAlignments =
 		cb.alignments?.map((a) => {
@@ -172,7 +178,7 @@ export const badgeSetupComplete = derived(
 	}
 );
 
-export const normalizedBadges = derived(
+export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 	[
 		badgeSetupComplete,
 		badgeSourceType,

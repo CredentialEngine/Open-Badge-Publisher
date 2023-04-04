@@ -7,7 +7,7 @@ import {
 	PUBLIC_PUBLISHER_API_BASEURL,
 	PUBLIC_PUBLISHER_API_ENV_LABEL
 } from '$env/static/public';
-import type { BadgeClassBasic, Alignment } from '$lib/utils/badges.js';
+import type { BadgeClassBasic, BadgeClassCTDLExtended, Alignment } from '$lib/utils/badges.js';
 import { normalizedBadges, checkedBadges } from '$lib/stores/badgeSourceStore.js';
 import { haveSameDomain } from '$lib/utils/urls.js';
 
@@ -84,6 +84,8 @@ export interface CtdlCredential {
 	SubjectWebpage: string; // "http://www.hutchcc.edu/",
 
 	//============= OPTIONAL PROPERTIES =============
+	DateEffective?: string; // "2019-01-01T00:00:00.00Z", Date the credential definition was created
+
 	InLanguage: string[]; // ["en-US"], // Language: defaults to en-US if not provided
 
 	// SameAs: provide the CTID or URL of a resource in the registry. Not presently used.
@@ -265,7 +267,7 @@ export const defaultAchievementTypeForBadgeAchievementType = (btype: string): st
 };
 
 // Converts a credential's data from Open Badges format to CTDL Publisher API format
-export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCredential => {
+export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlApiCredential => {
 	const publisherOrgId = get(publisherOrganization).org?.CTID;
 	if (!publisherOrgId) throw new Error('Publishing org must be set before importing credentials.');
 
@@ -297,6 +299,7 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassBasic): CtdlApiCreden
 			),
 			CredentialStatusType: 'Active',
 			Name: b.name,
+			DateEffective: b['ceterms:dateEffective'],
 			Description: b.description,
 			OwnedBy: [{ CTID: publisherOrgId }],
 			OfferedBy: [{ CTID: publisherOrgId }],

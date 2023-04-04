@@ -26,6 +26,10 @@ export interface BadgeClassBasic {
 	alignment: Alignment[];
 }
 
+export interface BadgeClassCTDLExtended extends BadgeClassBasic {
+	'ceterms:dateEffective'?: string;
+}
+
 interface MaybeABadgeClass {
 	'@context'?: string;
 	type?: string;

@@ -1,8 +1,6 @@
-import type { Alignment, BadgeClassBasic } from '$lib/utils/badges.js';
+import type { Alignment, BadgeClassBasic, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
 import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
-import {
-	PUBLIC_UI_API_BASEURL, PUBLIC_PUBLISHER_API_ENV_LABEL
-} from '$env/static/public';
+import { PUBLIC_UI_API_BASEURL, PUBLIC_PUBLISHER_API_ENV_LABEL } from '$env/static/public';
 
 // Canvas Options
 export interface CanvasIssuer {
@@ -80,7 +78,7 @@ export const canvasRegions = new Map([
 	]
 ]);
 
-export const badgeclassFromCanvasApiBadge = (cb: CanvasBadge): BadgeClassBasic => {
+export const badgeclassFromCanvasApiBadge = (cb: CanvasBadge): BadgeClassCTDLExtended => {
 	return {
 		id: cb.openBadgeId,
 		name: cb.name,
@@ -93,9 +91,7 @@ export const badgeclassFromCanvasApiBadge = (cb: CanvasBadge): BadgeClassBasic =
 		criteria: {
 			id: cb.criteriaUrl,
 			narrative: cb.criteriaNarrative
-		}
+		},
+		'ceterms:dateEffective': cb.createdAt
 	};
 };
-
-
-	
