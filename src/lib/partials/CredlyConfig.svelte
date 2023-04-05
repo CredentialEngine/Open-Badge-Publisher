@@ -112,7 +112,9 @@
 						description: b.description,
 						image_url: b.image_url,
 						alignments: b.alignments,
-						skills: b.skills
+						skills: b.skills,
+						badge_template_activities: b.badge_template_activities,
+						url: b.url
 					};
 				})
 			];
@@ -160,7 +162,7 @@
 		/>
 		<Button
 			buttonType="primary"
-			class="mb-3"
+			class="mb-3 text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2"
 			disabled={debounceRefreshIssuer}
 			on:click={handleSaveCredlyIssuer}
 		>
@@ -172,18 +174,17 @@
 				class="inline-flex items-center p-2 text-sm text-gray-900 bg-gray-200 rounded-l border border-r-0 border-gray-300"
 				>🔒</span
 			>
-			<input
-				bind:value={credlyIssuerUrl}
-				autocomplete="off"
-				type="text"
-				name="issuer_url"
-				id="input_credlyissuerurl"
-				aria-label="disabled credly issuer input"
+			<div
 				class="rounded-none rounded-r bg-gray-50 p-2 mr-3 border border-gray-300 text-gray-700 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm cursor-not-allowed"
-				disabled
-			/>
+			>
+				{credlyIssuerUrl}
+			</div>
 		</div>
-		<Button buttonType="default" class="mb-3" on:click={handleClearCredlyIssuer}>Clear</Button>
+		<Button
+			buttonType="default"
+			class="mb-3 text-sm focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2"
+			on:click={handleClearCredlyIssuer}>Clear</Button
+		>
 	{/if}
 </div>
 

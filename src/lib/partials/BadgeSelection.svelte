@@ -7,11 +7,29 @@
 		normalizedBadges,
 		checkedBadges
 	} from '$lib/stores/badgeSourceStore.js';
+	import Icon from 'svelte-icons-pack/Icon.svelte';
+	import FaSolidExternalLinkAlt from 'svelte-icons-pack/fa/FaSolidExternalLinkAlt.js';
 	import { publisherCredentials } from '$lib/stores/publisherStore.js';
 	import abbreviate from '$lib/utils/abbreviate.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
+
+	let showCreatedColumn = false;
+	$: if ($normalizedBadges.length && $normalizedBadges[0]['ceterms:dateEffective'])
+		showCreatedColumn = true;
+
+	const formatDate = (date: string | undefined) => {
+		const d = date ? new Date(date) : undefined;
+		return d
+			? d.toLocaleDateString('en-US', {
+					weekday: undefined,
+					month: '2-digit',
+					day: '2-digit',
+					year: 'numeric'
+			  })
+			: 'Unknown';
+	};
 
 	const handleChange = (badgeId: string) => {
 		$checkedBadges[badgeId] = !$checkedBadges[badgeId];
@@ -60,9 +78,12 @@
 						The first cell in each row is a checkbox allowing you to select that row for publishing.
 					</span>
 				</th>
-				<th scope="col" class="py-3 px-6"> Badge Name </th>
+				<th scope="col" class="py-3 px-6 w-20"> Badge Name </th>
 				<th scope="col" class="py-3 px-6"> Description </th>
-				<th scope="col" class="py-3 px-6"> ID </th>
+				{#if showCreatedColumn}
+					<th scope="col" class="py-3 px-6"> Created </th>
+				{/if}
+				<th scope="col" class="py-3 px-6"> Link </th>
 			</tr>
 		</thead>
 		<tbody>
@@ -86,8 +107,20 @@
 					<td class="py-4 px-6">
 						{abbreviate(badge.description)}
 					</td>
+					{#if showCreatedColumn}
+						<td class="py-4 px-6">
+							{formatDate(badge['ceterms:dateEffective'])}
+						</td>
+					{/if}
 					<td class="py-4 px-6">
-						<a class="text-midnight underline" href={badge.id} target="new">View source</a>
+						<a class="text-midnight underline" href={badge.id} target="new">
+							<Icon
+								src={FaSolidExternalLinkAlt}
+								color="currentColor"
+								className="inline-block"
+								size="0.8em"
+							/>
+						</a>
 					</td>
 				</tr>
 			{/each}
