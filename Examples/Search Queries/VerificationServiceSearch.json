@@ -27,21 +27,19 @@
 {
 	"Valid": true,
 	"Data": {
-		"TotalResults": 275,
+		"TotalResults": 3,
 		"Results": [
 			{
 				"Id": 1141,
 				"RowId": "00000000-0000-0000-0000-000000000000",
 				"Description": "Search this directory, https://www.bcsp.org/Resources/Credential-Holder-Directory, to determine who currently holds a BCSP certification or designation. If you have difficulties finding an individual or question an individual's certification status, please contact our office at bcsp@bcsp.org or at +1 317-593-4800. To report unauthorized use, use our complaint form which can be found here: https://www.bcsp.org/Portals/0/Assets/DocumentLibrary/Complaint_Form.pdf.",
-				"CTID": "ce-41968b35-d635-4fe9-8319-cb6879ebffdb",
-				"Type": "ceterms:certification"
+				"CTID": "ce-41968b35-d635-4fe9-8319-cb6879ebffdb"
 			},
 			{
 				"Id": 11,
 				"RowId": "00000000-0000-0000-0000-000000000000",
 				"Description": "To request verification of an individual's certification status, please submit the individual's full name, and AHIMA ID number (if possible) on your company's letterhead. Please include your fax and/or e-mail information specifying which to use to expedite your request. Verifications are processed within two to three business days. Fax this correspondence to (312) 233-1500. Attn: Credential Verification, or e-mail your request to credential_verification@ahima.org. This service is available to employers and recruiters only. For all other inquires contact Customer Relations.",
-				"CTID": "ce-54c34725-9986-4371-a837-5b4ed1c1b18d",
-				"Type": "ceterms:badge"
+				"CTID": "ce-54c34725-9986-4371-a837-5b4ed1c1b18d"
 			},
 			{
 				"etc": "etc"
