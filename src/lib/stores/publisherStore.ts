@@ -107,6 +107,9 @@ export interface CtdlCredential {
 
 	// Alignments: Condition profiles with required competencies (Open Badges alignments are assumed to have this relation in Credential)
 	Requires: AlignmentObject[];
+
+	// Verification Service Profile
+	UsesVerificationService: string[];
 }
 
 export interface CtdlApiCredential {
@@ -140,6 +143,9 @@ export const setPublisherSelection = (orgId: string) => {
 	const selectedOrgData = get(publisherUser).user?.Organizations?.find((o) => o.CTID == orgId);
 	publisherOrganization.set({ org: selectedOrgData });
 };
+
+// The CTID of the verification service selected for the current organization
+export const publisherVerificationService = writable<string>('');
 
 // Which credentials already exist within the publisher for the selected org:
 export const publisherCredentials = writable<PublisherCredentialsDataStore>({
@@ -183,6 +189,80 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 		credentials: responseData.Data.Results,
 		totalResults: responseData.Data.totalResults
 	});
+
+	return true;
+};
+
+export const getOrgVsp = async (): Promise<boolean> => {
+	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Resource/PublisherSearch`;
+	const orgCtid = get(publisherOrganization).org?.CTID;
+
+	const formData = {
+		Filters: [
+			{
+				URI: 'search:recordOwnedBy',
+				ItemTexts: [orgCtid]
+			},
+			{
+				URI: '@type',
+				ItemTexts: ['verificationservice']
+			},
+			{
+				URI: 'ceterms:claimType',
+				ItemTexts: ['claimType:BadgeClaim']
+			}
+		],
+		Skip: 0,
+		Take: 10
+	};
+
+	const response = await fetch(url, {
+		method: 'POST',
+		body: JSON.stringify(formData),
+		headers: {
+			Authorization: `Bearer ${get(publisherUser).user?.Token}`,
+			'Content-Type': 'application/json'
+		}
+	});
+	const responseData = await response.json();
+	if (!responseData['Valid']) {
+		return false;
+	}
+
+	if (responseData.Data?.Results.length) {
+		publisherVerificationService.set(responseData.Data.Results[0]?.CTID || '');
+	} else {
+		const vspCreateData = {
+			PublishForOrganizationIdentifier: orgCtid,
+			VerificationServiceProfile: {
+				Description:
+					'Open Badges verification: This organization issues credentials as Open Badges, which can each be verified by employers or other verifiers with whom they are shared.',
+				OfferedBy: [
+					{
+						CTID: orgCtid
+					}
+				]
+			}
+		};
+
+		const createResponse = await fetch(
+			`${PUBLIC_UI_API_BASEURL}/StagingApi/VerificationService/Save`,
+			{
+				method: 'POST',
+				body: JSON.stringify(vspCreateData),
+				headers: {
+					Authorization: `Bearer ${get(publisherUser).user?.Token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		const createResponseData = await response.json();
+		if (!responseData['Valid']) {
+			return false;
+		}
+		publisherVerificationService.set(createResponseData.Data?.CTID || '');
+	}
 
 	return true;
 };
@@ -271,6 +351,8 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlAp
 	const publisherOrgId = get(publisherOrganization).org?.CTID;
 	if (!publisherOrgId) throw new Error('Publishing org must be set before importing credentials.');
 
+	const vsp = get(publisherVerificationService);
+
 	const badgeAlignments = b.alignment || [];
 	let conditionProfile: AlignmentObject = {
 		Name: 'Open Badges Criteria',
@@ -307,7 +389,8 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlAp
 			SubjectWebpage: b.criteria.id || b.id, // Fall back to primary ID if no criteria URL set.
 			Keyword: b.tags,
 			InLanguage: ['en-US'],
-			Requires: [conditionProfile]
+			Requires: [conditionProfile],
+			UsesVerificationService: [vsp]
 		}
 	};
 	if (b.image) result.Credential.Image = b.image;
@@ -444,14 +527,12 @@ const createPublicationResultStore = () => {
 		});
 
 		const responseData = await response.json();
-		if (!responseData['Valid']) {
-			throw new Error("Credential detail data couldn't be loaded.");
-		}
 
 		updateCredentialStatus(c.CredentialId, {
 			CredentialId: c.CredentialId,
 			publicationStatus: PubStatuses.PendingUpdate,
-			publisherData: responseData['Data'] as CtdlCredential
+			publisherData: responseData['Data'] as CtdlCredential,
+			messages: responseData['Messages']
 		});
 
 		credentialDrafts.reconcileCredentialWithPublisher(

@@ -22,10 +22,12 @@
 		publisherCredentials,
 		publisherOptions,
 		publisherOrganization,
+		publisherVerificationService,
 		setPublisherSelection,
 		resetPublisherSelection,
 		publisherSetupStep,
-		getOrgCredentialList
+		getOrgCredentialList,
+		getOrgVsp
 	} from '$lib/stores/publisherStore.js';
 	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
 	import { pluralize } from '$lib/utils/pluralize.js';
@@ -118,7 +120,7 @@
 	}
 
 	const handlePreviewCredentials = () => {
-		credentialsLoading = getOrgCredentialList(); // eventually resolves to true once loaded
+		credentialsLoading = Promise.all([getOrgCredentialList(), getOrgVsp()]); // eventually resolves to true once loaded
 		credentialsLoading.then(() => {
 			panelIsHidden = true;
 			$publisherSetupStep = 4;
@@ -358,7 +360,7 @@
 					<div class="mt-2">
 						<LoadingSpinner />
 					</div>
-				{:then value}
+				{:then}
 					<BodyText gray={true}>
 						Successfully loaded {$publisherCredentials.credentials.length} existing
 						{pluralize($publisherCredentials.credentials.length, 'credential')}
@@ -368,6 +370,9 @@
 							class="text-midnight text-underline hover:no-underline"
 							target="new">organization summary page</a
 						>.
+						{#if $publisherVerificationService}
+							Using verification service {$publisherVerificationService}.
+						{/if}
 					</BodyText>
 				{/await}
 
