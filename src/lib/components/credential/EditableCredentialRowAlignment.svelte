@@ -2,33 +2,33 @@
 	import { tick } from 'svelte';
 	import {
 		credentialDrafts,
-		type CtdlApiCredential,
-		type AlignmentObject,
-		type TargetCompetency
+		type ConditionProfile,
+		type Competency,
+		type CtdlCredentialDraft
 	} from '$lib/stores/publisherStore.js';
 	import Button from '$lib/components/Button.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
-	export let credential: CtdlApiCredential;
+	export let credential: CtdlCredentialDraft;
 	export let fieldName = '';
 	export let fieldId: 'Requires';
 	export let helpText = '';
 	export let helpUrl = '';
 
-	let value: AlignmentObject[] = credential.Credential[fieldId] || [];
-	let filteredValues: AlignmentObject[] = value.filter(
+	let value: ConditionProfile[] = credential.Credential[fieldId] || [];
+	let filteredValues: ConditionProfile[] = value.filter(
 		(v) => v.Description == 'Open Badges Alignment' || v.Name == 'Open Badges Criteria'
 	);
 
 	const handleToggleItem = async (nodeToToggle: string) => {
-		const updatedListWithToggledItem = (a: AlignmentObject[]): AlignmentObject[] => {
-			let pruned: AlignmentObject[] = [];
+		const updatedListWithToggledItem = (a: ConditionProfile[]): ConditionProfile[] => {
+			let pruned: ConditionProfile[] = [];
 			value.forEach((ao) => {
 				if (ao.Description != 'Open Badges Alignment')
 					pruned.push(ao); // Ignore other Requires alignments on the Credential
 				else {
-					let tcList: TargetCompetency[] = [];
-					ao.TargetCompetency.forEach((tc) => {
+					let tcList: Competency[] = [];
+					ao.TargetCompetency?.forEach((tc) => {
 						if (tc.TargetNode == nodeToToggle) {
 							tcList.push({
 								...tc,
@@ -46,10 +46,11 @@
 			Credential: {
 				...credential.Credential
 			},
-			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
+			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier,
+			obAlignments: credential.obAlignments
 		};
 		editedCredential.Credential[fieldId] = updatedListWithToggledItem(
-			editedCredential.Credential[fieldId]
+			editedCredential.Credential[fieldId] ?? []
 		);
 		credentialDrafts.updateCredential(editedCredential);
 		await tick();
@@ -70,8 +71,8 @@
 {/if}
 
 {#each filteredValues as valueEntry, i (i)}
-	{#each valueEntry.TargetCompetency as targetCompetency, j (targetCompetency.TargetNode)}
-		<tr class="bg-white" class:border-b={j + 1 == valueEntry.TargetCompetency.length}>
+	{#each valueEntry.TargetCompetency ?? [] as targetCompetency, j (targetCompetency.TargetNode)}
+		<tr class="bg-white" class:border-b={j + 1 == valueEntry.TargetCompetency?.length}>
 			<td class="py-4 px-6" colspan="2">
 				<div>
 					<div>

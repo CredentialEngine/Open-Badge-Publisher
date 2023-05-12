@@ -3,7 +3,8 @@ import * as path from 'path';
 
 /** @type {import('vite').UserConfig} */
 const config = {
-	plugins: [sveltekit()]
+	plugins: [sveltekit()],
+	test: {}
 };
 
 export default config;

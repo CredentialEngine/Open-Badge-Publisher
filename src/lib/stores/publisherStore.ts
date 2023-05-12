@@ -10,12 +10,7 @@ import {
 import type { BadgeClassBasic, BadgeClassCTDLExtended, Alignment } from '$lib/utils/badges.js';
 import { normalizedBadges, checkedBadges } from '$lib/stores/badgeSourceStore.js';
 import { haveSameDomain } from '$lib/utils/urls.js';
-
-interface PublisherOptions {
-	cookieBasedAccess: boolean;
-	apiKey: string;
-	accessToken?: string;
-}
+import type Condition from 'yup/lib/Condition.js';
 
 interface PublisherOrganization {
 	Id: string;
@@ -42,21 +37,502 @@ interface OrganizationDataStore {
 	org?: PublisherOrganization;
 }
 
-export interface TargetCompetency {
+export interface AlignmentObject {
+	Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
+	TargetCompetency?: Competency[];
+	SubjectWebpage?: string; // Used for the expression of the critieria ID, if present.
+	Name?: string;
+	TargetNode?: string;
+}
+
+export enum AlignmentPropertyTypes {
+	DEFAULT = 'DEFAULT',
+	AdvancedStandingFrom = 'AdvancedStandingFrom',
+	Corequisite = 'Corequisite',
+	IsAdvancedStandingFor = 'IsAdvancedStandingFor',
+	IsPreparationFor = 'IsPreparationFor',
+	IsRecommendedFor = 'IsRecommendedFor',
+	IsRequiredFor = 'IsRequiredFor',
+	PreparationFrom = 'PreparationFrom',
+	Recommends = 'Recommends',
+	Requires = 'Requires',
+	AccreditedBy = 'AccreditedBy',
+	ApprovedBy = 'ApprovedBy',
+	RecognizedBy = 'RecognizedBy',
+	RegulatedBy = 'RegulatedBy'
+}
+export type AlignmentPropertyKey = keyof typeof AlignmentPropertyTypes;
+export type AlignmentPropertyTypeCredentialKey = Exclude<AlignmentPropertyKey, 'DEFAULT'>;
+
+export enum AlignmentTargetNodeTypes {
+	DEFAULT = 'DEFAULT',
+	AssessmentProfile = 'AssessmentProfile',
+	Competency = 'Competency',
+	Course = 'Course',
+	Credential = 'Credential',
+	LearningProgram = 'LearningProgram',
+	LearningOpportunity = 'LearningOpportunity',
+	Occupation = 'Occupation',
+	QACredentialOrganization = 'QACredentialOrganization'
+}
+export type AlignmentTargetNodeTypeKey = keyof typeof AlignmentTargetNodeTypes;
+
+export interface OBAlignmentConfig {
+	sourceData: Alignment;
+	propertyType: AlignmentPropertyKey;
+	targetNodeType: AlignmentTargetNodeTypeKey;
+	destinationData: { [key: string]: string }; // Holds overrides the user has made to properties of the destination object. If either type config is changed, customizations are assumed to be reset.
+	skip: boolean;
+}
+
+interface OBAlignmentMap {
+	[key: string]: OBAlignmentConfig;
+}
+
+// Objects representing alignment targets for types of things that the Credential might align to
+interface BaseAlignmentTarget {}
+
+// ceterms:AssessmentProfile can be referenced as ConditionProfile.TargetAssessment
+export interface AssessmentProfile {
+	Type: 'ceterms:AssessmentProfile';
+	Name?: string;
+	Description: string;
+	SubjectWebpage?: string;
+	Identifier?: {
+		IdentifierValueCode: string;
+	};
+}
+
+// ceasn:Competency may be referenced from ConditionProfile.TargetCompetency
+export interface Competency {
 	// Framework: Link to the target framework registry resource URL, but there is no source in Open Badges AlignmentObject to find this "https://credentialengineregistry.org/resources/ce-48A570E2-DAC8-4AD9-99A5-BF368393C73B",
 	FrameworkName?: string; // targetFramework -- Optional Framework Name
 	TargetNodeName: string; // targetName -- Required Competency Name
 	TargetNode: string; // targetUrl -- Alignment URL (preferably in registry domain)
 	TargetNodeDescription?: string; // targetDescription  -- Optional Competency Description
 	CodedNotation?: string; // targetCode
-	SKIP?: boolean; // Not part of CTDL, this enables non-destructive hiding of competencies in edit mode. Skipped nodes are not saved.
 }
 
-export interface AlignmentObject {
-	Description: string; // "Open Badges Alignment" -- purpose of the ConditionProfile
-	TargetCompetency: TargetCompetency[];
-	SubjectWebpage?: string; // Used for the expression of the critieria ID, if present.
-	Name?: string; //
+// ceterms:Course may be referenced from ConditionProfile.TargetLearningOpportunity
+export interface Course extends AlignmentObject {
+	Name: string; // "Course Name",
+	Description: string; // "Description of course.",
+	SubjectWebpage?: string; // "http://www.courses.com/course/123",
+	CodedNotation?: string; // "123",
+	Type: 'ceterms:Course';
+}
+
+// ceterms:LearningOpportunity may be referenced from ConditionProfile.TargetLearningOpportunity
+export interface LearningOpportunity extends AlignmentObject {
+	Name: string; // "Learning Opportunity Name",
+	Description: string; // "Description of learning opportunity.",
+	SubjectWebpage?: string; // "http://www.learningopportunities.com/learningopportunity/123",
+	CodedNotation?: string; // "123",
+	Type: 'ceterms:LearningOpportunity';
+}
+
+// ceterms:LearningOpportunity may be referenced from ConditionProfile.TargetLearningOpportunity
+export interface LearningProgram extends AlignmentObject {
+	Name: string; // "Learning Program Name",
+	Description: string; // "Description of learning program.",
+	SubjectWebpage?: string; // "http://www.learningprograms.com/learningprogram/123",
+	CodedNotation?: string; // "123",
+	Type: 'ceterms:LearningProgram';
+}
+
+// ctdl:Occupation may be referenced from Credential.IsRequiredFor, IsRecommendedFor, IsPreparationFor directly.
+export interface Occupation extends AlignmentObject {
+	Name: string; // "Occupation Name",
+	Description: string; // "Description of occupation.",
+	SubjectWebpage?: string; // "http://www.onetonline.org/link/summary/11-1011.00",
+	CodedNotation?: string; // "11-1011.00",
+	Type: 'ceterms:Occupation';
+}
+
+export interface QualityAssurance extends AlignmentObject {
+	Type: 'ceterms:QACredentialOrganization';
+	Name: string; // "Required Organization Name",
+	Description: string; // "Organization Description - not a description related to accreditation.",
+	SubjectWebpage?: string; // "https://example.org/subjectwebpage",
+	Identifier?: {
+		IdentifierValueCode: string;
+	};
+}
+
+// ceterms:Credential (supertype of many credential subtypes)
+// - An abbreviated Credential object may be referenced from ConditionProfile.TargetCredential
+export interface TargetCredential extends AlignmentObject {
+	Type: string; // TODO: let user pick subtype
+	Name?: string;
+	Description: string;
+	SubjectWebpage?: string;
+	Identifier?: {
+		IdentifierValueCode: string;
+	};
+}
+
+export const alignmentPropertyTypeDescriptions: { [key: string]: string } = {
+	Requires:
+		'The credential requires the completion of identified credentials, assessments or learning opportunities.',
+	AdvancedStandingFrom:
+		'This credential has its time or cost reduced by other credentials, assessments or learning opportunities.',
+	CoPrerequisite:
+		'This credential identifies other resources that must be completed prior to, or pursued at the same time, as this credential.',
+	Corequisite:
+		'This credential must be pursued concurrently with other credentials or other activities',
+	IsAdvancedStandingFor:
+		'This credential reduces the time or cost of obtaining additional identified credentials or of pursuing other activities.',
+	IsPreparationFor:
+		'This credential provides preparation for other credentials, assessments or learning opportunities.',
+	IsRecommendedFor:
+		'It is recommended to earn or complete this credential, assessment, or learning opportunity before attempting to earn or complete the referenced credentials, assessments, or learning opportunities.',
+	IsRequiredFor:
+		'This credential, assessment, or learning opportunity must be earned or completed prior to attempting to earn or complete the referenced credential, assessment, or learning opportunity.',
+	PreparationFrom:
+		'Other credentials, learning opportunities or assessments provide preparation for this credential.',
+	Recommends:
+		'Holders of this credential are recommended to pursue other credentials, assessments or learning opportunities.',
+	RecognizedBy:
+		'This credential is recognized or accepted by one or more third-party organizations.',
+	AccreditedBy: 'This credential is accredited by one or more third-party organizations.',
+	ApprovedBy: 'This credential is approved by one or more third-party organizations.',
+	RegulatedBy: 'This credential is regulated by one or more third-party organizations.'
+};
+
+export const mergeOccupationAlignment = (
+	credential: CtdlCredential,
+	alignmentConfig: OBAlignmentConfig
+): CtdlCredential => {
+	let result: CtdlCredential = { ...credential };
+
+	const property = getPropertyName(alignmentConfig.targetNodeType, alignmentConfig.propertyType);
+	const descriptionTerms: { [key: string]: string } = {
+		IsPreparationFor: 'Occupations that this credential prepares learners for',
+		IsRequiredFor: 'Occupations that require this credential',
+		IsRecommendedFor: 'Occupations for which workers are recommended to have this credential'
+	};
+	const descriptionTermFor = (property: AlignmentPropertyKey | keyof CtdlCredential) =>
+		descriptionTerms[property] || 'Open Badges Alignment';
+
+	const occupationProfile: ConditionProfile[] = [
+		{
+			Name: 'Occupations',
+			Description: descriptionTermFor(property),
+			TargetOccupation: [
+				{
+					Name: alignmentConfig.sourceData?.targetName ?? 'Connected Occupation',
+					Description:
+						alignmentConfig.sourceData?.targetDescription ??
+						'An Occupation related to this credential',
+					CodedNotation: alignmentConfig.sourceData?.targetCode,
+					Type: 'ceterms:Occupation'
+				}
+			]
+		}
+	];
+
+	const starterValue: ConditionProfile[] = (credential[property] as ConditionProfile[]) ?? [];
+	const existingCP = starterValue.find((value) => value.Name === 'Occupations');
+
+	if (existingCP) {
+		const existingTargetOccupation = existingCP.TargetOccupation ?? [];
+		result[property] = starterValue
+			.filter((value) => value.Name !== 'Occupations')
+			.concat([
+				{
+					...existingCP,
+					TargetOccupation: existingTargetOccupation.concat(
+						occupationProfile[0].TargetOccupation as Occupation[]
+					)
+				}
+			]);
+	} else {
+		result[property] = occupationProfile.concat(starterValue ?? []);
+	}
+
+	return result;
+};
+
+export const mergeQAAlignment = (
+	credential: CtdlCredential,
+	alignmentConfig: OBAlignmentConfig
+): CtdlCredential => {
+	let result: CtdlCredential = { ...credential };
+
+	const OCCUPATION_ALLOWED_PROPERTIES = [
+		'AccreditedBy',
+		'ApprovedBy',
+		'RecognizedBy',
+		'RegulatedBy'
+	];
+
+	const property = OCCUPATION_ALLOWED_PROPERTIES.includes(alignmentConfig.propertyType)
+		? (alignmentConfig.propertyType as
+				| 'AccreditedBy'
+				| 'ApprovedBy'
+				| 'RecognizedBy'
+				| 'RegulatedBy')
+		: 'RecognizedBy';
+
+	const descriptionTerms = {
+		AccreditedBy: 'QA organizations that provide official approval of this credential',
+		ApprovedBy: 'QA Organizations that approved this credential',
+		RecognizedBy: 'QA Organizations that recognize this credential',
+		RegulatedBy: 'QA Organizations that regulate this credential'
+	};
+
+	const qualityAssuranceProfile: ConditionProfile[] = [
+		{
+			...{
+				Type: 'ceterms:QACredentialOrganization',
+				Name: alignmentConfig.sourceData?.targetName ?? `${property} Organization`,
+				Description: alignmentConfig.sourceData?.targetDescription ?? 'A QA Organization',
+				SubjectWebpage: alignmentConfig.sourceData?.targetUrl ?? ''
+			},
+			...(alignmentConfig.sourceData?.targetCode && {
+				// Attach the Identifier property only if there is something useful to go there.
+				Identifier: {
+					IdentifierValueCode: alignmentConfig.sourceData?.targetCode
+				}
+			})
+		}
+	];
+
+	const starterValue: ConditionProfile[] = credential[property] ?? [];
+	const existingCP = starterValue.find(
+		(value) => value.SubjectWebpage && value.SubjectWebpage == alignmentConfig.sourceData?.targetUrl
+	);
+
+	if (existingCP) {
+		result[property] = starterValue
+			.filter(
+				(value) =>
+					!value.SubjectWebpage || value.SubjectWebpage != alignmentConfig.sourceData?.targetUrl
+			)
+			.concat(qualityAssuranceProfile);
+	} else {
+		result[property] = starterValue.concat(qualityAssuranceProfile);
+	}
+
+	return result;
+};
+
+export const mergeCompetencyAlignment = (
+	credential: CtdlCredential,
+	alignmentConfig: OBAlignmentConfig
+): CtdlCredential => {
+	let result: CtdlCredential = { ...credential };
+
+	const property = getPropertyName(alignmentConfig.targetNodeType, alignmentConfig.propertyType);
+	const descriptionTermFor = (property: AlignmentPropertyKey | keyof CtdlCredential) =>
+		alignmentPropertyTypeDescriptions[property] || 'Open Badges Alignment';
+
+	const competencyProfile: ConditionProfile[] = [
+		{
+			Name: 'Open Badges Alignment',
+			Description: descriptionTermFor(property),
+			TargetCompetency: [
+				{
+					TargetNode: alignmentConfig.sourceData.targetUrl,
+					TargetNodeName: alignmentConfig.sourceData?.targetName ?? 'Connected Competency',
+					TargetNodeDescription:
+						alignmentConfig.sourceData?.targetDescription ??
+						'A competency related to this credential',
+					FrameworkName: alignmentConfig.sourceData?.targetFramework,
+					CodedNotation: alignmentConfig.sourceData?.targetCode
+				}
+			]
+		}
+	];
+
+	const starterValue: ConditionProfile[] = (credential[property] as ConditionProfile[]) ?? [];
+	const existingCP = starterValue.find(
+		(value) => value.Name === 'Open Badges Alignment' || value.Name === 'Open Badges Criteria'
+	);
+
+	if (existingCP) {
+		const existingTargetCompetency = existingCP.TargetCompetency ?? [];
+		result[property] = starterValue
+			.filter(
+				(value) => value.Name != 'Open Badges Alignment' && value.Name != 'Open Badges Criteria'
+			)
+			.concat([
+				{
+					...existingCP,
+					TargetCompetency: existingTargetCompetency.concat(
+						competencyProfile[0].TargetCompetency as Competency[]
+					)
+				}
+			]);
+	} else {
+		result[property] = competencyProfile.concat(starterValue ?? []);
+	}
+
+	return result;
+};
+
+const connectionTypeForNodeType = (
+	nodeType: AlignmentTargetNodeTypeKey
+):
+	| 'TargetAssessment'
+	| 'TargetCompetency'
+	| 'TargetCredential'
+	| 'TargetLearningOpportunity'
+	| 'TargetOccupation' => {
+	switch (nodeType) {
+		case 'AssessmentProfile':
+			return 'TargetAssessment';
+		case 'Course':
+			return 'TargetLearningOpportunity';
+		case 'Credential':
+			return 'TargetCredential';
+		case 'LearningOpportunity':
+			return 'TargetLearningOpportunity';
+		case 'LearningProgram':
+			return 'TargetLearningOpportunity';
+		case 'Occupation':
+			return 'TargetOccupation';
+		default: // 'DEFAULT', 'QACredentialOrganization'
+			return 'TargetCompetency';
+	}
+};
+
+export const mergeSingleAlignment = (
+	credential: CtdlCredential,
+	ac: OBAlignmentConfig
+): CtdlCredential => {
+	let property: AlignmentPropertyTypeCredentialKey;
+	let targetProperty: 'TargetAssessment' | 'TargetCredential' | 'TargetLearningOpportunity';
+
+	switch (ac.targetNodeType) {
+		case 'Occupation':
+			return mergeOccupationAlignment(credential, ac);
+		case 'QACredentialOrganization':
+			return mergeQAAlignment(credential, ac);
+		case 'Competency':
+			return mergeCompetencyAlignment(credential, ac);
+		case 'AssessmentProfile':
+		case 'Course':
+		case 'Credential':
+		case 'LearningOpportunity':
+		case 'LearningProgram':
+			property = getPropertyName(ac.targetNodeType, ac.propertyType);
+			targetProperty = connectionTypeForNodeType(ac.targetNodeType) as
+				| 'TargetAssessment'
+				| 'TargetCredential'
+				| 'TargetLearningOpportunity';
+			break;
+		default:
+			return mergeCompetencyAlignment(credential, ac);
+	}
+
+	let result: CtdlCredential = { ...credential };
+	const cpName = property == 'Requires' ? 'Open Badges Criteria' : 'Open Badges Alignment';
+
+	const starterValue = Object.hasOwn(credential, property)
+		? (credential[property] as ConditionProfile[])
+		: ([] as ConditionProfile[]);
+
+	const existingCP =
+		starterValue.find((value) => value.Name === cpName) ?? ({} as ConditionProfile);
+
+	let cp: ConditionProfile = {
+		Name: cpName,
+		Description: alignmentPropertyTypeDescriptions[property]
+	};
+
+	const existingTargetList: AlignmentObject[] = existingCP
+		? (existingCP[targetProperty] as AlignmentObject[]) ?? ([] as AlignmentObject[])
+		: ([] as AlignmentObject[]);
+	const existingMatchingMember =
+		existingTargetList.find(
+			(target: any) =>
+				target.SubjectWebpage === ac.sourceData.targetUrl ||
+				(target.TargetNode && ac.sourceData.targetUrl)
+		) ?? {};
+	const filteredExistingList: AlignmentObject[] =
+		existingTargetList.filter(
+			(target: any) =>
+				target.SubjectWebpage !== ac.sourceData.targetUrl &&
+				target.TargetNode !== ac.sourceData.targetUrl
+		) ?? [];
+
+	switch (targetProperty) {
+		case 'TargetAssessment':
+			cp['TargetAssessment'] = filteredExistingList.concat([
+				{
+					...(existingMatchingMember as AssessmentProfile),
+
+					Name: ac.sourceData.targetName,
+					Description: ac.sourceData.targetDescription,
+					SubjectWebpage: ac.sourceData.targetUrl,
+					Identifier: {
+						IdentifierValueCode: ac.sourceData.targetCode || ''
+					},
+					Type: 'ceterms:AssessmentProfile'
+				} as AssessmentProfile
+			]) as AssessmentProfile[];
+			break;
+		case 'TargetCredential':
+			cp['TargetCredential'] = filteredExistingList.concat([
+				{
+					...(existingMatchingMember as TargetCredential),
+
+					Name: ac.sourceData.targetName,
+					Description: ac.sourceData.targetDescription,
+					SubjectWebpage: ac.sourceData.targetUrl,
+					Identifier: {
+						IdentifierValueCode: ac.sourceData.targetCode || ''
+					},
+					Type: ac.destinationData?.Type ?? 'ceterms:Certification'
+				} as TargetCredential
+			]) as TargetCredential[];
+			break;
+		case 'TargetLearningOpportunity':
+			cp['TargetLearningOpportunity'] = filteredExistingList.concat([
+				{
+					...(existingMatchingMember as Course | LearningOpportunity | LearningProgram),
+					Name: ac.sourceData.targetName,
+					Description: ac.sourceData.targetDescription,
+					SubjectWebpage: ac.sourceData.targetUrl,
+					CodedNotation: ac.sourceData.targetCode || '',
+					Type: `ceterms:${ac.targetNodeType}`
+				} as Course | LearningOpportunity | LearningProgram
+			]) as (Course | LearningOpportunity | LearningProgram)[];
+			break;
+	}
+
+	result[property] = starterValue.filter((value) => value.Name !== cpName).concat([cp]);
+	return result;
+};
+
+export const mergeAllAlignments = (
+	credential: CtdlCredential,
+	alignmentMap: { [key: string]: OBAlignmentConfig }
+): CtdlCredential => {
+	let result: CtdlCredential = { ...credential };
+	const alignmentKeys = Object.keys(alignmentMap);
+	return alignmentKeys.reduce((acc: CtdlCredential, key: string) => {
+		if (alignmentMap[key].skip) return acc;
+		return mergeSingleAlignment(acc, alignmentMap[key]);
+	}, result);
+};
+
+// TODO was using "AlignmentObject" above, but Requires and these other fields actually accept a ConditionProfile, so customizing it here. Remove the above AlignmentObject if it's no longer used after this refactor.
+export interface ConditionProfile {
+	Type?: string; // usually defaults to just ConditionProfile, but sometimes it's something else, e.g. Credential.ApprovedBy.Type = "ceterms:QACredentialOrganization"
+	Description: string; // e.g. used for the expression of criteria narrative
+	SubjectWebpage?: string; // Used for the expression of the critieria ID, if present in a Requires profile.
+	Name?: string; // e.g. "Open Badges Criteria"
+	Identifier?: {
+		IdentifierValueCode: string;
+	};
+
+	TargetAssessment?: AssessmentProfile[];
+	TargetCompetency?: Competency[];
+	TargetCredential?: TargetCredential[];
+	TargetLearningOpportunity?: Array<Course | LearningOpportunity | LearningProgram>;
+	TargetOccupation?: Occupation[];
 }
 
 export interface CtdlCredential {
@@ -105,8 +581,32 @@ export interface CtdlCredential {
 	Keyword?: string[]; // ["tag1", "tag two"] // list of keywords for the credential
 	// "Subject": string[];  // ["Subject1", "Subject2"], // not used at this time. list of subjects for the credential
 
-	// Alignments: Condition profiles with required competencies (Open Badges alignments are assumed to have this relation in Credential)
-	Requires: AlignmentObject[];
+	// Alignments: Condition profiles with required competencies, assessments, learning opportunities, etc.
+	AdvancedStandingFrom?: ConditionProfile[];
+	Corequisite?: ConditionProfile[];
+	IsAdvancedStandingFor?: ConditionProfile[];
+	IsPreparationFor?: ConditionProfile[];
+	IsRecommendedFor?: ConditionProfile[];
+	IsRequiredFor?: ConditionProfile[];
+	PreparationFrom?: ConditionProfile[];
+	Recommends?: ConditionProfile[];
+	Requires?: ConditionProfile[]; // Used for Open Badges Criteria and some other alignments.
+
+	// OccupationType alignment
+	OccupationType?: Array<{
+		TargetNodeName: string; // "Occupation Name",
+		TargetNode: string; // "http://www.onetonline.org/link/summary/11-1011.00",
+		TargetNodeDescription: string; // "Description of occupation.",
+		Framework: string; // confusing... TODO check if they did this right
+		CodedNotaion: string; // "11-1011.00",
+	}>;
+
+	// Alignments: QualityAssurance
+	// TODO these should be QACredentialOrganization type
+	AccreditedBy?: ConditionProfile[];
+	ApprovedBy?: ConditionProfile[];
+	RecognizedBy?: ConditionProfile[];
+	RegulatedBy?: ConditionProfile[];
 
 	// Verification Service Profile
 	UsesVerificationService: string[];
@@ -116,6 +616,64 @@ export interface CtdlApiCredential {
 	//required CTID of the owning organization
 	PublishForOrganizationIdentifier: string; // "ce-696ea290-249a-4f99-9ed1-419f000d8472",
 	Credential: CtdlCredential;
+}
+
+export enum CtdlAlignmentProperty {
+	// Expect type ConditionProfile
+	advancedStandingFrom = 'AdvancedStandingFrom',
+	corequisite = 'Corequisite',
+	isAdvancedStandingFor = 'IsAdvancedStandingFor',
+	isPreparationFor = 'IsPreparationFor',
+	isRecommendedFor = 'IsRecommendedFor',
+	isRequiredFor = 'IsRequiredFor',
+	preparationFrom = 'PreparationFrom',
+	recommends = 'Recommends',
+	requires = 'Requires',
+
+	// Expect type QACredentialOrganization
+	accreditedBy = 'AccreditedBy',
+	approvedBy = 'ApprovedBy',
+	recognizedBy = 'RecognizedBy',
+	regulatedBy = 'RegulatedBy'
+}
+
+export enum CtdlTargetNodeType {
+	AssessmentProfile = 'ceterms:AssessmentProfile',
+	Competency = 'ceterms:Competency',
+	Course = 'ceterms:Course',
+	Credential = 'ceterms:Credential', // TODO: this is invalid. User must pick a subtype.
+	LearningProgram = 'ceterms:LearningProgram',
+	LearningOpportunity = 'ceterms:LearningOpportunity',
+	Occupation = 'ceterms:Occupation',
+	QACredentialOrganization = 'ceterms:QACredentialOrganization'
+}
+
+const RequiresGroup = [
+	'Requires',
+	'AdvancedStandingFrom',
+	'CoPrerequisite',
+	'Corequisite',
+	'IsAdvancedStandingFor',
+	'IsPreparationFor',
+	'IsRecommendedFor',
+	'IsRequiredFor',
+	'PreparationFrom',
+	'Recommends'
+];
+export const nodeTypePropertyDefaultMap = {
+	DEFAULT: RequiresGroup,
+	AssessmentProfile: RequiresGroup,
+	Competency: RequiresGroup,
+	Course: RequiresGroup,
+	Credential: RequiresGroup,
+	LearningProgram: RequiresGroup,
+	LearningOpportunity: RequiresGroup,
+	Occupation: ['IsPreparationFor', 'IsRecommendedFor', 'IsRequiredFor'],
+	QACredentialOrganization: ['RecognizedBy', 'AccreditedBy', 'ApprovedBy', 'RegulatedBy']
+};
+
+export interface CtdlCredentialDraft extends CtdlApiCredential {
+	obAlignments: OBAlignmentMap; // indexed by targetUrl (which is a required string)
 }
 
 interface PublisherCredentialSummary {
@@ -133,6 +691,31 @@ interface PublisherCredentialsDataStore {
 	credentials: Array<PublisherCredentialSummary>;
 	totalResults: number;
 }
+
+interface PublisherOptions {
+	cookieBasedAccess: boolean;
+	apiKey: string;
+	accessToken?: string;
+	alignmentSettings: {
+		defaultTargetType: CtdlTargetNodeType;
+		defaultPropertyType: CtdlAlignmentProperty;
+	};
+}
+
+/**
+ * Get the default property name for a given node type, or validate a suggestion, returning default value if suggestion is not acceptable.
+ */
+export const getPropertyName = (
+	nodeType: AlignmentTargetNodeTypeKey,
+	suggestion?: AlignmentPropertyKey
+): AlignmentPropertyTypeCredentialKey => {
+	if (suggestion) {
+		return suggestion !== 'DEFAULT' && nodeTypePropertyDefaultMap[nodeType].includes(suggestion)
+			? suggestion
+			: (nodeTypePropertyDefaultMap[nodeType][0] as AlignmentPropertyTypeCredentialKey);
+	}
+	return nodeTypePropertyDefaultMap[nodeType][0] as AlignmentPropertyTypeCredentialKey;
+};
 
 // Which user is authenticated, if any
 export const publisherUser = writable<UserDataStore>({});
@@ -272,11 +855,15 @@ export const resetPublisherSelection = () => {
 	publisherCredentials.set({ credentials: [], totalResults: 0 });
 };
 
-// Details about the API connection to the publisher
+// Details about the API connection to the publisher and configuration
 export const publisherOptions = writable<PublisherOptions>({
 	cookieBasedAccess: false,
 	apiKey: '',
-	accessToken: undefined
+	accessToken: undefined,
+	alignmentSettings: {
+		defaultTargetType: CtdlTargetNodeType.Competency,
+		defaultPropertyType: CtdlAlignmentProperty.requires
+	}
 });
 
 // Governs which step is displayed
@@ -347,33 +934,20 @@ export const defaultAchievementTypeForBadgeAchievementType = (btype: string): st
 };
 
 // Converts a credential's data from Open Badges format to CTDL Publisher API format
-export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlApiCredential => {
+export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlCredentialDraft => {
 	const publisherOrgId = get(publisherOrganization).org?.CTID;
 	if (!publisherOrgId) throw new Error('Publishing org must be set before importing credentials.');
 
 	const vsp = get(publisherVerificationService);
 
-	const badgeAlignments = b.alignment || [];
-	let conditionProfile: AlignmentObject = {
+	const badgeAlignments = b.alignment ?? [];
+	let conditionProfile: ConditionProfile = {
 		Name: 'Open Badges Criteria',
 		Description: b.criteria.narrative ? markdownToTxt(b.criteria.narrative) : 'Earning criteria',
-		SubjectWebpage: b.criteria.id || undefined,
-		TargetCompetency: []
+		SubjectWebpage: b.criteria.id ?? undefined
 	};
-	badgeAlignments.forEach((a: Alignment) => {
-		conditionProfile.TargetCompetency.push({
-			FrameworkName: a.targetFramework,
-			TargetNode: a.targetUrl,
-			TargetNodeName: a.targetName,
-			TargetNodeDescription: a.targetDescription,
-			CodedNotation:
-				!a.targetCode?.match(/^https?:\/\//) && a.targetCode != a.targetUrl
-					? a.targetCode
-					: undefined
-		});
-	});
 
-	let result: CtdlApiCredential = {
+	let result: CtdlCredentialDraft = {
 		PublishForOrganizationIdentifier: publisherOrgId,
 		Credential: {
 			CredentialType: defaultAchievementTypeForBadgeAchievementType(
@@ -391,42 +965,215 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlAp
 			InLanguage: ['en-US'],
 			Requires: [conditionProfile],
 			UsesVerificationService: [vsp]
-		}
+		},
+		obAlignments: badgeAlignments.reduce((acc: OBAlignmentMap, a: Alignment): OBAlignmentMap => {
+			if (a.targetFramework == 'Credentials Transparency Description Language') return acc; // Skip self-referential alignment.
+			return {
+				...acc,
+				[a.targetUrl]: {
+					sourceData: a,
+					propertyType: 'DEFAULT',
+					targetNodeType: 'DEFAULT',
+					destinationData: {},
+					skip: false
+				}
+			};
+		}, {})
 	};
 	if (b.image) result.Credential.Image = b.image;
 
 	return result;
 };
 
-// Combines the previously saved ConditionProfile found in the publisher with the potentially updated data from the badge system
-const reconcileAlignments = (
-	publisherRequires: AlignmentObject[],
-	badgeSystemAlignments: AlignmentObject[],
-	ctid: string | undefined
-): AlignmentObject[] => {
-	let representation: AlignmentObject[] = [];
-	publisherRequires.forEach((pa) => {
-		if (pa.Description != 'Open Badges Alignment' && pa.Name != 'Open Badges Criteria')
-			representation.push(pa); // only replace Open Badges Alignments previously added by this tool, others are left in place
-	});
-	badgeSystemAlignments.forEach((bsa) => {
-		let filteredAlignment: AlignmentObject = {
-			Description: bsa.Description,
-			TargetCompetency: bsa.TargetCompetency.filter((a) => !!ctid && !a.TargetNode?.includes(ctid))
-		};
-		if (bsa.Name) filteredAlignment.Name = bsa.Name;
-		if (bsa.SubjectWebpage) filteredAlignment.SubjectWebpage = bsa.SubjectWebpage;
-		representation.push(filteredAlignment);
+interface FilterData {
+	cp: ConditionProfile | null;
+	ac: OBAlignmentConfig | null;
+}
+
+const filterAlignmentFromConditionProfile = (
+	cp: ConditionProfile,
+	ac: OBAlignmentConfig,
+	prop: keyof CtdlCredential = 'Requires'
+): FilterData => {
+	let newCp = { ...cp };
+	let newAc: OBAlignmentConfig | null = null;
+	let foundAlignment: Array<any> = [];
+	const targetUrl = ac.sourceData.targetUrl;
+
+	let remainingAlignmentsCount = 0;
+	if (Object.hasOwn(cp, 'TargetAssessment')) {
+		const propValue = cp['TargetAssessment'];
+		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
+		newCp['TargetAssessment'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		remainingAlignmentsCount += cp['TargetAssessment']?.length ?? 0;
+
+		if (foundAlignment.length)
+			newAc = {
+				...ac,
+				propertyType: prop as AlignmentPropertyTypeCredentialKey,
+				targetNodeType: 'AssessmentProfile'
+			};
+	}
+	if (Object.hasOwn(cp, 'TargetCompetency')) {
+		const propValue = cp['TargetCompetency'];
+		foundAlignment = propValue?.filter((a) => a.TargetNode === targetUrl) ?? [];
+		newCp['TargetCompetency'] = propValue?.filter((a) => a.TargetNode !== targetUrl);
+		remainingAlignmentsCount += cp['TargetCompetency']?.length ?? 0;
+
+		if (foundAlignment.length)
+			newAc = {
+				...ac,
+				propertyType: prop as AlignmentPropertyTypeCredentialKey,
+				targetNodeType: 'Competency'
+			};
+	}
+	if (Object.hasOwn(cp, 'TargetCredential')) {
+		const propValue = cp['TargetCredential'];
+		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
+		newCp['TargetCredential'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		remainingAlignmentsCount += cp['TargetCredential']?.length ?? 0;
+
+		if (foundAlignment.length)
+			newAc = {
+				...ac,
+				propertyType: prop as AlignmentPropertyTypeCredentialKey,
+				targetNodeType: 'Credential',
+				destinationData: { ...ac.destinationData, Type: foundAlignment[0].Type }
+			};
+	}
+	if (Object.hasOwn(cp, 'TargetLearningOpportunity')) {
+		const propValue = cp['TargetLearningOpportunity'];
+		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
+		newCp['TargetLearningOpportunity'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		remainingAlignmentsCount += cp['TargetLearningOpportunity']?.length ?? 0;
+
+		if (foundAlignment.length)
+			newAc = {
+				...ac,
+				propertyType: prop as AlignmentPropertyTypeCredentialKey,
+				targetNodeType:
+					AlignmentTargetNodeTypes[foundAlignment[0].Type as AlignmentTargetNodeTypeKey]
+			};
+	}
+	if (Object.hasOwn(cp, 'TargetOccupation')) {
+		const propValue = cp['TargetOccupation'];
+		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
+		newCp['TargetOccupation'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		remainingAlignmentsCount += cp['TargetOccupation']?.length ?? 0;
+
+		if (foundAlignment.length)
+			newAc = {
+				...ac,
+				propertyType: prop as AlignmentPropertyTypeCredentialKey,
+				targetNodeType: 'Occupation'
+			};
+	}
+
+	// If no alignments remain, return null to indicate that the condition profile should be removed.
+	// This only applies if this CP is "managed" by this app. There is some tiny risk that a user manually
+	// entered some additional data in the CP after it was previously published, and this will be deleted,
+	// so that the AlignmentConfigs will repopulate it with the correct data. This is a very unlikely scenario.
+	if (remainingAlignmentsCount === 0 && newCp.Name == 'Open Badges Alignment')
+		return { cp: null, ac: newAc };
+	return { cp: newCp, ac: newAc };
+};
+
+export const filterAlignmentFromCredential = (
+	c: CtdlCredentialDraft,
+	ac: OBAlignmentConfig
+): CtdlCredentialDraft => {
+	let newCredential = { ...c };
+
+	const conditionProfilePropsToCheck: Array<
+		| 'AdvancedStandingFrom'
+		| 'Corequisite'
+		| 'IsAdvancedStandingFor'
+		| 'IsPreparationFor'
+		| 'IsRecommendedFor'
+		| 'IsRequiredFor'
+		| 'PreparationFrom'
+		| 'Recommends'
+		| 'Requires'
+	> = [
+		'AdvancedStandingFrom',
+		'Corequisite',
+		'IsAdvancedStandingFor',
+		'IsPreparationFor',
+		'IsRecommendedFor',
+		'IsRequiredFor',
+		'PreparationFrom',
+		'Recommends',
+		'Requires'
+	];
+
+	// Check all locations in the credential where alignments might be found within a ConditionProfile
+	conditionProfilePropsToCheck.map((prop) => {
+		if (Object.hasOwn(newCredential.Credential, prop)) {
+			const propValue = newCredential.Credential[prop] as Array<any> | undefined;
+			const newCps =
+				propValue?.map(
+					(cp: ConditionProfile): FilterData => filterAlignmentFromConditionProfile(cp, ac, prop)
+				) ?? [];
+			newCredential.Credential[prop] = newCps
+				.map((c: FilterData) => c.cp)
+				.filter((cp: ConditionProfile | null) => cp !== null) as ConditionProfile[];
+			const newAcs = newCps
+				.map((c: FilterData) => c.ac)
+				.filter((ac) => ac !== null) as OBAlignmentConfig[];
+
+			// Replace the alignmentConfig with the discovered one, recording the user's previous preference
+			// about the placement of this alignment within the CtdlCredential.
+			if (newAcs.length) {
+				console.log(
+					`${newAcs[0].targetNodeType} alignment to ${ac.sourceData.targetUrl} found in ${newAcs[0].propertyType} of ${prop}`
+				);
+				newCredential.obAlignments[ac.sourceData.targetUrl] = newAcs[0];
+			}
+		}
 	});
 
-	return representation;
+	// Check all locations in the credential where alignments might be found to a QA org profile
+	const qaOrgPropsToCheck: Array<'AccreditedBy' | 'ApprovedBy' | 'RecognizedBy' | 'RegulatedBy'> = [
+		'AccreditedBy',
+		'ApprovedBy',
+		'RecognizedBy',
+		'RegulatedBy'
+	];
+	qaOrgPropsToCheck.map((prop) => {
+		if (Object.hasOwn(newCredential.Credential, prop)) {
+			const propValue = newCredential.Credential[prop] as QualityAssurance[];
+			const foundAlignment = propValue?.filter(
+				(a) => a.SubjectWebpage === ac.sourceData.targetUrl
+			) as QualityAssurance[];
+
+			if (foundAlignment.length) {
+				newCredential.Credential[prop] = propValue?.filter(
+					(a) => a.SubjectWebpage !== ac.sourceData.targetUrl
+				) as QualityAssurance[];
+
+				console.log(
+					`QACredentialOrganization alignment to ${ac.sourceData.targetUrl} found in ${prop}`
+				);
+
+				// Replace the alignmentConfig with the discovered one, recording the user's previous preference
+				newCredential.obAlignments[ac.sourceData.targetUrl] = {
+					...ac,
+					propertyType: prop as AlignmentPropertyTypeCredentialKey,
+					targetNodeType: 'QACredentialOrganization'
+				};
+			}
+		}
+	});
+
+	return newCredential;
 };
 
 // This store holds credential drafts ready for publishing.
 const createCredentialDraftStore = () => {
-	const { subscribe, set, update } = writable<CtdlApiCredential[]>([]);
+	const { subscribe, set, update } = writable<CtdlCredentialDraft[]>([]);
 
 	return {
+		set,
 		subscribe,
 		importCheckedSourceBadges: () => {
 			const checkedBadgeKeys = get(checkedBadges);
@@ -437,7 +1184,7 @@ const createCredentialDraftStore = () => {
 					.sort((a, b) => a.Credential.Name.localeCompare(b.Credential.Name))
 			);
 		},
-		updateCredential: (b: CtdlApiCredential) => {
+		updateCredential: (b: CtdlCredentialDraft) => {
 			update((credentialList) => {
 				const filteredList = credentialList.filter(
 					(c) => c.Credential.CredentialId != b.Credential.CredentialId
@@ -450,25 +1197,15 @@ const createCredentialDraftStore = () => {
 		reconcileCredentialWithPublisher: (credentialId: string, publisherData: CtdlCredential) => {
 			update((credentialList) => {
 				const credential = credentialList.find((c) => c.Credential.CredentialId == credentialId);
-				if (!credential) {
-					return credentialList;
-				}
+				if (!credential) return credentialList;
 
-				let updated = {
-					PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier,
-					Credential: { ...publisherData }
-				};
-				Object.keys(credential.Credential).map((key) => {
-					// If the badge system version has data for the key, set that value into the draft.
-					if ('Requires' == key)
-						updated.Credential[key] = reconcileAlignments(
-							updated.Credential[key], // current data on publisher
-							credential.Credential[key], // data from badge system
-							publisherData.CTID
-						);
-					else if (credential.Credential[key as keyof CtdlCredential] != undefined)
-						updated.Credential[key as keyof CtdlCredential] = credential.Credential[key];
-				});
+				// Filter out any existing alignment from publisher data
+				const updated = Object.values(credential.obAlignments).reduce(
+					(acc: CtdlCredentialDraft, ac: OBAlignmentConfig) => {
+						return filterAlignmentFromCredential(acc, ac);
+					},
+					{ ...credential, Credential: publisherData }
+				);
 
 				const filteredList = credentialList.filter(
 					(c) => c.Credential.CredentialId != credentialId
@@ -596,7 +1333,8 @@ const createPublicationResultStore = () => {
 						CredentialId: existingId,
 						publicationStatus: PubStatuses.SaveError,
 						messages: [
-							"Error loading credential data from publisher. Can't update without loading existing data."
+							"Error loading credential data from publisher. Can't update without loading existing data: " +
+								reason
 						]
 					});
 				});
@@ -607,33 +1345,7 @@ const createPublicationResultStore = () => {
 // {[key: CredentialId]: CredentialPublicationStatus}
 export const ctdlPublicationResultStore = createPublicationResultStore();
 
-const credentialWithFilteredCompetencies = (credential: CtdlApiCredential): CtdlApiCredential => {
-	const filterAlignmentObject = (ao: AlignmentObject[]): AlignmentObject[] => {
-		let result: AlignmentObject[] = [];
-		ao.forEach((a: AlignmentObject) => {
-			if (a.Description == 'Open Badges Alignment') {
-				result.push({
-					Description: a.Description,
-					TargetCompetency: a.TargetCompetency.filter((tc) => !tc.SKIP)
-				});
-			} else {
-				result.push(a);
-			}
-		});
-		return result;
-	};
-
-	let ret = {
-		Credential: { ...credential.Credential },
-		PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
-	};
-	const newRequires = filterAlignmentObject(credential.Credential.Requires || []);
-	if (newRequires.length) ret.Credential.Requires = newRequires;
-
-	return ret;
-};
-
-export const saveCredential = async (credential: CtdlApiCredential) => {
+export const saveCredential = async (credential: CtdlCredentialDraft) => {
 	const status = get(ctdlPublicationResultStore)[credential.Credential.CredentialId];
 
 	if (
@@ -651,12 +1363,15 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 	});
 
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Credential/Save`;
-	const orgCtid = get(publisherOrganization).org?.CTID;
-	const competencyFilteredCredential = credentialWithFilteredCompetencies(credential);
+
+	const mergedCredential: CtdlApiCredential = {
+		PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier,
+		Credential: mergeAllAlignments(credential.Credential, credential.obAlignments)
+	};
 
 	const response = await fetch(url, {
 		method: 'POST',
-		body: JSON.stringify(competencyFilteredCredential),
+		body: JSON.stringify(mergedCredential),
 		headers: {
 			Authorization: `Bearer ${get(publisherUser).user?.Token}`,
 			'Content-Type': 'application/json'
@@ -682,7 +1397,7 @@ export const saveCredential = async (credential: CtdlApiCredential) => {
 
 export const saveAllCredentials = async () => {
 	let doneYet = false;
-	let nextCredential: CtdlApiCredential | undefined;
+	let nextCredential: CtdlCredentialDraft | undefined;
 	let currentResults: { [key: string]: CredentialPublicationStatus };
 
 	while (!doneYet) {
@@ -708,15 +1423,12 @@ export const alignmentUrlForCredential = (ctid: string | undefined): string => {
 	else return `https://credentialfinder.org/resources/${ctid}`;
 };
 
-export const alignmentExistsForCredential = (credential: CtdlApiCredential): boolean => {
+export const alignmentExistsForCredential = (credential: CtdlCredentialDraft): boolean => {
 	const targetUrl = alignmentUrlForCredential(
 		get(ctdlPublicationResultStore)[credential.Credential.CredentialId]?.CTID
 	);
-	let existingAlignmentUrls: string[] = [];
-	credential.Credential.Requires.filter((r) => r.Description.includes('Open Badges')).map((a) => {
-		a.TargetCompetency.map((tc) => {
-			existingAlignmentUrls.push(tc.TargetNode);
-		});
-	});
+	const existingAlignmentUrls = Object.values(credential.obAlignments).map(
+		(a) => a.sourceData.targetUrl
+	);
 	return existingAlignmentUrls.includes(targetUrl);
 };

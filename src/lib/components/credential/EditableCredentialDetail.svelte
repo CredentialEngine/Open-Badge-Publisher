@@ -8,24 +8,19 @@
 	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
 	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
 	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
+	import AlignmentEditor from '$lib/components/credential/AlignmentEditor.svelte';
+	import BodyText from '../typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import Modal from '$lib/components/Modal.svelte';
-	import Tag from '$lib/components/Tag.svelte';
+	import { EditStatus, type CtdlCredentialDraft } from '$lib/stores/publisherStore.js';
+	import { credentialTypesStore } from '$lib/stores/credentialTypesStore.js';
 
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import { credentialDrafts, EditStatus } from '$lib/stores/publisherStore.js';
-	import {
-		credentialTypesStore,
-		prettyNameForCredentialType
-	} from '$lib/stores/credentialTypesStore.js';
-	import type { CtdlApiCredential, CtdlCredential } from '$lib/stores/publisherStore.js';
-	import BodyText from '../typography/BodyText.svelte';
-
-	export let credential: CtdlApiCredential;
+	export let credential: CtdlCredentialDraft;
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
 
-	let modalVisible = false;
+	let unsavedChangesModalVisible = false;
+	let alignmentEditorModalVisible = false;
 	let editStatus: EditStatus = EditStatus.Editing;
 
 	const handleFinish = () => {
@@ -38,21 +33,21 @@
 	const handleUnsaved = async () => {
 		if (editStatus != EditStatus.Editing) {
 			editStatus = EditStatus.Editing;
-			modalVisible = true;
+			unsavedChangesModalVisible = true;
 			// await tick();
 			// document.getElementById(`unsaved-${credential.Credential.CredentialId}`)?.focus();
 		}
 	};
 	const handleRevert = () => {
 		editStatus = EditStatus.Reject;
-		modalVisible = false;
+		unsavedChangesModalVisible = false;
 		setTimeout(() => {
 			handleFinishEditingCredential(credential.Credential.CredentialId);
 		}, 200);
 	};
 	const handleAccept = () => {
 		editStatus = EditStatus.Accept;
-		modalVisible = false;
+		unsavedChangesModalVisible = false;
 		setTimeout(() => {
 			handleFinishEditingCredential(credential.Credential.CredentialId);
 		}, 200);
@@ -172,12 +167,12 @@
 					editable={true}
 					fieldName="Criteria Narrative"
 					getter={(c) => {
-						return c.Requires.find((cp) => cp.Name == 'Open Badges Criteria')?.Description || '';
+						return c.Requires?.find((cp) => cp.Name == 'Open Badges Criteria')?.Description ?? '';
 					}}
 					transformer={(c, newValue) => {
 						let cc = { ...c };
 
-						cc.Requires = c.Requires.map((ao) => {
+						cc.Requires = c.Requires?.map((ao) => {
 							if (ao.Name == 'Open Badges Criteria') {
 								return {
 									...ao,
@@ -192,7 +187,7 @@
 					validator={yup.string().required()}
 				>
 					<div class="whitespace-pre-line">
-						{credential.Credential.Requires.find((cp) => cp.Name == 'Open Badges Criteria')
+						{credential.Credential.Requires?.find((cp) => cp.Name == 'Open Badges Criteria')
 							?.Description || ''}
 					</div>
 				</EditableCredentialRowText>
@@ -244,12 +239,12 @@
 					helpText="List of keywords for this credential"
 				/>
 
-				<EditableCredentialRowAlignment
+				<!-- <EditableCredentialRowAlignment
 					{credential}
 					fieldId="Requires"
 					fieldName="Competencies"
 					helpText="The Credential Registry allows you to specify which competencies are required for the award of this badge. You may skip any badge alignments that don't make sense as required competencies."
-				/>
+				/> -->
 			</tbody>
 		</table>
 
@@ -261,15 +256,22 @@
 			>
 				Finished Editing
 			</Button>
+			<Button
+				on:click={() => {
+					alignmentEditorModalVisible = true;
+				}}
+			>
+				Edit alignments
+			</Button>
 		</div>
 	</div>
 </div>
 
 <Modal
-	visible={modalVisible}
+	visible={unsavedChangesModalVisible}
 	id={`unsaved-${credential.Credential.CredentialId}`}
 	on:close={() => {
-		modalVisible = false;
+		unsavedChangesModalVisible = false;
 	}}
 	title="Unsaved Changes"
 	actions={[
@@ -277,14 +279,34 @@
 			label: 'Cancel',
 			buttonType: 'default',
 			onClick: () => {
-				modalVisible = false;
+				unsavedChangesModalVisible = false;
 			}
 		},
 		{ label: 'Revert changes', buttonType: 'danger', onClick: handleRevert },
 		{ label: 'Accept changes', buttonType: 'primary', onClick: handleAccept }
 	]}
 >
-	<BodyText
-		>Some fields have unsaved changes. Do you want to save these changes or discard them?</BodyText
-	>
+	<BodyText>
+		Some fields have unsaved changes. Do you want to save these changes or discard them?
+	</BodyText>
+</Modal>
+
+<Modal
+	visible={alignmentEditorModalVisible}
+	id={`alignmentEditor-${credential.Credential.CredentialId}`}
+	on:close={() => {
+		alignmentEditorModalVisible = false;
+	}}
+	title="Customize alignment mapping"
+	actions={[
+		{
+			label: 'Done',
+			buttonType: 'primary',
+			onClick: () => {
+				alignmentEditorModalVisible = false;
+			}
+		}
+	]}
+>
+	<AlignmentEditor {credential} />
 </Modal>
