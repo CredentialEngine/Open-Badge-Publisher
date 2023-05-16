@@ -153,7 +153,7 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white p-10"
+		class="focus:outline-none w-full bg-white p-4 sm:p-10"
 		transition:slide
 	>
 		<div class="md:flex items-center border-b pb-6 border-gray-200">
@@ -403,7 +403,7 @@
 	<div
 		id="publisherConfigContent"
 		aria-label="form"
-		class="focus:outline-none w-full bg-white p-10"
+		class="focus:outline-none w-full bg-white p-4 sm:p-10"
 		transition:slide
 	>
 		<div class="flex items-center md:items-end flex-col justify-between md:flex-row">

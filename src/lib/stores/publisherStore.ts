@@ -77,6 +77,17 @@ export enum AlignmentTargetNodeTypes {
 }
 export type AlignmentTargetNodeTypeKey = keyof typeof AlignmentTargetNodeTypes;
 
+const NodeTypeKeyForCtdlClass: { [key: string]: AlignmentTargetNodeTypeKey } = {
+	'ceterms:AssessmentProfile': 'AssessmentProfile',
+	'ceasn:Competency': 'Competency',
+	'ceterms:Course': 'Course',
+	'ceterms:Credential': 'Credential',
+	'ceterms:LearningProgram': 'LearningProgram',
+	'ceterms:LearningOpportunityProfile': 'LearningOpportunity',
+	'ceterms:Occupation': 'Occupation',
+	'ceterms:QACredentialOrganization': 'QACredentialOrganization'
+};
+
 export interface OBAlignmentConfig {
 	sourceData: Alignment;
 	propertyType: AlignmentPropertyKey;
@@ -85,7 +96,7 @@ export interface OBAlignmentConfig {
 	skip: boolean;
 }
 
-interface OBAlignmentMap {
+export interface OBAlignmentMap {
 	[key: string]: OBAlignmentConfig;
 }
 
@@ -98,9 +109,9 @@ export interface AssessmentProfile {
 	Name?: string;
 	Description: string;
 	SubjectWebpage?: string;
-	Identifier?: {
+	Identifier?: Array<{
 		IdentifierValueCode: string;
-	};
+	}>;
 }
 
 // ceasn:Competency may be referenced from ConditionProfile.TargetCompetency
@@ -122,13 +133,13 @@ export interface Course extends AlignmentObject {
 	Type: 'ceterms:Course';
 }
 
-// ceterms:LearningOpportunity may be referenced from ConditionProfile.TargetLearningOpportunity
+// ceterms:LearningOpportunityProfile may be referenced from ConditionProfile.TargetLearningOpportunity
 export interface LearningOpportunity extends AlignmentObject {
 	Name: string; // "Learning Opportunity Name",
 	Description: string; // "Description of learning opportunity.",
 	SubjectWebpage?: string; // "http://www.learningopportunities.com/learningopportunity/123",
 	CodedNotation?: string; // "123",
-	Type: 'ceterms:LearningOpportunity';
+	Type: 'ceterms:LearningOpportunityProfile';
 }
 
 // ceterms:LearningOpportunity may be referenced from ConditionProfile.TargetLearningOpportunity
@@ -154,9 +165,9 @@ export interface QualityAssurance extends AlignmentObject {
 	Name: string; // "Required Organization Name",
 	Description: string; // "Organization Description - not a description related to accreditation.",
 	SubjectWebpage?: string; // "https://example.org/subjectwebpage",
-	Identifier?: {
+	Identifier?: Array<{
 		IdentifierValueCode: string;
-	};
+	}>;
 }
 
 // ceterms:Credential (supertype of many credential subtypes)
@@ -166,9 +177,9 @@ export interface TargetCredential extends AlignmentObject {
 	Name?: string;
 	Description: string;
 	SubjectWebpage?: string;
-	Identifier?: {
+	Identifier?: Array<{
 		IdentifierValueCode: string;
-	};
+	}>;
 }
 
 export const alignmentPropertyTypeDescriptions: { [key: string]: string } = {
@@ -220,12 +231,13 @@ export const mergeOccupationAlignment = (
 			Description: descriptionTermFor(property),
 			TargetOccupation: [
 				{
+					Type: 'ceterms:Occupation',
 					Name: alignmentConfig.sourceData?.targetName ?? 'Connected Occupation',
 					Description:
 						alignmentConfig.sourceData?.targetDescription ??
 						'An Occupation related to this credential',
 					CodedNotation: alignmentConfig.sourceData?.targetCode,
-					Type: 'ceterms:Occupation'
+					SubjectWebpage: alignmentConfig.sourceData?.targetUrl
 				}
 			]
 		}
@@ -291,9 +303,11 @@ export const mergeQAAlignment = (
 			},
 			...(alignmentConfig.sourceData?.targetCode && {
 				// Attach the Identifier property only if there is something useful to go there.
-				Identifier: {
-					IdentifierValueCode: alignmentConfig.sourceData?.targetCode
-				}
+				Identifier: [
+					{
+						IdentifierValueCode: alignmentConfig.sourceData?.targetCode
+					}
+				]
 			})
 		}
 	];
@@ -466,9 +480,13 @@ export const mergeSingleAlignment = (
 					Name: ac.sourceData.targetName,
 					Description: ac.sourceData.targetDescription,
 					SubjectWebpage: ac.sourceData.targetUrl,
-					Identifier: {
-						IdentifierValueCode: ac.sourceData.targetCode || ''
-					},
+					Identifier: ac.sourceData.targetCode
+						? [
+								{
+									IdentifierValueCode: ac.sourceData.targetCode || ''
+								}
+						  ]
+						: [],
 					Type: 'ceterms:AssessmentProfile'
 				} as AssessmentProfile
 			]) as AssessmentProfile[];
@@ -481,9 +499,13 @@ export const mergeSingleAlignment = (
 					Name: ac.sourceData.targetName,
 					Description: ac.sourceData.targetDescription,
 					SubjectWebpage: ac.sourceData.targetUrl,
-					Identifier: {
-						IdentifierValueCode: ac.sourceData.targetCode || ''
-					},
+					Identifier: ac.sourceData.targetCode
+						? [
+								{
+									IdentifierValueCode: ac.sourceData.targetCode || ''
+								}
+						  ]
+						: [],
 					Type: ac.destinationData?.Type ?? 'ceterms:Certification'
 				} as TargetCredential
 			]) as TargetCredential[];
@@ -496,7 +518,7 @@ export const mergeSingleAlignment = (
 					Description: ac.sourceData.targetDescription,
 					SubjectWebpage: ac.sourceData.targetUrl,
 					CodedNotation: ac.sourceData.targetCode || '',
-					Type: `ceterms:${ac.targetNodeType}`
+					Type: CtdlTargetNodeType[ac.targetNodeType]
 				} as Course | LearningOpportunity | LearningProgram
 			]) as (Course | LearningOpportunity | LearningProgram)[];
 			break;
@@ -524,9 +546,9 @@ export interface ConditionProfile {
 	Description: string; // e.g. used for the expression of criteria narrative
 	SubjectWebpage?: string; // Used for the expression of the critieria ID, if present in a Requires profile.
 	Name?: string; // e.g. "Open Badges Criteria"
-	Identifier?: {
+	Identifier?: Array<{
 		IdentifierValueCode: string;
-	};
+	}>;
 
 	TargetAssessment?: AssessmentProfile[];
 	TargetCompetency?: Competency[];
@@ -616,6 +638,7 @@ export interface CtdlApiCredential {
 	//required CTID of the owning organization
 	PublishForOrganizationIdentifier: string; // "ce-696ea290-249a-4f99-9ed1-419f000d8472",
 	Credential: CtdlCredential;
+	DoingCompleteReplacement?: boolean;
 }
 
 export enum CtdlAlignmentProperty {
@@ -643,7 +666,7 @@ export enum CtdlTargetNodeType {
 	Course = 'ceterms:Course',
 	Credential = 'ceterms:Credential', // TODO: this is invalid. User must pick a subtype.
 	LearningProgram = 'ceterms:LearningProgram',
-	LearningOpportunity = 'ceterms:LearningOpportunity',
+	LearningOpportunity = 'ceterms:LearningOpportunityProfile',
 	Occupation = 'ceterms:Occupation',
 	QACredentialOrganization = 'ceterms:QACredentialOrganization'
 }
@@ -710,6 +733,7 @@ export const getPropertyName = (
 	suggestion?: AlignmentPropertyKey
 ): AlignmentPropertyTypeCredentialKey => {
 	if (suggestion) {
+		console.log(nodeType);
 		return suggestion !== 'DEFAULT' && nodeTypePropertyDefaultMap[nodeType].includes(suggestion)
 			? suggestion
 			: (nodeTypePropertyDefaultMap[nodeType][0] as AlignmentPropertyTypeCredentialKey);
@@ -1051,8 +1075,7 @@ const filterAlignmentFromConditionProfile = (
 			newAc = {
 				...ac,
 				propertyType: prop as AlignmentPropertyTypeCredentialKey,
-				targetNodeType:
-					AlignmentTargetNodeTypes[foundAlignment[0].Type as AlignmentTargetNodeTypeKey]
+				targetNodeType: NodeTypeKeyForCtdlClass[foundAlignment[0].Type] ?? 'DEFAULT'
 			};
 	}
 	if (Object.hasOwn(cp, 'TargetOccupation')) {
@@ -1070,11 +1093,10 @@ const filterAlignmentFromConditionProfile = (
 	}
 
 	// If no alignments remain, return null to indicate that the condition profile should be removed.
-	// This only applies if this CP is "managed" by this app. There is some tiny risk that a user manually
-	// entered some additional data in the CP after it was previously published, and this will be deleted,
-	// so that the AlignmentConfigs will repopulate it with the correct data. This is a very unlikely scenario.
-	if (remainingAlignmentsCount === 0 && newCp.Name == 'Open Badges Alignment')
-		return { cp: null, ac: newAc };
+	// There is some tiny risk that a user manually entered some additional data in the CP after it was previously
+	// published, and this will be deleted, so that the AlignmentConfigs will repopulate it with the correct data.
+	// This is a very unlikely scenario.
+	if (remainingAlignmentsCount === 0) return { cp: null, ac: newAc };
 	return { cp: newCp, ac: newAc };
 };
 
@@ -1366,7 +1388,8 @@ export const saveCredential = async (credential: CtdlCredentialDraft) => {
 
 	const mergedCredential: CtdlApiCredential = {
 		PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier,
-		Credential: mergeAllAlignments(credential.Credential, credential.obAlignments)
+		Credential: mergeAllAlignments(credential.Credential, credential.obAlignments),
+		DoingCompleteReplacement: true
 	};
 
 	const response = await fetch(url, {

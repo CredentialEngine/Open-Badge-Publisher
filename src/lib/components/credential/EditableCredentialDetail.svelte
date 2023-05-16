@@ -8,7 +8,6 @@
 	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
 	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
 	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
-	import AlignmentEditor from '$lib/components/credential/AlignmentEditor.svelte';
 	import BodyText from '../typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
@@ -20,7 +19,6 @@
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
 
 	let unsavedChangesModalVisible = false;
-	let alignmentEditorModalVisible = false;
 	let editStatus: EditStatus = EditStatus.Editing;
 
 	const handleFinish = () => {
@@ -239,29 +237,18 @@
 					helpText="List of keywords for this credential"
 				/>
 
-				<!-- <EditableCredentialRowAlignment
-					{credential}
-					fieldId="Requires"
-					fieldName="Competencies"
-					helpText="The Credential Registry allows you to specify which competencies are required for the award of this badge. You may skip any badge alignments that don't make sense as required competencies."
-				/> -->
+				<EditableCredentialRowAlignment {credential} />
 			</tbody>
 		</table>
 
-		<div class="flex flex-row-reverse my-4 px-4">
+		<div class="flex flex-row-reverse my-4 px-4 gap-2">
 			<Button
 				on:click={() => {
 					handleFinish();
 				}}
+				buttonType="primary"
 			>
 				Finished Editing
-			</Button>
-			<Button
-				on:click={() => {
-					alignmentEditorModalVisible = true;
-				}}
-			>
-				Edit alignments
 			</Button>
 		</div>
 	</div>
@@ -289,24 +276,4 @@
 	<BodyText>
 		Some fields have unsaved changes. Do you want to save these changes or discard them?
 	</BodyText>
-</Modal>
-
-<Modal
-	visible={alignmentEditorModalVisible}
-	id={`alignmentEditor-${credential.Credential.CredentialId}`}
-	on:close={() => {
-		alignmentEditorModalVisible = false;
-	}}
-	title="Customize alignment mapping"
-	actions={[
-		{
-			label: 'Done',
-			buttonType: 'primary',
-			onClick: () => {
-				alignmentEditorModalVisible = false;
-			}
-		}
-	]}
->
-	<AlignmentEditor {credential} />
 </Modal>

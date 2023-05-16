@@ -47,7 +47,7 @@
 >
 
 {#if $proofingStep <= 3}
-	<div aria-label="form" in:slide class="focus:outline-none w-full bg-white p-10">
+	<div aria-label="form" in:slide class="focus:outline-none w-full bg-white p-4 sm:p-10">
 		<div class="md:flex items-center pb-6">
 			<ConfigurationStep
 				stepNumber="7"
@@ -113,7 +113,7 @@
 		{/if}
 	</div>
 {:else}
-	<div id="proofingContent" class="focus:outline-none w-full bg-white p-10" transition:slide>
+	<div id="proofingContent" class="focus:outline-none w-full bg-white p-4 sm:p-10" transition:slide>
 		<div class="flex items-center md:items-end flex-col justify-between md:flex-row">
 			<BodyText>Saving selected data to publisher complete.</BodyText>
 			<Button

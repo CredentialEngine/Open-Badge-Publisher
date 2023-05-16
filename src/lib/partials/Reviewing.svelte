@@ -17,7 +17,7 @@
 
 <Heading><h2>Summary</h2></Heading>
 
-<div aria-label="form" transition:slide class="focus:outline-none w-full bg-white p-10">
+<div aria-label="form" transition:slide class="focus:outline-none w-full bg-white p-4 sm:p-10">
 	<div class="md:flex items-center border-b pb-6 border-gray-200">
 		<ConfigurationStep
 			stepNumber="10"

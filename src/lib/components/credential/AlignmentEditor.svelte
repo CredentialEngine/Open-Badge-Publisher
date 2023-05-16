@@ -13,10 +13,9 @@
 	credential.
 </BodyText>
 
-{JSON.stringify(credential)}
-<!-- TODO REMOVE THIS -->
 {#each Object.keys(credential.obAlignments) as alignmentKey (alignmentKey)}
 	{#if credential.obAlignments[alignmentKey].sourceData.targetFramework != 'Credentials Transparency Description Language'}
+		<!-- TODO: the above CTDL self-references may be already filtered out at obAlignment creation time.-->
 		<SingleEditableAlignment {credential} ac={credential.obAlignments[alignmentKey]} />
 	{/if}
 {/each}

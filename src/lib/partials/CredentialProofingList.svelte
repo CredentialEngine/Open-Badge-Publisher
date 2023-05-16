@@ -13,7 +13,9 @@
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
-		PubStatuses
+		PubStatuses,
+		type OBAlignmentMap,
+		type AlignmentTargetNodeTypeKey
 	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 
@@ -23,6 +25,16 @@
 	};
 	const handleFinishEditingCredential = (credentialId: string) => {
 		currentlyEditing[credentialId] = false;
+	};
+
+	const alignmentsCountByTargetNodeType = (map: OBAlignmentMap) => {
+		let counts: { [key: string]: number } = {};
+		for (let a of Object.values(map).filter((ac) => !ac.skip)) {
+			let key = a.targetNodeType == 'DEFAULT' ? 'Competency' : a.targetNodeType;
+			if (counts[key] == undefined) counts[key] = 1;
+			counts[key]++;
+		}
+		return counts;
 	};
 </script>
 
@@ -37,7 +49,7 @@
 			{#if currentlyEditing[credential.Credential.CredentialId]}
 				<EditableCredentialDetail {credential} {handleFinishEditingCredential} />
 			{:else}
-				<!-- Fields shown own CE detail page - https://sandbox.credentialengine.org/publisher/credential/7259
+				<!-- Fields shown on CE detail page - https://sandbox.credentialengine.org/publisher/credential/7259
                 {Name},
                 Issuer Name
                 {CredentialType}
@@ -56,7 +68,7 @@
                 {RequirementProfiles}
                 -->
 				<div
-					class="flex flex-col md:flex-row w-full bg-white border border-gray-200 rounded-lg shadow-md"
+					class="flex flex-col md:flex-row w-full bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
 					transition:slide
 				>
 					<div class="flex-initial max-w-xs mx-auto p-6">
@@ -102,8 +114,8 @@
 							<Tag>{prettyNameForCredentialType(credential.Credential.CredentialType)}</Tag>
 							<Tag>{credential.Credential.CredentialStatusType}</Tag>
 							<Tag>{credential.Credential.InLanguage.join(', ')}</Tag>
-							<a href={credential.Credential.CredentialId} target="new"
-								><TagLink>
+							<a href={credential.Credential.CredentialId} target="new">
+								<TagLink>
 									{abbreviate(credential.Credential.CredentialId, 28)}
 									<Icon
 										src={FaSolidExternalLinkAlt}
@@ -111,8 +123,20 @@
 										className="inline-block"
 										size="0.8em"
 									/>
-								</TagLink></a
-							>
+								</TagLink>
+							</a>
+						</div>
+						<div class="mt-2 space-x-2">
+							{#if Object.keys(credential.obAlignments).length}
+								<span class="text-xs font-bold text-midnight">Alignments:</span>
+								{#each Object.entries(alignmentsCountByTargetNodeType(credential.obAlignments)) as [targetNodeType, count]}
+									<span class="inline-block">
+										<Tag>
+											{targetNodeType} ({count})
+										</Tag>
+									</span>
+								{/each}
+							{/if}
 						</div>
 						<BodyText>
 							<span class="text-sm">{abbreviate(credential.Credential.Description, 280)}</span>

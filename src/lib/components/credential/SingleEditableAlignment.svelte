@@ -22,8 +22,8 @@
 	export let credential: CtdlCredentialDraft;
 	export let ac: OBAlignmentConfig;
 	const targetUrl = ac.sourceData.targetUrl;
-	let nodeType = ac.targetNodeType;
-	let propertyType = ac.propertyType;
+	let nodeType = ac.targetNodeType ?? 'DEFAULT';
+	let propertyType = ac.propertyType ?? 'DEFAULT';
 	let credentialSubtype = ac.destinationData?.Type ?? 'ceterms:Certification';
 	const credentialSubtypeOptions = $credentialTypesStore.map((typ) => {
 		return { value: typ.URI, name: typ.Name };
@@ -55,7 +55,7 @@
 				...credential.obAlignments,
 				[targetUrl]: {
 					...credential.obAlignments[targetUrl],
-					targetNodeType: newNodeType,
+					targetNodeType: newNodeType ?? 'DEFAULT',
 					propertyType:
 						propertyType == 'DEFAULT' ? propertyType : getPropertyName(newNodeType, propertyType)
 				}
