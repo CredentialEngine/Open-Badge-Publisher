@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { createEventDispatcher, tick } from 'svelte';
-	import { PubStatuses, type CtdlApiCredential } from '$lib/stores/publisherStore.js';
+	import {
+		PubStatuses,
+		type CtdlApiCredential,
+		type CtdlCredentialDraft
+	} from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
 	import {
@@ -14,7 +18,7 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 
-	export let credential: CtdlApiCredential;
+	export let credential: CtdlCredentialDraft;
 	export let fieldName = '';
 	export let editStatus: EditStatus;
 	export let fieldId: 'CredentialType' | 'CredentialStatusType';
@@ -57,10 +61,10 @@
 		}
 
 		let editedCredential = {
+			...credential,
 			Credential: {
 				...credential.Credential
-			},
-			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
+			}
 		};
 		editedCredential.Credential[fieldId] = value;
 		credentialDrafts.updateCredential(editedCredential);

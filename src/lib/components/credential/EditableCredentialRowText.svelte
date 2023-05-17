@@ -4,7 +4,9 @@
 	import {
 		PubStatuses,
 		type CtdlApiCredential,
-		type CtdlCredential
+		type CtdlCredential,
+		CtdlAlignmentProperty,
+		type CtdlCredentialDraft
 	} from '$lib/stores/publisherStore.js';
 	import * as yup from 'yup';
 	import type { BaseSchema } from 'yup';
@@ -17,7 +19,7 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
 
-	export let credential: CtdlApiCredential;
+	export let credential: CtdlCredentialDraft;
 	export let editStatus: EditStatus;
 	export let fieldName = '';
 	export let fieldId: 'Name' | 'Description' | 'SubjectWebpage' | 'Image' | 'CTID' | 'OTHER' =
@@ -78,8 +80,8 @@
 		}
 
 		let editedCredential = {
-			Credential: transformer(credential.Credential, value),
-			PublishForOrganizationIdentifier: credential.PublishForOrganizationIdentifier
+			...credential,
+			Credential: transformer(credential.Credential, value)
 		};
 
 		credentialDrafts.updateCredential(editedCredential);

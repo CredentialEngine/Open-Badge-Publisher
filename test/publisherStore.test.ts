@@ -97,23 +97,46 @@ const exampleCredential: CtdlCredentialDraft = {
 	}
 };
 
-test('should reconcile alignments with publisher', () => {
+test('should reconcile alignments with publisher, dropping requirementless CPs', () => {
 	credentialDrafts.set([exampleCredential]);
 	assert.equal(get(credentialDrafts).length, 1);
 	credentialDrafts.reconcileCredentialWithPublisher(exampleCredential.Credential.CredentialId, {
-		...exampleCredential,
-		Credential: {
-			...exampleCredential.Credential,
-			Requires: [
-				{
-					Description: 'Just some janky stuff that the admin assistant saved earlier'
-				}
-			]
-		}
+		...exampleCredential.Credential,
+		Requires: [
+			{
+				Description: 'Just some janky stuff that the admin assistant saved earlier'
+			}
+		]
 	});
 
 	const credential = get(credentialDrafts)[0];
+	const requirements = credential.Credential.Requires as ConditionProfile[];
 	assert.equal(credential.Credential.Requires?.length, 1);
+	assert.equal(requirements[0].Name, 'Open Badges Criteria');
+
+	// It should not drop CPs that have something cool in them, even if that cool thing doesn't come from the badge system
+	credentialDrafts.set([exampleCredential]);
+	credentialDrafts.reconcileCredentialWithPublisher(exampleCredential.Credential.CredentialId, {
+		...exampleCredential.Credential,
+		Requires: [
+			{
+				Description: 'A proper ConditionProfile with all the trimmings',
+				TargetAssessment: [
+					{
+						Name: 'A proper Assessment with all the trimmings',
+						Description: 'A proper Assessment with all the trimmings',
+						SubjectWebpage: 'https://example.com/assessment/1',
+						Type: 'ceterms:AssessmentProfile'
+					}
+				]
+			}
+		]
+	});
+
+	const credential2 = get(credentialDrafts)[0];
+	const requirements2 = credential.Credential.Requires as ConditionProfile[];
+
+	assert.equal(credential2.Credential.Requires?.length, 2);
 });
 
 test('should augment a CtdlApiCredential with alignments', () => {
@@ -166,8 +189,9 @@ test('should filter any of many type of alignment matching target URL from a cre
 		exampleCredential.obAlignments['http://example.com/competency/1']
 	);
 	assert.equal(credential.Requires?.length, 1);
-	if (!credential.Requires) return;
+	if (!credential.Requires) return; // Avoid typescript errors
 	assert.equal(credential.Requires[0].TargetCompetency?.length, 1); // There is now a competency.
+	assert.equal(credential.Requires[0].Name, 'Open Badges Criteria');
 
 	const filteredCredential = filterAlignmentFromCredential(
 		{ ...exampleCredential, Credential: credential },

@@ -111,6 +111,7 @@ export interface AssessmentProfile {
 	SubjectWebpage?: string;
 	Identifier?: Array<{
 		IdentifierValueCode: string;
+		IdentifierTypeName: string;
 	}>;
 }
 
@@ -167,6 +168,7 @@ export interface QualityAssurance extends AlignmentObject {
 	SubjectWebpage?: string; // "https://example.org/subjectwebpage",
 	Identifier?: Array<{
 		IdentifierValueCode: string;
+		IdentifierTypeName: string;
 	}>;
 }
 
@@ -179,6 +181,7 @@ export interface TargetCredential extends AlignmentObject {
 	SubjectWebpage?: string;
 	Identifier?: Array<{
 		IdentifierValueCode: string;
+		IdentifierTypeName: string;
 	}>;
 }
 
@@ -305,7 +308,8 @@ export const mergeQAAlignment = (
 				// Attach the Identifier property only if there is something useful to go there.
 				Identifier: [
 					{
-						IdentifierValueCode: alignmentConfig.sourceData?.targetCode
+						IdentifierValueCode: alignmentConfig.sourceData?.targetCode,
+						IdentifierTypeName: 'TargetCode'
 					}
 				]
 			})
@@ -483,7 +487,8 @@ export const mergeSingleAlignment = (
 					Identifier: ac.sourceData.targetCode
 						? [
 								{
-									IdentifierValueCode: ac.sourceData.targetCode || ''
+									IdentifierValueCode: ac.sourceData.targetCode || '',
+									IdentifierTypeName: 'TargetCode'
 								}
 						  ]
 						: [],
@@ -502,7 +507,8 @@ export const mergeSingleAlignment = (
 					Identifier: ac.sourceData.targetCode
 						? [
 								{
-									IdentifierValueCode: ac.sourceData.targetCode || ''
+									IdentifierValueCode: ac.sourceData.targetCode || '',
+									IdentifierTypeName: 'TargetCode'
 								}
 						  ]
 						: [],
@@ -548,6 +554,7 @@ export interface ConditionProfile {
 	Name?: string; // e.g. "Open Badges Criteria"
 	Identifier?: Array<{
 		IdentifierValueCode: string;
+		IdentifierTypeName: string;
 	}>;
 
 	TargetAssessment?: AssessmentProfile[];
@@ -1096,7 +1103,8 @@ const filterAlignmentFromConditionProfile = (
 	// There is some tiny risk that a user manually entered some additional data in the CP after it was previously
 	// published, and this will be deleted, so that the AlignmentConfigs will repopulate it with the correct data.
 	// This is a very unlikely scenario.
-	if (remainingAlignmentsCount === 0) return { cp: null, ac: newAc };
+	if (remainingAlignmentsCount === 0 && newCp.Name != 'Open Badges Criteria')
+		return { cp: null, ac: newAc };
 	return { cp: newCp, ac: newAc };
 };
 
@@ -1190,6 +1198,26 @@ export const filterAlignmentFromCredential = (
 	return newCredential;
 };
 
+const smartBlendCredential = (
+	publisherData: CtdlCredential,
+	badgeData: CtdlCredential
+): CtdlCredential => {
+	let result = { ...publisherData };
+	result['Name'] = badgeData['Name'] ?? publisherData['Name'];
+	result['Description'] = badgeData['Description'] ?? publisherData['Description'];
+	result['SubjectWebpage'] = badgeData['SubjectWebpage'] ?? publisherData['SubjectWebpage'];
+	result['DateEffective'] = badgeData['DateEffective'] ?? publisherData['DateEffective'];
+	result['InLanguage'] = badgeData['InLanguage'] ?? publisherData['InLanguage'];
+	result['Image'] = badgeData['Image'] ?? publisherData['Image'];
+	result['Keyword'] = badgeData['Keyword'] ?? publisherData['Keyword'];
+
+	// Gently merge the criteria requirement profile from the badge with any existing CPs on the publisher data.
+	const r = badgeData['Requires'] ?? [];
+	result['Requires'] = r.concat(publisherData['Requires'] ?? []);
+
+	return result;
+};
+
 // This store holds credential drafts ready for publishing.
 const createCredentialDraftStore = () => {
 	const { subscribe, set, update } = writable<CtdlCredentialDraft[]>([]);
@@ -1222,11 +1250,11 @@ const createCredentialDraftStore = () => {
 				if (!credential) return credentialList;
 
 				// Filter out any existing alignment from publisher data
-				const updated = Object.values(credential.obAlignments).reduce(
+				const updated: CtdlCredentialDraft = Object.values(credential.obAlignments).reduce(
 					(acc: CtdlCredentialDraft, ac: OBAlignmentConfig) => {
 						return filterAlignmentFromCredential(acc, ac);
 					},
-					{ ...credential, Credential: publisherData }
+					{ ...credential, Credential: smartBlendCredential(publisherData, credential.Credential) }
 				);
 
 				const filteredList = credentialList.filter(
