@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type {
+		AlignmentPropertyKey,
+		AlignmentTargetNodeTypeKey,
 		CtdlApiCredential,
 		CtdlCredentialDraft,
 		EditStatus
@@ -11,6 +13,11 @@
 
 	export let credential: CtdlCredentialDraft;
 	let alignmentEditorModalVisible = false;
+
+	const summarizePropertyType = (t: AlignmentPropertyKey): string =>
+		t == 'DEFAULT' ? 'Required (default)' : t;
+	const summarizeNodeType = (t: AlignmentTargetNodeTypeKey): string =>
+		t == 'DEFAULT' ? 'Competency (default)' : t;
 </script>
 
 <tr class="bg-white border-b">
@@ -20,7 +27,8 @@
 			<ul>
 				{#each Object.values(credential.obAlignments) as a (a.sourceData.targetUrl)}
 					<li>
-						{a.propertyType} / {a.targetNodeType}:
+						{summarizePropertyType(a.propertyType)} /
+						{summarizeNodeType(a.targetNodeType)}:
 						<a
 							href={a.sourceData.targetUrl}
 							target="_blank"
