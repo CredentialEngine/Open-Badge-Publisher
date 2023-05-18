@@ -1,10 +1,11 @@
 <script lang="ts">
-	import type {
-		AlignmentPropertyKey,
-		AlignmentTargetNodeTypeKey,
-		CtdlApiCredential,
-		CtdlCredentialDraft,
-		EditStatus
+	import {
+		type AlignmentPropertyKey,
+		type AlignmentTargetNodeTypeKey,
+		type CtdlApiCredential,
+		type CtdlCredentialDraft,
+		type EditStatus,
+		publisherOptions
 	} from '$lib/stores/publisherStore.js';
 	import Button from '$lib/components/Button.svelte';
 	import abbreviate from '$lib/utils/abbreviate.js';
@@ -15,9 +16,9 @@
 	let alignmentEditorModalVisible = false;
 
 	const summarizePropertyType = (t: AlignmentPropertyKey): string =>
-		t == 'DEFAULT' ? 'Required (default)' : t;
+		t == 'DEFAULT' ? `${$publisherOptions.alignmentSettings.defaultPropertyType} (default)` : t;
 	const summarizeNodeType = (t: AlignmentTargetNodeTypeKey): string =>
-		t == 'DEFAULT' ? 'Competency (default)' : t;
+		t == 'DEFAULT' ? `${$publisherOptions.alignmentSettings.defaultPropertyType} (default)` : t;
 </script>
 
 <tr class="bg-white border-b">
@@ -27,17 +28,48 @@
 			<ul>
 				{#each Object.values(credential.obAlignments) as a (a.sourceData.targetUrl)}
 					<li>
-						{summarizePropertyType(a.propertyType)} /
-						{summarizeNodeType(a.targetNodeType)}:
-						<a
-							href={a.sourceData.targetUrl}
-							target="_blank"
-							rel="noreferrer"
-							class="text-midnight underline hover:no-underline"
-						>
-							{abbreviate(a.sourceData.targetName, 60)}
-						</a>
-						{#if a.skip} <span class="text-red-900"> (Skipped)</span> {/if}
+						{#if a.propertyType !== 'DEFAULT' && a.targetNodeType !== 'DEFAULT'}
+							<!-- Alignment settings as mapped specifically by the user -->
+							{summarizePropertyType(a.propertyType)} /
+							{summarizeNodeType(a.targetNodeType)}:
+							<a
+								href={a.sourceData.targetUrl}
+								target="_blank"
+								rel="noreferrer"
+								class="text-midnight underline hover:no-underline"
+							>
+								{abbreviate(a.sourceData.targetName, 60)}
+							</a>
+						{:else if ($publisherOptions.alignmentSettings.defaultTargetType !== 'DEFAULT' || a.targetNodeType !== 'DEFAULT') && ($publisherOptions.alignmentSettings.defaultPropertyType !== 'DEFAULT' || a.propertyType !== 'DEFAULT')}
+							<!-- Alignment settings populated with defaults -->
+							{a.propertyType === 'DEFAULT'
+								? `${$publisherOptions.alignmentSettings.defaultPropertyType} (default)`
+								: summarizePropertyType(a.propertyType)} /
+							{a.targetNodeType === 'DEFAULT'
+								? `${$publisherOptions.alignmentSettings.defaultTargetType} (default)`
+								: summarizeNodeType(a.targetNodeType)}:
+							<a
+								href={a.sourceData.targetUrl}
+								target="_blank"
+								rel="noreferrer"
+								class="text-midnight underline hover:no-underline"
+							>
+								{abbreviate(a.sourceData.targetName, 60)}
+							</a>
+						{:else}
+							<!-- Unmapped alignment warning -->
+							<span class="text-red-600">Unmapped alignment: </span>
+							<a
+								href={a.sourceData.targetUrl}
+								target="_blank"
+								rel="noreferrer"
+								class="text-midnight underline hover:no-underline"
+							>
+								{abbreviate(a.sourceData.targetName, 60)}
+							</a>
+						{/if}
+
+						{#if a.skip} <span class="text-red-600"> (Skipped)</span> {/if}
 					</li>
 				{/each}
 			</ul>

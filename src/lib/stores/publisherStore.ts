@@ -77,6 +77,18 @@ export enum AlignmentTargetNodeTypes {
 }
 export type AlignmentTargetNodeTypeKey = keyof typeof AlignmentTargetNodeTypes;
 
+export const nodeTypeOptions = [
+	AlignmentTargetNodeTypes.DEFAULT,
+	AlignmentTargetNodeTypes.AssessmentProfile,
+	AlignmentTargetNodeTypes.Competency,
+	AlignmentTargetNodeTypes.Course,
+	AlignmentTargetNodeTypes.Credential,
+	AlignmentTargetNodeTypes.LearningProgram,
+	AlignmentTargetNodeTypes.LearningOpportunity,
+	AlignmentTargetNodeTypes.Occupation,
+	AlignmentTargetNodeTypes.QACredentialOrganization
+];
+
 const NodeTypeKeyForCtdlClass: { [key: string]: AlignmentTargetNodeTypeKey } = {
 	'ceterms:AssessmentProfile': 'AssessmentProfile',
 	'ceasn:Competency': 'Competency',
@@ -192,16 +204,15 @@ export const alignmentPropertyTypeDescriptions: { [key: string]: string } = {
 		'This credential has its time or cost reduced by other credentials, assessments or learning opportunities.',
 	CoPrerequisite:
 		'This credential identifies other resources that must be completed prior to, or pursued at the same time, as this credential.',
-	Corequisite:
-		'This credential must be pursued concurrently with other credentials or other activities',
+	Corequisite: 'This credential must be pursued concurrently with other credentials or activities.',
 	IsAdvancedStandingFor:
 		'This credential reduces the time or cost of obtaining additional identified credentials or of pursuing other activities.',
 	IsPreparationFor:
 		'This credential provides preparation for other credentials, assessments or learning opportunities.',
 	IsRecommendedFor:
-		'It is recommended to earn or complete this credential, assessment, or learning opportunity before attempting to earn or complete the referenced credentials, assessments, or learning opportunities.',
+		'It is recommended to earn or complete this credential before attempting to earn or complete the referenced credentials, assessments, or learning opportunity.',
 	IsRequiredFor:
-		'This credential, assessment, or learning opportunity must be earned or completed prior to attempting to earn or complete the referenced credential, assessment, or learning opportunity.',
+		'This credential must be earned or completed prior to attempting to earn or complete the referenced credential, assessment, or learning opportunity.',
 	PreparationFrom:
 		'Other credentials, learning opportunities or assessments provide preparation for this credential.',
 	Recommends:
@@ -727,8 +738,9 @@ interface PublisherOptions {
 	apiKey: string;
 	accessToken?: string;
 	alignmentSettings: {
-		defaultTargetType: CtdlTargetNodeType;
-		defaultPropertyType: CtdlAlignmentProperty;
+		defaultTargetType: AlignmentTargetNodeTypeKey;
+		defaultPropertyType: AlignmentPropertyKey;
+		defaultCredentialSubtype: string;
 	};
 }
 
@@ -892,8 +904,9 @@ export const publisherOptions = writable<PublisherOptions>({
 	apiKey: '',
 	accessToken: undefined,
 	alignmentSettings: {
-		defaultTargetType: CtdlTargetNodeType.Competency,
-		defaultPropertyType: CtdlAlignmentProperty.requires
+		defaultTargetType: AlignmentTargetNodeTypes.DEFAULT,
+		defaultPropertyType: AlignmentPropertyTypes.DEFAULT,
+		defaultCredentialSubtype: 'ceterms:Certification'
 	}
 });
 

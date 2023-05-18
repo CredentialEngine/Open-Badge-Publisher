@@ -91,8 +91,6 @@
 			</div>
 		{:else if $proofingStep == 2}
 			<div transition:slide>
-				<Heading><h3 aria-label="source type">Final Edits</h3></Heading>
-
 				<CredentialProofingList />
 			</div>
 

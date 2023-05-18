@@ -7,15 +7,19 @@
 	export let credential: CtdlCredentialDraft;
 </script>
 
-<BodyText>
-	Open Badges alignments can describe a wide variety of relationships. The default is a "required
-	Competency". Here you can customize the type of aligned resource and its connection to the
-	credential.
-</BodyText>
+<div>
+	<BodyText>
+		Open Badges alignments can describe a wide variety of relationships. The default is a "required
+		Competency". Here you can customize the type of aligned resource and its connection to the
+		credential.
+	</BodyText>
 
-{#each Object.keys(credential.obAlignments) as alignmentKey (alignmentKey)}
-	{#if credential.obAlignments[alignmentKey].sourceData.targetFramework != 'Credentials Transparency Description Language'}
-		<!-- TODO: the above CTDL self-references may be already filtered out at obAlignment creation time.-->
-		<SingleEditableAlignment {credential} ac={credential.obAlignments[alignmentKey]} />
-	{/if}
-{/each}
+	<div class="pt-2 space-y-6">
+		{#each Object.keys(credential.obAlignments) as alignmentKey (alignmentKey)}
+			{#if credential.obAlignments[alignmentKey].sourceData.targetFramework != 'Credentials Transparency Description Language'}
+				<!-- TODO: the above CTDL self-references may be already filtered out at obAlignment creation time.-->
+				<SingleEditableAlignment {credential} ac={credential.obAlignments[alignmentKey]} />
+			{/if}
+		{/each}
+	</div>
+</div>

@@ -9,16 +9,77 @@
 	import Tag from '$lib/components/Tag.svelte';
 	import TagLink from '$lib/components/TagLink.svelte';
 	import abbreviate from '$lib/utils/abbreviate.js';
-	import { prettyNameForCredentialType } from '$lib/stores/credentialTypesStore.js';
+	import {
+		credentialTypesStore,
+		prettyNameForCredentialType
+	} from '$lib/stores/credentialTypesStore.js';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		PubStatuses,
+		publisherOptions,
+		nodeTypePropertyDefaultMap,
+		alignmentPropertyTypeDescriptions,
 		type OBAlignmentMap,
-		type AlignmentTargetNodeTypeKey
+		AlignmentPropertyTypes,
+		type AlignmentTargetNodeTypeKey,
+		type AlignmentPropertyKey,
+		getPropertyName,
+		nodeTypeOptions
 	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 
+	// Enable editing of default settings for alignment mapping
+	let settingsModalOpen = false;
+	let defaultNodeType: AlignmentTargetNodeTypeKey =
+		$publisherOptions.alignmentSettings.defaultTargetType;
+	let defaultPropertyType: AlignmentPropertyKey =
+		$publisherOptions.alignmentSettings.defaultPropertyType;
+
+	const credentialSubtypeOptions = $credentialTypesStore.map((typ) => {
+		return { value: typ.URI, name: typ.Name };
+	});
+	let defaultCredentialSubtype = $publisherOptions.alignmentSettings.defaultCredentialSubtype;
+
+	let propertyTypeOptions = [AlignmentPropertyTypes.DEFAULT as AlignmentPropertyKey].concat(
+		nodeTypePropertyDefaultMap[defaultNodeType] as AlignmentPropertyKey[]
+	);
+
+	const handleChangeDefaultNodeType = (newNodeType: AlignmentTargetNodeTypeKey) => {
+		$publisherOptions = {
+			...$publisherOptions,
+			alignmentSettings: { ...$publisherOptions.alignmentSettings, defaultTargetType: newNodeType }
+		};
+	};
+	const handleChangeDefaultPropertyType = (newPropertyType: AlignmentPropertyKey) => {
+		$publisherOptions = {
+			...$publisherOptions,
+			alignmentSettings: {
+				...$publisherOptions.alignmentSettings,
+				defaultPropertyType: newPropertyType
+			}
+		};
+	};
+	const handleChangeDefaultCredentialSubtype = (newCredentialSubtype: string) => {
+		$publisherOptions = {
+			...$publisherOptions,
+			alignmentSettings: {
+				...$publisherOptions.alignmentSettings,
+				defaultCredentialSubtype: newCredentialSubtype
+			}
+		};
+	};
+
+	$: defaultPropertyType =
+		defaultPropertyType == 'DEFAULT'
+			? defaultPropertyType
+			: getPropertyName(defaultNodeType, defaultPropertyType); // Ensures the property type still makes sense for the node type.
+	$: propertyTypeOptions = [AlignmentPropertyTypes.DEFAULT as AlignmentPropertyKey].concat(
+		nodeTypePropertyDefaultMap[defaultNodeType] as AlignmentPropertyKey[]
+	); // Ensures the property type options are updated when the node type changes.
+
+	// Manage state of editing process for each credential
 	let currentlyEditing: { [key: string]: boolean } = {};
 	const handleEditCredential = (credentialId: string) => {
 		currentlyEditing[credentialId] = true;
@@ -26,22 +87,44 @@
 	const handleFinishEditingCredential = (credentialId: string) => {
 		currentlyEditing[credentialId] = false;
 	};
+	const handleOpenSettingsModal = () => {
+		settingsModalOpen = true;
+	};
 
 	const alignmentsCountByTargetNodeType = (map: OBAlignmentMap) => {
 		let counts: { [key: string]: number } = {};
 		for (let a of Object.values(map).filter((ac) => !ac.skip)) {
-			let key = a.targetNodeType == 'DEFAULT' ? 'Competency' : a.targetNodeType;
+			let key =
+				a.targetNodeType == 'DEFAULT' &&
+				defaultNodeType != 'DEFAULT' &&
+				defaultPropertyType != 'DEFAULT'
+					? defaultNodeType
+					: a.targetNodeType;
 			if (counts[key] == undefined) counts[key] = 1;
 			counts[key]++;
 		}
-		return counts;
+		return Object.entries(counts);
 	};
 </script>
 
-<BodyText>
-	Check to see that the following Credential definitions are correct. You can customize options for
-	each badge before saving to the publisher.
-</BodyText>
+<div class="flex items-center flex-col justify-between md:flex-row mb-6">
+	<div class="space-y-2">
+		<Heading><h3 aria-label="source type">Final Edits</h3></Heading>
+		<BodyText>
+			Check to see that the following Credential definitions are correct. You can customize options
+			for each badge before saving to the publisher. If there are unmapped alignments, you can set
+			defaults in settings.
+		</BodyText>
+	</div>
+	<div>
+		<Button buttonType="default" on:click={handleOpenSettingsModal}>
+			Settings
+			{#if defaultNodeType == 'DEFAULT' || defaultPropertyType == 'DEFAULT'}
+				<span class="text-red-600">&#8226;</span>
+			{/if}
+		</Button>
+	</div>
+</div>
 
 <ul class="space-y-4">
 	{#each $credentialDrafts as credential (credential.Credential.CredentialId)}
@@ -129,12 +212,28 @@
 						<div class="mt-2 space-x-2">
 							{#if Object.keys(credential.obAlignments).length}
 								<span class="text-xs font-bold text-midnight">Alignments:</span>
-								{#each Object.entries(alignmentsCountByTargetNodeType(credential.obAlignments)) as [targetNodeType, count]}
-									<span class="inline-block">
-										<Tag>
-											{targetNodeType} ({count})
-										</Tag>
-									</span>
+								{#each nodeTypeOptions as option (option)}
+									{#if option == 'DEFAULT' && (defaultNodeType == 'DEFAULT' || defaultPropertyType == 'DEFAULT') && Object.values(credential.obAlignments).filter((a) => a.targetNodeType == 'DEFAULT').length}
+										<span class="inline-block">
+											<Tag class="text-red-600 bg-red-200">
+												Unmapped ({Object.values(credential.obAlignments).filter(
+													(a) => a.targetNodeType == 'DEFAULT'
+												).length})
+											</Tag>
+										</span>
+									{:else if option != 'DEFAULT' && Object.values(credential.obAlignments).filter((a) => a.targetNodeType == option || (defaultNodeType == option && defaultPropertyType != 'DEFAULT')).length}
+										<span class="inline-block">
+											<Tag>
+												{option} ({Object.values(credential.obAlignments).filter(
+													(a) =>
+														a.targetNodeType == option ||
+														(a.targetNodeType == 'DEFAULT' &&
+															defaultNodeType == option &&
+															defaultPropertyType != 'DEFAULT')
+												).length})
+											</Tag>
+										</span>
+									{/if}
 								{/each}
 							{/if}
 						</div>
@@ -157,3 +256,106 @@
 		</li>
 	{/each}
 </ul>
+
+<Modal
+	visible={settingsModalOpen}
+	id={`proofingSettingsModal`}
+	on:close={() => {
+		settingsModalOpen = false;
+	}}
+	title="Customize alignment mapping"
+	actions={[
+		{
+			label: 'Done',
+			buttonType: 'primary',
+			onClick: () => {
+				settingsModalOpen = false;
+			}
+		}
+	]}
+>
+	<div class="space-y-4">
+		<BodyText>
+			There may be badge alignments that are not yet mapped to destination types. If there is a
+			common setting that fits most of your alignments, you can set it here to save time. Alignments
+			that are not mapped to a specific resource type and connection type will be skipped.
+		</BodyText>
+		<div transition:slide class="mb-4">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+				<div>
+					<BodyText>
+						<label for={`nodeTypeSelect-default`}>Resource type</label>
+					</BodyText>
+					<select
+						id={`nodeTypeSelect-default`}
+						bind:value={defaultNodeType}
+						on:change={() => {
+							handleChangeDefaultNodeType(defaultNodeType);
+						}}
+						class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+					>
+						{#each nodeTypeOptions as option (option)}
+							<option value={option} selected={defaultNodeType == option}>
+								{option == 'DEFAULT' ? 'Skip Unmapped Alignments (!)' : option}
+							</option>
+						{/each}
+					</select>
+				</div>
+				<div>
+					<BodyText>
+						<label for={`propertyTypeSelect-default`}>Connection type</label>
+					</BodyText>
+					<select
+						id={`propertyTypeSelect-default`}
+						bind:value={defaultPropertyType}
+						on:change={() => {
+							handleChangeDefaultPropertyType(defaultPropertyType);
+						}}
+						class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+					>
+						{#each propertyTypeOptions as option (option)}
+							<option value={option} selected={defaultPropertyType == option}>
+								{option == 'DEFAULT' ? 'Skip Unmapped Alignments (!)' : option}
+							</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+
+			{#if defaultPropertyType == 'DEFAULT' || defaultNodeType == 'DEFAULT'}
+				<p class="text-xs text-red-500 my-2">
+					Incomplete defaults. Alignments that are not mapped to a specific resource type and
+					connection type will be skipped.
+				</p>
+			{:else}
+				<p class="text-xs text-midgray my-2">
+					{alignmentPropertyTypeDescriptions[getPropertyName(defaultNodeType, defaultPropertyType)]}
+				</p>
+			{/if}
+
+			{#if defaultNodeType == 'Credential'}
+				<div transition:slide>
+					<BodyText>
+						<label for={`credentialSubtypeSelect-default`}
+							>Select Credential sub-type (required for this resource type)</label
+						>
+					</BodyText>
+					<select
+						id={`credentialSubtypeSelect-default`}
+						bind:value={defaultCredentialSubtype}
+						on:change={() => {
+							handleChangeDefaultCredentialSubtype(defaultCredentialSubtype);
+						}}
+						class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+					>
+						{#each credentialSubtypeOptions as option (option)}
+							<option value={option.value} selected={defaultCredentialSubtype == option.value}>
+								{option.name}
+							</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+		</div>
+	</div>
+</Modal>
