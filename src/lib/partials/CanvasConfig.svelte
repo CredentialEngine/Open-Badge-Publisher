@@ -20,7 +20,7 @@
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
-	import { error } from '@sveltejs/kit';
+	import { initiateLogin } from '$lib/auth/oauth.js';
 
 	let canvasAccessTokenHidden = true;
 	let getCanvasIssuers = async (): Promise<boolean> => {
@@ -233,6 +233,15 @@
 					}}>obtain an auth token manually</button
 				>.
 			</BodyText>
+			<Button
+				buttonType="primary"
+				on:click={() => {
+					console.log('Clicked Login with OAuth...');
+					initiateLogin();
+				}}
+			>
+				Login with OAuth
+			</Button>
 			{#await canvasAuthTokenPromise}
 				<div transition:slide><LoadingSpinner /></div>
 			{:then success}
