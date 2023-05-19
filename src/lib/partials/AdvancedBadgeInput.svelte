@@ -30,7 +30,7 @@
 		}
 
 		const validateOne = async (c, i: number) => {
-			console.log('Gonna try validating...');
+			console.log('Attempting validating...');
 			console.log(c);
 			try {
 				let validationResults = await validateSingleBadge(c);

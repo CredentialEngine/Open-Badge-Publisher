@@ -118,6 +118,12 @@
 	$: if (!!selectedOrg) {
 		setPublisherSelection(selectedOrg);
 	}
+	$: if ($publisherSetupStep == 5) {
+		// Step 5 is triggered by restoreSession() in src/lib/auth/oauth.ts after
+		// all publisher stores are repopulated from sessionStorage. The user is ready to continue now.
+		panelIsHidden = true;
+		$publisherSetupStep = 4;
+	}
 
 	const handlePreviewCredentials = () => {
 		credentialsLoading = Promise.all([getOrgCredentialList(), getOrgVsp()]); // eventually resolves to true once loaded

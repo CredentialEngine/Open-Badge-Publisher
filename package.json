@@ -22,6 +22,7 @@
 		"@typescript-eslint/parser": "^5.48.0",
 		"@vitest/ui": "^0.31.0",
 		"autoprefixer": "^10.4.13",
+		"client-oauth2": "^4.3.3",
 		"eslint": "^8.31.0",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-svelte3": "^4.0.0",

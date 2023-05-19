@@ -3,7 +3,8 @@ import {
 	badgeclassFromCanvasApiBadge,
 	canvasRegions,
 	type CanvasBadge,
-	type CanvasIssuer
+	type CanvasIssuer,
+	type CanvasEnvKey
 } from '$lib/utils/canvas.js';
 import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
 import { writable, derived, get, type Readable } from 'svelte/store';
@@ -23,7 +24,7 @@ export const badgeSetupStep = writable(0);
 // Canvas configuration
 export const canvasAccessToken = writable<string>('');
 export const canvasAgreeTerms = writable(false);
-export const canvasSelectedRegion = writable('');
+export const canvasSelectedRegion = writable<CanvasEnvKey | ''>('');
 export const canvasIssuers = writable<CanvasIssuer[]>();
 export const canvasSelectedIssuer = writable<CanvasIssuer | undefined>();
 export const canvasSelectedIssuerBadges = writable<CanvasBadge[]>([]);
@@ -32,7 +33,7 @@ export const fetchCanvasIssuerBadges = async (): Promise<boolean> => {
 	if (!get(canvasSelectedRegion) || !get(canvasAgreeTerms) || !get(canvasAccessToken)) return false;
 
 	const requestData = {
-		URL: `${canvasRegions.get(get(canvasSelectedRegion))?.apiDomain}/v2/issuers/${
+		URL: `${canvasRegions.get(get(canvasSelectedRegion) || 'test')?.apiDomain}/v2/issuers/${
 			get(canvasSelectedIssuer)?.entityId
 		}/badgeclasses`,
 		Method: 'GET',
@@ -218,6 +219,7 @@ export const resetBadgeData = () => {
 	credlySelectedIssuer.set('');
 	credlyIssuerData.set(undefined);
 
+	// Does not invalidate canvasAuthToken
 	canvasIssuers.set([]);
 	canvasSelectedIssuer.set(undefined);
 	canvasSelectedIssuerBadges.set([]);

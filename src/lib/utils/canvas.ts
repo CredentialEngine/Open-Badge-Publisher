@@ -1,6 +1,23 @@
-import type { Alignment, BadgeClassBasic, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
-import type { CtdlApiCredential } from '$lib/stores/publisherStore.js';
-import { PUBLIC_UI_API_BASEURL, PUBLIC_PUBLISHER_API_ENV_LABEL } from '$env/static/public';
+import type { Alignment, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
+import {
+	PUBLIC_CANVAS_AU_ENABLED,
+	PUBLIC_CANVAS_AU_LOGIN_CLIENT_ID,
+	PUBLIC_CANVAS_AU_LOGIN_CLIENT_SECRET,
+	PUBLIC_CANVAS_CA_ENABLED,
+	PUBLIC_CANVAS_CA_LOGIN_CLIENT_ID,
+	PUBLIC_CANVAS_CA_LOGIN_CLIENT_SECRET,
+	PUBLIC_CANVAS_EU_ENABLED,
+	PUBLIC_CANVAS_EU_LOGIN_CLIENT_ID,
+	PUBLIC_CANVAS_EU_LOGIN_CLIENT_SECRET,
+	PUBLIC_CANVAS_TEST_ENABLED,
+	PUBLIC_CANVAS_TEST_LOGIN_CLIENT_ID,
+	PUBLIC_CANVAS_TEST_LOGIN_CLIENT_SECRET,
+	PUBLIC_CANVAS_US_ENABLED,
+	PUBLIC_CANVAS_US_LOGIN_CLIENT_ID,
+	PUBLIC_CANVAS_US_LOGIN_CLIENT_SECRET,
+	PUBLIC_PUBLISHER_API_ENV_LABEL,
+	PUBLIC_UI_API_BASEURL
+} from '$env/static/public';
 
 // Canvas Options
 export interface CanvasIssuer {
@@ -30,7 +47,18 @@ export interface CanvasBadge {
 	tags: string[];
 }
 
-export const canvasRegions = new Map([
+export interface CanvasEnv {
+	enabled?: boolean;
+	client_id?: string;
+	client_secret?: string;
+	id?: string | undefined;
+	domain?: string | undefined;
+	apiDomain?: string | undefined;
+	name?: string | undefined;
+}
+export type CanvasEnvKey = 'us' | 'ca' | 'eu' | 'au' | 'test';
+
+export const canvasRegions: Map<CanvasEnvKey, CanvasEnv> = new Map([
 	[
 		'us',
 		{
@@ -93,5 +121,39 @@ export const badgeclassFromCanvasApiBadge = (cb: CanvasBadge): BadgeClassCTDLExt
 			narrative: cb.criteriaNarrative
 		},
 		'ceterms:dateEffective': cb.createdAt
+	};
+};
+
+export const canvasEnv = (regionKey: CanvasEnvKey): CanvasEnv => {
+	const regionEnvVars: { [key: string]: CanvasEnv } = {
+		test: {
+			enabled: PUBLIC_CANVAS_TEST_ENABLED == 'true',
+			client_id: PUBLIC_CANVAS_TEST_LOGIN_CLIENT_ID,
+			client_secret: PUBLIC_CANVAS_TEST_LOGIN_CLIENT_SECRET
+		},
+		au: {
+			enabled: PUBLIC_CANVAS_AU_ENABLED == 'true',
+			client_id: PUBLIC_CANVAS_AU_LOGIN_CLIENT_ID,
+			client_secret: PUBLIC_CANVAS_AU_LOGIN_CLIENT_SECRET
+		},
+		ca: {
+			enabled: PUBLIC_CANVAS_CA_ENABLED == 'true',
+			client_id: PUBLIC_CANVAS_CA_LOGIN_CLIENT_ID,
+			client_secret: PUBLIC_CANVAS_CA_LOGIN_CLIENT_SECRET
+		},
+		eu: {
+			enabled: PUBLIC_CANVAS_EU_ENABLED == 'true',
+			client_id: PUBLIC_CANVAS_EU_LOGIN_CLIENT_ID,
+			client_secret: PUBLIC_CANVAS_EU_LOGIN_CLIENT_SECRET
+		},
+		us: {
+			enabled: PUBLIC_CANVAS_US_ENABLED == 'true',
+			client_id: PUBLIC_CANVAS_US_LOGIN_CLIENT_ID,
+			client_secret: PUBLIC_CANVAS_US_LOGIN_CLIENT_SECRET
+		}
+	};
+	return {
+		...canvasRegions.get(regionKey),
+		...regionEnvVars[regionKey]
 	};
 };

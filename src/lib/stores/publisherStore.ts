@@ -723,9 +723,6 @@ interface PublisherCredentialsDataStore {
 }
 
 interface PublisherOptions {
-	cookieBasedAccess: boolean;
-	apiKey: string;
-	accessToken?: string;
 	alignmentSettings: {
 		defaultTargetType: CtdlTargetNodeType;
 		defaultPropertyType: CtdlAlignmentProperty;
@@ -740,7 +737,6 @@ export const getPropertyName = (
 	suggestion?: AlignmentPropertyKey
 ): AlignmentPropertyTypeCredentialKey => {
 	if (suggestion) {
-		console.log(nodeType);
 		return suggestion !== 'DEFAULT' && nodeTypePropertyDefaultMap[nodeType].includes(suggestion)
 			? suggestion
 			: (nodeTypePropertyDefaultMap[nodeType][0] as AlignmentPropertyTypeCredentialKey);
@@ -888,9 +884,6 @@ export const resetPublisherSelection = () => {
 
 // Details about the API connection to the publisher and configuration
 export const publisherOptions = writable<PublisherOptions>({
-	cookieBasedAccess: false,
-	apiKey: '',
-	accessToken: undefined,
 	alignmentSettings: {
 		defaultTargetType: CtdlTargetNodeType.Competency,
 		defaultPropertyType: CtdlAlignmentProperty.requires
@@ -898,7 +891,7 @@ export const publisherOptions = writable<PublisherOptions>({
 });
 
 // Governs which step is displayed
-export const publisherSetupStep = writable<Number>(0);
+export const publisherSetupStep = writable<number>(0);
 export const proofingStep = writable(0);
 export const reviewingStep = writable(0);
 
@@ -918,7 +911,6 @@ export const getUser = async () => {
 	if (!data || !data['Valid']) return null;
 
 	publisherUser.set({ user: data['Data'] });
-	publisherOptions.set({ ...get(publisherOptions), cookieBasedAccess: true });
 };
 
 export const defaultAchievementTypeForBadgeAchievementType = (btype: string): string => {
