@@ -34,6 +34,7 @@
 	const handleAdvanceToBadgeSelection = () => {
 		if ($badgeSourceType == 'canvas') fetchCanvasIssuerBadges();
 		$badgeSetupStep = 3;
+		handleRefocusPanel();
 	};
 
 	const handleReopenPanel = async () => {
@@ -41,6 +42,10 @@
 		panelIsHidden = false;
 		$badgeSetupStep = 3;
 		$proofingStep = 0;
+		handleRefocusPanel();
+	};
+
+	const handleRefocusPanel = async () => {
 		await tick();
 		document.getElementById('badge-source-configuration')?.scrollIntoView();
 	};
@@ -130,7 +135,13 @@
 				{/if}
 
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
-					<NextPrevButton on:click={() => badgeSetupStep.update((n) => n - 1)} isNext={false} />
+					<NextPrevButton
+						on:click={() => {
+							badgeSetupStep.update((n) => n - 1);
+							handleRefocusPanel();
+						}}
+						isNext={false}
+					/>
 					<NextPrevButton on:click={handleAdvanceToBadgeSelection} isActive={$badgeSetupComplete} />
 				</div>
 			</div>
@@ -151,6 +162,9 @@
 								credentialDrafts.importCheckedSourceBadges();
 								ctdlPublicationResultStore.initialize();
 							}
+							tick().then(() => {
+								document.getElementById('proofing')?.scrollIntoView();
+							});
 						}}
 						isNext={true}
 						isActive={Object.keys($checkedBadges).length > 0}

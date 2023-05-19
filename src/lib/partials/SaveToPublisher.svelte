@@ -72,9 +72,6 @@
 				saveInProgress: 0
 			}
 		);
-		console.log('Updated counts!');
-		console.log(Object.values(results));
-		console.log(counts);
 	};
 
 	const handleClickFinish = () => {

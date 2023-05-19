@@ -17,13 +17,19 @@
 	} from '$env/static/public';
 
 	import { publisherOrganization, reviewingStep } from '$lib/stores/publisherStore.js';
+	import { processLoginResponse } from '$lib/auth/oauth.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
+	import { onMount } from 'svelte';
 
 	if (!PUBLIC_UI_API_BASEURL || !PUBLIC_PUBLISHER_API_BASEURL || !PUBLIC_PUBLISHER_API_ENV_LABEL)
 		throw error(404, {
 			message:
 				'Application environment settings not properly configured. Follow instructions on setting up the .env'
 		});
+
+	onMount(async () => {
+		if (window.location.search.includes('code=')) processLoginResponse();
+	});
 </script>
 
 <BodyText>

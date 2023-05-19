@@ -9,7 +9,7 @@
 	} from '$lib/stores/badgeSourceStore.js';
 	import abbreviate from '$lib/utils/abbreviate.js';
 	import { publisherUser } from '$lib/stores/publisherStore.js';
-	import { canvasRegions } from '$lib/utils/canvas.js';
+	import { canvasEnv, canvasRegions, type CanvasEnv } from '$lib/utils/canvas.js';
 	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
 	import Alert from '$lib/components/Alert.svelte';
@@ -20,10 +20,11 @@
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
-	import { error } from '@sveltejs/kit';
+	import { initiateLogin } from '$lib/auth/oauth.js';
 
 	let canvasAccessTokenHidden = true;
 	let getCanvasIssuers = async (): Promise<boolean> => {
+		if (!$canvasSelectedRegion) return false;
 		const requestData = {
 			URL: `${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/v2/issuers?num=100`,
 			Method: 'GET',
@@ -55,7 +56,7 @@
 			throw new Error('Error fetching issuer data.');
 
 		const issuerData = JSON.parse(proxyResponseData.Data?.Body);
-		$canvasIssuers = issuerData.result.map((i) => {
+		$canvasIssuers = issuerData.result.map((i: any) => {
 			return {
 				entityId: i.entityId,
 				openBadgeId: i.openBadgeId,
@@ -96,7 +97,9 @@
 	let canvasErrorMessage = '';
 	let debounceObtainAuth = false;
 
-	const handleObtainCanvasAuthToken = async (): Promise<boolean> => {
+	const handleObtainCanvasAuthTokenWithPassword = async (): Promise<boolean> => {
+		if (!$canvasSelectedRegion) return false;
+
 		canvasErrorMessage = '';
 		const formData = `username=${encodeURIComponent(canvasEmail)}&password=${encodeURIComponent(
 			canvasPassword
@@ -145,6 +148,9 @@
 	let canvasAuthTokenPromise = new Promise((resolve, reject) => {
 		resolve(true);
 	});
+
+	let currentCanvasEnv: CanvasEnv | null = null;
+	$: currentCanvasEnv = $canvasSelectedRegion ? canvasEnv($canvasSelectedRegion) : null;
 </script>
 
 <Heading><h3>Configure Canvas Credentials connection</h3></Heading>
@@ -168,17 +174,24 @@
 	>, choose United States.
 </BodyText>
 <div class="mt-8">
-	{#each [...canvasRegions] as [regionId, region]}
+	{#each [...canvasRegions].filter(([rId, r]) => rId !== 'test' || canvasEnv(rId).enabled) as [regionId, region]}
 		<div class="flex items-center mb-4">
 			<input
 				id={`canvasRegionSelect-${region.id}`}
 				type="radio"
 				bind:group={$canvasSelectedRegion}
 				value={region.id}
+				disabled={!!$canvasAccessToken || !canvasEnv(regionId).enabled}
 				class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
 			/>
-			<label for={`canvasRegionSelect-${region.id}`} class="ml-2 text-sm font-medium text-gray-900">
+			<label
+				for={`canvasRegionSelect-${region.id}`}
+				class={`ml-2 text-sm font-medium ${
+					canvasEnv(regionId).enabled ? 'text-gray-900' : 'text-midgray'
+				}`}
+			>
 				{region.name}
+				{#if !canvasEnv(regionId).enabled}(disabled in app settings){/if}
 			</label>
 		</div>
 	{/each}
@@ -223,61 +236,84 @@
 	</div>
 	{#if usePassword}
 		<div>
-			<BodyText>
-				Authenticate with Canvas Credentials (Badgr) to load badges by entering your email address
-				and password. We do not retain password data, but you may also
-				<button
-					class="text-midnight underline hover:no-underline"
-					on:click={() => {
-						usePassword = false;
-					}}>obtain an auth token manually</button
-				>.
-			</BodyText>
-			{#await canvasAuthTokenPromise}
-				<div transition:slide><LoadingSpinner /></div>
-			{:then success}
-				{#if $canvasAccessToken}
-					<BodyText>Successfully obtained Canvas Auth Token.</BodyText>
+			{#if currentCanvasEnv?.client_id && currentCanvasEnv?.client_secret}
+				<BodyText>
+					Authenticate with Canvas Credentials (Badgr) account to load badges. You will be
+					redirected to Canvas Credentials in your selected region to authorize.
+				</BodyText>
+				{#if !$canvasAccessToken}
+					<Button
+						buttonType="primary"
+						on:click={() => {
+							initiateLogin();
+						}}
+					>
+						Login with Canvas
+					</Button>
 				{:else}
-					<div class="mt-8 md:flex items-center" transition:slide>
-						<div class="flex flex-col">
-							<label for="input_canvasemail" class="mb-3 text-sm leading-none text-gray-800"
-								>Email</label
-							>
-							<input
-								id="input_canvasemail"
-								type="email"
-								aria-label="Enter publisher account email"
-								class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
-								bind:value={canvasEmail}
-							/>
-						</div>
-					</div>
-					<div class="mt-4 md:flex items-center">
-						<div class="flex flex-col">
-							<label for="input_canvaspassword" class="mb-3 text-sm leading-none text-gray-800"
-								>Password</label
-							>
-							<input
-								id="input_canvaspassword"
-								type="password"
-								aria-label="Enter publisher account password"
-								class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
-								bind:value={canvasPassword}
-							/>
-						</div>
-					</div>
-					<div class="mt-4">
-						<Button buttonType="primary" on:click={handleObtainCanvasAuthToken}>Submit</Button>
-					</div>
-
-					{#if canvasErrorMessage}
-						<div class="mt-4" transition:slide>
-							<Alert level="error" message={canvasErrorMessage} />
-						</div>
-					{/if}
+					<Button disabled={true}>Login with Canvas</Button>
+					<BodyText>Successfully obtained Canvas Auth Token.</BodyText>
 				{/if}
-			{/await}
+			{:else}
+				<BodyText>
+					Authenticate with Canvas Credentials (Badgr) to load badges by entering your email address
+					and password. We do not retain password data, but you may also
+					<button
+						class="text-midnight underline hover:no-underline"
+						on:click={() => {
+							usePassword = false;
+						}}>obtain an auth token manually</button
+					>.
+				</BodyText>
+
+				{#await canvasAuthTokenPromise}
+					<div transition:slide><LoadingSpinner /></div>
+				{:then success}
+					{#if $canvasAccessToken}
+						<BodyText>Successfully obtained Canvas Auth Token.</BodyText>
+					{:else}
+						<div class="mt-8 md:flex items-center" transition:slide>
+							<div class="flex flex-col">
+								<label for="input_canvasemail" class="mb-3 text-sm leading-none text-gray-800"
+									>Email</label
+								>
+								<input
+									id="input_canvasemail"
+									type="email"
+									aria-label="Enter publisher account email"
+									class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
+									bind:value={canvasEmail}
+								/>
+							</div>
+						</div>
+						<div class="mt-4 md:flex items-center">
+							<div class="flex flex-col">
+								<label for="input_canvaspassword" class="mb-3 text-sm leading-none text-gray-800"
+									>Password</label
+								>
+								<input
+									id="input_canvaspassword"
+									type="password"
+									aria-label="Enter publisher account password"
+									class="focus:outline-none focus:ring-2 focus:ring-indigo-400 w-64 bg-gray-100 text-sm font-medium leading-none text-gray-800 p-3 border rounded border-gray-200"
+									bind:value={canvasPassword}
+								/>
+							</div>
+						</div>
+						<div class="mt-4">
+							<Button buttonType="primary" on:click={handleObtainCanvasAuthTokenWithPassword}
+								>Submit</Button
+							>
+						</div>
+
+						{#if canvasErrorMessage}
+							<div class="mt-4" transition:slide>
+								<Alert level="error" message={canvasErrorMessage} />
+							</div>
+						{/if}
+					{/if}
+				{/await}
+			{/if}
 		</div>
 	{:else}
 		<!-- usePassword: false -- obtain auth token manually. -->
