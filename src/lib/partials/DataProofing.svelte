@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { slide, fly } from 'svelte/transition'; // TODO: implement left-right fly-in instead of slide for next/prev steps
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -24,9 +24,15 @@
 
 	const handleNextStep = () => {
 		$proofingStep = $proofingStep + 1;
+		tick().then(() => {
+			document.getElementById('proofing')?.scrollIntoView();
+		});
 	};
 	const handlePreviousStep = () => {
 		$proofingStep = $proofingStep - 1;
+		tick().then(() => {
+			document.getElementById('proofing')?.scrollIntoView();
+		});
 	};
 
 	$: {
