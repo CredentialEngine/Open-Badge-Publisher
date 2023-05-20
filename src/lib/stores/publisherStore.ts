@@ -912,7 +912,7 @@ export const getUser = async () => {
 	if (!browser || get(publisherUser).user) return null;
 
 	const url = `${PUBLIC_UI_API_BASEURL || '/publisher'}/StagingApi/Load/User`;
-	if (!haveSameDomain(url, PUBLIC_BASEURL)) return null;
+	if (!haveSameDomain(url, PUBLIC_BASEURL, PUBLIC_BASEURL)) return null;
 
 	// Attempt to get user from the publisher using cookies that may be set if this app is running on same-origin.
 	// TODO: just skip this if we can tell in advance that it is not running on same origin.
