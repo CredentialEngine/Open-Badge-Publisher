@@ -29,6 +29,10 @@
 	} from '$lib/stores/publisherStore.js';
 	import Alert from '$lib/components/Alert.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
+
+	export let handleNextStep: () => void;
+	export let handlePreviousStep: () => void;
 
 	// Enable editing of default settings for alignment mapping
 	let settingsModalOpen = false;
@@ -36,6 +40,26 @@
 		$publisherOptions.alignmentSettings.defaultTargetType;
 	let defaultPropertyType: AlignmentPropertyKey =
 		$publisherOptions.alignmentSettings.defaultPropertyType;
+	let unmappedAlignmentWarnings = 0;
+
+	const handleContinueMaybe = () => {
+		const settings = $publisherOptions.alignmentSettings;
+		if (settings.defaultTargetType != 'DEFAULT' && settings.defaultPropertyType != 'DEFAULT')
+			return handleNextStep();
+
+		unmappedAlignmentWarnings = 0;
+		$credentialDrafts.forEach((draft) => {
+			unmappedAlignmentWarnings += Object.values(draft.obAlignments).reduce((acc, val) => {
+				const isMapped =
+					(val.targetNodeType != 'DEFAULT' || settings.defaultTargetType != 'DEFAULT') &&
+					(val.propertyType != 'DEFAULT' || settings.defaultPropertyType != 'DEFAULT');
+
+				return acc + (val.skip || isMapped ? 0 : 1);
+			}, 0);
+		});
+
+		if (unmappedAlignmentWarnings == 0) handleNextStep();
+	};
 
 	const credentialSubtypeOptions = $credentialTypesStore.map((typ) => {
 		return { value: typ.URI, name: typ.Name };
@@ -257,6 +281,11 @@
 	{/each}
 </ul>
 
+<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
+	<NextPrevButton on:click={handlePreviousStep} isNext={false} />
+	<NextPrevButton on:click={handleContinueMaybe} />
+</div>
+
 <Modal
 	visible={settingsModalOpen}
 	id={`proofingSettingsModal`}
@@ -358,4 +387,50 @@
 			{/if}
 		</div>
 	</div>
+</Modal>
+
+<Modal
+	visible={unmappedAlignmentWarnings > 0}
+	id={`unmappedAlignmentsWarningModal`}
+	on:close={() => {
+		unmappedAlignmentWarnings = 0;
+	}}
+	title="Unmapped alignments"
+	actions={[
+		{
+			label: 'Continue and skip',
+			buttonType: 'danger',
+			onClick: () => {
+				unmappedAlignmentWarnings = 0;
+				handleNextStep();
+			}
+		},
+		{
+			label: 'Customize defaults',
+			buttonType: 'default',
+			onClick: () => {
+				unmappedAlignmentWarnings = 0;
+				settingsModalOpen = true;
+			}
+		},
+		{
+			label: 'Cancel',
+			buttonType: 'default',
+			onClick: () => {
+				unmappedAlignmentWarnings = 0;
+			}
+		}
+	]}
+>
+	<BodyText
+		>There are still <Tag class="text-red-600 bg-red-200">{unmappedAlignmentWarnings}</Tag> unmapped
+		alignments from your badge data. If you continue, these alignments will be skipped. You may cancel
+		to configure the details of each alignment, or you may set a default that applies to all unmapped
+		alignments.
+	</BodyText>
+	<BodyText>
+		<strong class="font-bold">What is alignment mapping?</strong> Open Badges only have one type of alignment,
+		but the CTDL can describe many relationships. This interface lets you quickly select the meaning
+		of each alignment among these options.
+	</BodyText>
 </Modal>

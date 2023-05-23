@@ -97,12 +97,7 @@
 			</div>
 		{:else if $proofingStep == 2}
 			<div transition:slide>
-				<CredentialProofingList />
-			</div>
-
-			<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
-				<NextPrevButton on:click={handlePreviousStep} isNext={false} />
-				<NextPrevButton on:click={handleNextStep} />
+				<CredentialProofingList {handleNextStep} {handlePreviousStep} />
 			</div>
 		{:else if $proofingStep == 3}
 			<div transition:slide>
