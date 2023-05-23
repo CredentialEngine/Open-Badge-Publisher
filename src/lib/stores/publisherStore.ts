@@ -792,13 +792,13 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 			}
 		],
 		Skip: 0,
-		Take: 1000
+		Take: 100
 	};
 
 	const fetchPage = async () => {
 		const response = await fetch(url, {
 			method: 'POST',
-			body: JSON.stringify({ ...formData, Skip: page * 1000 }),
+			body: JSON.stringify({ ...formData, Skip: page * 100 }),
 			headers: {
 				Authorization: `Bearer ${get(publisherUser).user?.Token}`,
 				'Content-Type': 'application/json'
@@ -815,7 +815,7 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 		page++;
 		responseData = await fetchPage();
 
-		results = results.concat(responseData.Data.Results ?? []);
+		results = results.concat(responseData?.Data?.Results ?? []);
 
 		// TODO: there was a bug in the publisher API returning valid false for pages after the first.
 		// This will at least return the first page of results and should still work once the API is fixed.
@@ -894,7 +894,7 @@ export const getOrgVsp = async (): Promise<boolean> => {
 			}
 		);
 
-		const createResponseData = await response.json();
+		const createResponseData = await createResponse.json();
 		if (!responseData['Valid']) {
 			return false;
 		}
