@@ -777,6 +777,8 @@ export const publisherCredentials = writable<PublisherCredentialsDataStore>({
 export const getOrgCredentialList = async (): Promise<boolean> => {
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Resource/PublisherSearch`;
 	const orgCtid = get(publisherOrganization).org?.CTID;
+	let page = 0;
+	let results: any[] = [];
 
 	const formData = {
 		Filters: [
@@ -790,25 +792,38 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 			}
 		],
 		Skip: 0,
-		Take: 100
+		Take: 1000
 	};
-	// TODO: handle pagination
 
-	const response = await fetch(url, {
-		method: 'POST',
-		body: JSON.stringify(formData),
-		headers: {
-			Authorization: `Bearer ${get(publisherUser).user?.Token}`,
-			'Content-Type': 'application/json'
-		}
-	});
-	const responseData = await response.json();
+	const fetchPage = async () => {
+		const response = await fetch(url, {
+			method: 'POST',
+			body: JSON.stringify({ ...formData, Skip: page * 1000 }),
+			headers: {
+				Authorization: `Bearer ${get(publisherUser).user?.Token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+		return await response.json();
+	};
+	let responseData = await fetchPage();
 	if (!responseData['Valid']) {
 		return false;
 	}
+	results = results.concat(responseData.Data.Results);
+	while (results.length < responseData.Data.TotalResults) {
+		page++;
+		responseData = await fetchPage();
+
+		results = results.concat(responseData.Data.Results ?? []);
+
+		// TODO: there was a bug in the publisher API returning valid false for pages after the first.
+		// This will at least return the first page of results and should still work once the API is fixed.
+		if (responseData['Valid'] === false) break;
+	}
 
 	publisherCredentials.set({
-		credentials: responseData.Data.Results,
+		credentials: results,
 		totalResults: responseData.Data.totalResults
 	});
 
