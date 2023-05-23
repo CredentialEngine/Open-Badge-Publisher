@@ -682,7 +682,7 @@ export enum CtdlTargetNodeType {
 	AssessmentProfile = 'ceterms:AssessmentProfile',
 	Competency = 'ceterms:Competency',
 	Course = 'ceterms:Course',
-	Credential = 'ceterms:Credential', // TODO: this is invalid. User must pick a subtype.
+	Credential = 'ceterms:Credential',
 	LearningProgram = 'ceterms:LearningProgram',
 	LearningOpportunity = 'ceterms:LearningOpportunityProfile',
 	Occupation = 'ceterms:Occupation',

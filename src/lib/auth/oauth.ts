@@ -37,7 +37,7 @@ import {
 	canvasAccessToken,
 	canvasSelectedRegion
 } from '../stores/badgeSourceStore.js';
-import { canvasRegions } from '../utils/canvas.js';
+import { canvasEnv } from '../utils/canvas.js';
 import { restoreStores, serializeStores } from '../stores/storageBackend.js';
 import { tick } from 'svelte';
 import { error } from '@sveltejs/kit';
@@ -72,15 +72,6 @@ const generateBasicAuth = (username: string, password: string): string => {
 	return 'Basic ' + window.btoa(username ?? '' + ':' + password ?? '');
 };
 
-const canvasLoginOptions = {
-	client_id: PUBLIC_CANVAS_TEST_LOGIN_CLIENT_ID ?? '',
-	client_secret: PUBLIC_CANVAS_TEST_LOGIN_CLIENT_SECRET ?? '',
-	authorizationUri: 'https://test.badgr.com/auth/oauth2/authorize', // TODO: get the one for this environment
-	tokenUri: 'https://api.test.badgr.com/o/token', // TODO: get the one for this environment
-	redirect_uri: PUBLIC_BASEURL,
-	scope: 'rw:issuer'
-};
-
 const UUID_TEMPLATE = '10000000-1000-4000-8000-100000000000';
 const verifierPart = (): string => {
 	const uuid = UUID_TEMPLATE.replace(/[018]/g, (c) =>
@@ -105,16 +96,20 @@ export const initiateLogin = async () => {
 
 	storageBackend?.setItem('pkce_code_verifier', verifier);
 
-	const authorizeParams = {
-		client_id: canvasLoginOptions.client_id,
-		redirect_uri: canvasLoginOptions.redirect_uri,
-		state: storageTimestamp,
-		scope: canvasLoginOptions.scope,
-		code_challenge_method: 'S256',
-		code_challenge
-	};
+	const selectedRegion = get(canvasSelectedRegion) || 'test';
+	const canvasLoginOptions = canvasEnv(selectedRegion);
+	const client_id: string = canvasLoginOptions.client_id || 'CREDENTIALENGINEBADGEPUBLISHER';
 
-	const authorizeUri = `${canvasLoginOptions.authorizationUri}?${new URLSearchParams(
+	const authorizeParams: [string, string][] = [
+		['client_id', client_id],
+		['redirect_uri', PUBLIC_BASEURL],
+		['state', storageTimestamp],
+		['scope', 'rw:issuer'],
+		['code_challenge_method', 'S256'],
+		['code_challenge', code_challenge]
+	];
+
+	const authorizeUri = `${canvasLoginOptions.domain}/auth/oauth2/authorize?${new URLSearchParams(
 		authorizeParams
 	).toString()}`;
 	window.location.replace(authorizeUri);
@@ -150,31 +145,38 @@ export const processLoginResponse = async () => {
 	}
 
 	const params = new URLSearchParams(window.location.toString()?.split('?')[1]);
-	const code = params.get('code');
+	const code = params.get('code') ?? '';
 	const state = params.get('state');
 
 	const storageTimestamp = storageBackend?.getItem('storageTimestamp');
 	storageBackend?.removeItem('storageTimestamp');
 
-	const verifier = storageBackend?.getItem('pkce_code_verifier');
+	const verifier = storageBackend?.getItem('pkce_code_verifier') || '';
 	storageBackend?.removeItem('pkce_code_verifier');
+
+	const selectedRegion = get(canvasSelectedRegion) || 'test';
+	const canvasLoginOptions = canvasEnv(selectedRegion);
+	const client_id: string = canvasLoginOptions.client_id || 'CREDENTIALENGINEBADGEPUBLISHER';
+	const client_secret: string = canvasLoginOptions.client_secret || 'SECRET_NOT_CONFIGURED';
+
+	const tokenParams: [string, string][] = [
+		['grant_type', 'authorization_code'],
+		['code', code],
+		['client_id', client_id],
+		['client_secret', client_secret],
+		['redirect_uri', PUBLIC_BASEURL],
+		['code_verifier', verifier]
+	];
 
 	if (verifier && code && state == storageTimestamp) {
 		const tokenResponse = await requestByProxy(
 			'POST',
-			canvasLoginOptions.tokenUri,
-			new URLSearchParams({
-				grant_type: 'authorization_code',
-				code: code,
-				client_id: canvasLoginOptions.client_id,
-				client_secret: canvasLoginOptions.client_secret,
-				redirect_uri: canvasLoginOptions.redirect_uri,
-				code_verifier: verifier
-			}).toString(),
+			`${canvasLoginOptions.apiDomain}/o/token`,
+			new URLSearchParams(tokenParams).toString(),
 			[
 				{
 					Name: 'Authorization',
-					Value: generateBasicAuth(canvasLoginOptions.client_id, canvasLoginOptions.client_secret)
+					Value: generateBasicAuth(client_id, client_secret)
 				},
 				{
 					Name: 'Accept',
