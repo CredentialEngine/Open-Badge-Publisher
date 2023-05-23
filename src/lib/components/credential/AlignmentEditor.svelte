@@ -16,10 +16,7 @@
 
 	<div class="pt-2 space-y-6">
 		{#each Object.keys(credential.obAlignments) as alignmentKey (alignmentKey)}
-			{#if credential.obAlignments[alignmentKey].sourceData.targetFramework != 'Credentials Transparency Description Language'}
-				<!-- TODO: the above CTDL self-references may be already filtered out at obAlignment creation time.-->
-				<SingleEditableAlignment {credential} ac={credential.obAlignments[alignmentKey]} />
-			{/if}
+			<SingleEditableAlignment {credential} ac={credential.obAlignments[alignmentKey]} />
 		{/each}
 	</div>
 </div>
