@@ -129,10 +129,8 @@
 				Alignment: {ac.sourceData.targetName}
 			</h4>
 		</Heading>
-		{#if (!ac.skip && propertyType === 'DEFAULT' && $publisherOptions.alignmentSettings.defaultPropertyType === 'DEFAULT') || (!ac.skip && nodeType === 'DEFAULT' && $publisherOptions.alignmentSettings.defaultTargetType === 'DEFAULT')}<div
-				class="px-2"
-			>
-				<!-- TODO: make sure this stays vertically consistent by putting it inside one or the other of the flex items instead of being a justify-between peer -->
+		{#if (!ac.skip && propertyType === 'DEFAULT' && $publisherOptions.alignmentSettings.defaultPropertyType === 'DEFAULT') || (!ac.skip && nodeType === 'DEFAULT' && $publisherOptions.alignmentSettings.defaultTargetType === 'DEFAULT')}
+			<div class="px-2">
 				<Tag class="text-red-700 bg-red-100">Unmapped</Tag>
 			</div>
 		{/if}

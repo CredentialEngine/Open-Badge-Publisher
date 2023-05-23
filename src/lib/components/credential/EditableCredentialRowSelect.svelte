@@ -31,7 +31,7 @@
 	const dispatch = createEventDispatcher();
 
 	const inputId = `${encodeURIComponent(credential.Credential.CredentialId)}-${fieldId}`;
-	let value: string = credential.Credential[fieldId] || ''; // Todo -- Image is nullable. Make sure not to send '' to server
+	let value: string = credential.Credential[fieldId] || '';
 	let isEditing = false;
 	let validationErrorMessage = '';
 
