@@ -1198,6 +1198,11 @@ export const filterAlignmentFromCredential = (
 				};
 			}
 		}
+
+		// If the target URL is self-referential (an informational alignment to the finder itself), then we can drop the AC from the data.
+		if (ac.sourceData.targetUrl == alignmentUrlForCredential(newCredential.Credential.CTID)) {
+			delete newCredential.obAlignments[ac.sourceData.targetUrl];
+		}
 	});
 
 	return newCredential;
@@ -1217,9 +1222,25 @@ const smartBlendCredential = (
 	result['Keyword'] = badgeData['Keyword'] ?? publisherData['Keyword'];
 
 	// Gently merge the criteria requirement profile from the badge with any existing CPs on the publisher data.
-	const r = badgeData['Requires'] ?? [];
-	result['Requires'] = r.concat(publisherData['Requires'] ?? []);
-
+	let r = badgeData['Requires'] ?? [];
+	let pubR = publisherData['Requires'] ?? [];
+	if (r.length && pubR.length) {
+		const previouslySavedCriteria = pubR.filter(
+			(cp) => cp.Name === 'Open Badges Criteria' || cp.Description == r[0].Description
+		);
+		if (previouslySavedCriteria.length) {
+			result['Requires'] = [{ ...previouslySavedCriteria[0], ...r[0] }].concat(
+				pubR.filter(
+					(cp) => cp.Name !== 'Open Badges Criteria' && cp.Description !== r[0].Description
+				)
+			);
+		} else {
+			result['Requires'] = r.concat(pubR);
+		}
+	} else {
+		// pubR.length == 0 // there are no existing CPs on the publisher data for the key 'Requires'
+		result['Requires'] = r;
+	}
 	return result;
 };
 
@@ -1254,13 +1275,31 @@ const createCredentialDraftStore = () => {
 				const credential = credentialList.find((c) => c.Credential.CredentialId == credentialId);
 				if (!credential) return credentialList;
 
-				// Filter out any existing alignment from publisher data
-				const updated: CtdlCredentialDraft = Object.values(credential.obAlignments).reduce(
-					(acc: CtdlCredentialDraft, ac: OBAlignmentConfig) => {
-						return filterAlignmentFromCredential(acc, ac);
+				// Describe self-referential alignments to also filter out
+				const selfA: OBAlignmentConfig = {
+					sourceData: {
+						targetUrl: alignmentUrlForCredential(publisherData.CTID),
+						targetName: credential.Credential.Name,
+						targetDescription: 'Additional information powered by the Credential Registry'
 					},
-					{ ...credential, Credential: smartBlendCredential(publisherData, credential.Credential) }
-				);
+					propertyType: 'DEFAULT',
+					targetNodeType: 'DEFAULT',
+					destinationData: {},
+					skip: false
+				};
+
+				// Filter out any existing alignment from publisher data
+				const updated: CtdlCredentialDraft = Object.values(credential.obAlignments)
+					.concat([selfA])
+					.reduce(
+						(acc: CtdlCredentialDraft, ac: OBAlignmentConfig) => {
+							return filterAlignmentFromCredential(acc, ac);
+						},
+						{
+							...credential,
+							Credential: smartBlendCredential(publisherData, credential.Credential)
+						}
+					);
 
 				const filteredList = credentialList.filter(
 					(c) => c.Credential.CredentialId != credentialId
