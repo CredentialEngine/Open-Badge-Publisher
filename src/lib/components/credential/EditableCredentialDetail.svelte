@@ -126,6 +126,10 @@
 					fieldId="Image"
 					helpText="The URL to an image that is a symbolic representation of the achievement. Data URIs cannot be used in the Registry."
 					validator={yup.string().url()}
+					transformer={(c, newValue) => {
+						if (!newValue) return { ...c, Image: undefined };
+						return { ...c, Image: newValue };
+					}}
 				>
 					{#if credential.Credential.Image}
 						<img
