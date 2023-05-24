@@ -51,7 +51,7 @@
 		};
 
 		const requestData = {
-			URL: `${canvasRegions.get($canvasSelectedRegion)?.apiDomain}/v2/badgeclasses/${
+			URL: `${canvasRegions.get($canvasSelectedRegion || 'test')?.apiDomain}/v2/badgeclasses/${
 				canvasBadge.entityId
 			}`,
 			Method: 'PUT',

@@ -187,7 +187,7 @@ export interface QualityAssurance extends AlignmentObject {
 // ceterms:Credential (supertype of many credential subtypes)
 // - An abbreviated Credential object may be referenced from ConditionProfile.TargetCredential
 export interface TargetCredential extends AlignmentObject {
-	Type: string; // TODO: let user pick subtype
+	Type: string;
 	Name?: string;
 	Description: string;
 	SubjectWebpage?: string;
@@ -557,7 +557,6 @@ export const mergeAllAlignments = (
 	}, result);
 };
 
-// TODO was using "AlignmentObject" above, but Requires and these other fields actually accept a ConditionProfile, so customizing it here. Remove the above AlignmentObject if it's no longer used after this refactor.
 export interface ConditionProfile {
 	Type?: string; // usually defaults to just ConditionProfile, but sometimes it's something else, e.g. Credential.ApprovedBy.Type = "ceterms:QACredentialOrganization"
 	Description: string; // e.g. used for the expression of criteria narrative
@@ -637,12 +636,12 @@ export interface CtdlCredential {
 		TargetNodeName: string; // "Occupation Name",
 		TargetNode: string; // "http://www.onetonline.org/link/summary/11-1011.00",
 		TargetNodeDescription: string; // "Description of occupation.",
-		Framework: string; // confusing... TODO check if they did this right
+		Framework: string; // This term selection is a little strange, but functionality is working as written.
 		CodedNotaion: string; // "11-1011.00",
 	}>;
 
 	// Alignments: QualityAssurance
-	// TODO these should be QACredentialOrganization type
+	// An improvement could be to make these a slightly improved QACredentialOrganization type instead of having a generic ConditionProfile that sometimes represents an organization
 	AccreditedBy?: ConditionProfile[];
 	ApprovedBy?: ConditionProfile[];
 	RecognizedBy?: ConditionProfile[];
@@ -814,11 +813,7 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 	while (results.length < responseData.Data.TotalResults) {
 		page++;
 		responseData = await fetchPage();
-
 		results = results.concat(responseData?.Data?.Results ?? []);
-
-		// TODO: there was a bug in the publisher API returning valid false for pages after the first.
-		// This will at least return the first page of results and should still work once the API is fixed.
 		if (responseData['Valid'] === false) break;
 	}
 
@@ -930,7 +925,6 @@ export const getUser = async () => {
 	if (!haveSameDomain(url, PUBLIC_BASEURL, PUBLIC_BASEURL)) return null;
 
 	// Attempt to get user from the publisher using cookies that may be set if this app is running on same-origin.
-	// TODO: just skip this if we can tell in advance that it is not running on same origin.
 	const response = await fetch(url, { credentials: 'include' });
 	if (!response.ok) return null;
 

@@ -39,6 +39,7 @@ import {
 } from '../stores/badgeSourceStore.js';
 import { canvasEnv } from '../utils/canvas.js';
 import { restoreStores, serializeStores } from '../stores/storageBackend.js';
+import { refreshCredentialTypes } from '../stores/credentialTypesStore.js';
 import { tick } from 'svelte';
 import { error } from '@sveltejs/kit';
 
@@ -141,6 +142,8 @@ export const processLoginResponse = async () => {
 	// Canvas again.
 	const accessTokenFromSession = storageBackend?.getItem('canvas_access_token');
 	if (accessTokenFromSession) {
+		// Now that we have a user token again, we can reload credentialtypes
+		refreshCredentialTypes();
 		return restoreSession();
 	}
 
@@ -153,6 +156,9 @@ export const processLoginResponse = async () => {
 
 	const verifier = storageBackend?.getItem('pkce_code_verifier') || '';
 	storageBackend?.removeItem('pkce_code_verifier');
+
+	// Now that we have a user token again, we can reload credentialtypes
+	refreshCredentialTypes();
 
 	const selectedRegion = get(canvasSelectedRegion) || 'test';
 	const canvasLoginOptions = canvasEnv(selectedRegion);

@@ -1,4 +1,6 @@
-import { get, readable } from 'svelte/store';
+import { get, readable, writable } from 'svelte/store';
+import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
+import { publisherUser } from './publisherStore.js';
 
 export interface CredentialType {
 	Id: number;
@@ -177,12 +179,22 @@ const DEFAULT_TYPES = [
 	}
 ];
 
-export const credentialTypesStore = readable<CredentialType[]>(DEFAULT_TYPES);
-// todo: trigger a request on load and refresh list from /publisher/StagingApi/Load/CredentialTypes
+export const credentialTypesStore = writable<CredentialType[]>(DEFAULT_TYPES);
 
 export const prettyNameForCredentialType = (t: string): string => {
 	const credentialTypes = get(credentialTypesStore);
 	const credentialType = credentialTypes.find((ct) => ct.URI == t);
 	if (!credentialType) return t;
 	return credentialType.Name;
+};
+
+export const refreshCredentialTypes = async () => {
+	const response = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Load/CredentialTypes`, {
+		headers: {
+			Accept: 'application/json',
+			Authorization: `Bearer ${get(publisherUser)?.user?.Token}`
+		}
+	});
+	const credentialTypes = await response.json();
+	credentialTypesStore.set(credentialTypes?.Data ?? (DEFAULT_TYPES as CredentialType[]));
 };

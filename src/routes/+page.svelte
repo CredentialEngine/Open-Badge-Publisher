@@ -15,7 +15,6 @@
 		PUBLIC_PUBLISHER_API_BASEURL,
 		PUBLIC_PUBLISHER_API_ENV_LABEL
 	} from '$env/static/public';
-
 	import { publisherOrganization, reviewingStep } from '$lib/stores/publisherStore.js';
 	import { processLoginResponse } from '$lib/auth/oauth.js';
 	import Heading from '$lib/components/typography/Heading.svelte';

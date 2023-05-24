@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
-	import { slide, fly } from 'svelte/transition'; // TODO: implement left-right fly-in instead of slide for next/prev steps
+	import { tick } from 'svelte';
+	import { slide } from 'svelte/transition';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
@@ -12,7 +12,6 @@
 
 	import { PubStatuses } from '$lib/stores/publisherStore.js';
 	import {
-		credentialDrafts,
 		ctdlPublicationResultStore,
 		proofingStep,
 		reviewingStep

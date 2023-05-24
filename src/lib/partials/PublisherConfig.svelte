@@ -32,6 +32,7 @@
 	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
 	import { pluralize } from '$lib/utils/pluralize.js';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import { refreshCredentialTypes } from '$lib/stores/credentialTypesStore.js';
 
 	let currentMessage = {
 		level: 'info',
@@ -97,6 +98,7 @@
 				publisherUser.set({ user: responseData['Data'] });
 				userIsLoading = false;
 				$publisherSetupStep = 2;
+				refreshCredentialTypes();
 			});
 	};
 
@@ -451,10 +453,3 @@
 		<BodyText>If you change your publisher settings, any loaded badge data will be reset.</BodyText>
 	</Modal>
 {/if}
-
-<style lang="postcss">
-	#publisherConfigContent {
-		/* TODO make this work, maybe use an absolute height -- doesn't work on auto height elements */
-		transition: max-height 6.8s ease-in-out;
-	}
-</style>
