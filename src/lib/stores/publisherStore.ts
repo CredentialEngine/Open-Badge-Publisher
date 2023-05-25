@@ -819,7 +819,7 @@ export const getOrgCredentialList = async (): Promise<boolean> => {
 
 	publisherCredentials.set({
 		credentials: results,
-		totalResults: responseData.Data.totalResults
+		totalResults: responseData.Data.TotalResults
 	});
 
 	return true;
