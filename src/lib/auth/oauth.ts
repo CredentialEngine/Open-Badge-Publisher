@@ -205,6 +205,7 @@ export const processLoginResponse = async () => {
 
 		if (responseBody.access_token) {
 			storageBackend?.setItem('canvas_access_token', responseBody.access_token);
+			canvasAccessToken.set(responseBody.access_token);
 			restoreSession();
 		} else {
 			throw error(
