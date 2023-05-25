@@ -8,7 +8,12 @@ import {
 	publisherOptions
 } from '$lib/stores/publisherStore.js';
 import { get } from 'svelte/store';
-import { badgeSourceType, canvasSelectedRegion, canvasAgreeTerms } from './badgeSourceStore.js';
+import {
+	badgeSourceType,
+	canvasSelectedRegion,
+	canvasAgreeTerms,
+	canvasAccessToken
+} from '$lib/stores/badgeSourceStore.js';
 
 export const storageBackend = browser ? window?.sessionStorage : null;
 
@@ -32,6 +37,9 @@ export const serializeStores = () => {
 };
 
 export const restoreStores = () => {
+	const accessTokenFromSession = storageBackend?.getItem('canvas_access_token');
+	if (accessTokenFromSession) canvasAccessToken.set(accessTokenFromSession);
+
 	const publisherUserString = storageBackend?.getItem('publisherUser');
 	if (publisherUserString) publisherUser.set(JSON.parse(publisherUserString));
 	// storageBackend?.removeItem('publisherUser');

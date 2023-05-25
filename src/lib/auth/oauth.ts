@@ -116,41 +116,42 @@ export const initiateLogin = async () => {
 	window.location.replace(authorizeUri);
 };
 
+/* Return the user experience to the spot where they load data from Canvas for the first time */
 const restoreSession = async () => {
-	const accessTokenFromSession = storageBackend?.getItem('canvas_access_token');
-	if (accessTokenFromSession) {
-		canvasAccessToken.set(accessTokenFromSession);
-		restoreStores();
-
-		if (
-			get(publisherOrganization).org?.Id &&
-			get(publisherVerificationService) &&
-			get(publisherCredentials).credentials?.length >= 0 // May be no drafts yet
-		) {
-			publisherSetupStep.set(5); // Triggers reactive statement in PublisherConfig.svelte
-			badgeSetupStep.set(2);
-			await tick();
-			document.getElementById('badge-source-configuration')?.scrollIntoView();
-		}
+	if (
+		get(publisherOrganization).org?.Id &&
+		get(publisherVerificationService) &&
+		get(publisherCredentials).credentials?.length >= 0 // May be no drafts yet
+	) {
+		publisherSetupStep.set(5); // Triggers reactive statement in PublisherConfig.svelte
+		badgeSetupStep.set(2);
+		await tick();
+		document.getElementById('badge-source-configuration')?.scrollIntoView();
 	}
 };
 
 export const processLoginResponse = async () => {
+	// Restore session data from before the redirect to Canvas.
+	restoreStores();
+
 	// In case the user refreshes the page after returning from Canvas,
 	// and this function is triggered because `code=` is still in the
 	// querystring, it would be nice to not force them to go sign in with
 	// Canvas again.
-	const accessTokenFromSession = storageBackend?.getItem('canvas_access_token');
-	if (accessTokenFromSession) {
+	if (get(canvasAccessToken)) {
 		// Now that we have a user token again, we can reload credentialtypes
+		restoreSession();
 		refreshCredentialTypes();
-		return restoreSession();
+		return; // Session is restored, including Canvas access token, so we're done.
 	}
 
+	// Normally: handle the first time the user returns from Canvas in a session.
 	const params = new URLSearchParams(window.location.toString()?.split('?')[1]);
 	const code = params.get('code') ?? '';
 	const state = params.get('state');
 
+	// Remove these items so that an invalid request for some reason doesn't get sent
+	// to Canvas over and over.
 	const storageTimestamp = storageBackend?.getItem('storageTimestamp');
 	storageBackend?.removeItem('storageTimestamp');
 
@@ -194,6 +195,12 @@ export const processLoginResponse = async () => {
 				}
 			]
 		);
+		if (tokenResponse.status !== 200) {
+			throw error(
+				500,
+				'Unable to get access token from Canvas. Status code: ' + tokenResponse.status
+			);
+		}
 		const responseBody = JSON.parse(tokenResponse.body ?? '{}');
 
 		if (responseBody.access_token) {
