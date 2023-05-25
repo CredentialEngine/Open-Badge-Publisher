@@ -196,5 +196,6 @@ export const refreshCredentialTypes = async () => {
 		}
 	});
 	const credentialTypes = await response.json();
-	credentialTypesStore.set(credentialTypes?.Data ?? (DEFAULT_TYPES as CredentialType[]));
+	if (credentialTypes?.Valid)
+		credentialTypesStore.set(credentialTypes?.Data ?? (DEFAULT_TYPES as CredentialType[]));
 };

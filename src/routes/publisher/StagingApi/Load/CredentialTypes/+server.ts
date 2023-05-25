@@ -2,7 +2,7 @@ import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params, request }) => {
-	const publisherUrl = `${PUBLIC_PUBLISHER_API_BASEURL}/StagingApi/Load/Credential/${params.id}`;
+	const publisherUrl = `${PUBLIC_PUBLISHER_API_BASEURL}/StagingApi/Load/CredentialTypes`;
 
 	const publisherResponse = await fetch(publisherUrl, {
 		headers: {
