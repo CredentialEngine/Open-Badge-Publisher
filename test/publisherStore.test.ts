@@ -214,3 +214,43 @@ test('should filter any of many type of alignment matching target URL from a cre
 	);
 	assert.equal(unemployedCredential.Credential.IsRequiredFor, undefined);
 });
+
+test('can apply both assessments and credentials to the same conditionprofile', () => {
+	const credentialBase: CtdlCredentialDraft = {
+		...exampleCredential,
+		obAlignments: {
+			'http://example.com/assessment/1': {
+				sourceData: {
+					targetUrl: 'http://example.com/assessment/1',
+					targetName: 'Assessment 1',
+					targetDescription: 'This is the first Assessment. It was good.',
+					targetFramework: 'Example Assessments'
+				},
+				propertyType: 'IsRequiredFor',
+				targetNodeType: 'AssessmentProfile',
+				destinationData: {},
+				skip: false
+			},
+			'http://example.com/credential/2': {
+				sourceData: {
+					targetUrl: 'http://example.com/credential/2',
+					targetName: 'Credential 2',
+					targetDescription: 'This is a credential that also requires this credential.'
+				},
+				propertyType: 'IsRequiredFor',
+				targetNodeType: 'Credential',
+				destinationData: { Type: 'ceterms:Certification' },
+				skip: false
+			}
+		}
+	};
+
+	const updatedCredential = mergeAllAlignments(
+		credentialBase.Credential,
+		credentialBase.obAlignments
+	);
+	assert.equal(updatedCredential.IsRequiredFor?.length, 1);
+	if (!updatedCredential.IsRequiredFor) return; // Avoid typescript errors
+	assert.equal(updatedCredential.IsRequiredFor[0].TargetAssessment?.length, 1);
+	assert.equal(updatedCredential.IsRequiredFor[0].TargetCredential?.length, 1);
+});

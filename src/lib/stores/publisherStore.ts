@@ -466,6 +466,7 @@ export const mergeSingleAlignment = (
 		starterValue.find((value) => value.Name === cpName) ?? ({} as ConditionProfile);
 
 	let cp: ConditionProfile = {
+		...existingCP,
 		Name: cpName,
 		Description: alignmentPropertyTypeDescriptions[property]
 	};
