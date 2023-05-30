@@ -1012,7 +1012,7 @@ export const badgeClassToCtdlApiCredential = (b: BadgeClassCTDLExtended): CtdlCr
 			UsesVerificationService: [vsp]
 		},
 		obAlignments: badgeAlignments.reduce((acc: OBAlignmentMap, a: Alignment): OBAlignmentMap => {
-			if (a.targetFramework == 'Credentials Transparency Description Language') return acc; // Skip self-referential alignment.
+			if (a.targetFramework == 'Credential Transparency Description Language') return acc; // Skip self-referential alignment.
 			return {
 				...acc,
 				[a.targetUrl]: {
