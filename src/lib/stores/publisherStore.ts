@@ -703,7 +703,7 @@ const RequiresGroup = [
 export const nodeTypePropertyDefaultMap = {
 	DEFAULT: RequiresGroup,
 	AssessmentProfile: RequiresGroup,
-	Competency: RequiresGroup,
+	Competency: ['Requires'],
 	Course: RequiresGroup,
 	Credential: RequiresGroup,
 	LearningProgram: RequiresGroup,
