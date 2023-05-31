@@ -254,3 +254,25 @@ test('can apply both assessments and credentials to the same conditionprofile', 
 	assert.equal(updatedCredential.IsRequiredFor[0].TargetAssessment?.length, 1);
 	assert.equal(updatedCredential.IsRequiredFor[0].TargetCredential?.length, 1);
 });
+
+test('can map occupationtype alignment', () => {
+	const merged = mergeSingleAlignment(exampleCredential.Credential, {
+		sourceData: {
+			targetUrl: 'http://example.com/occupationType/1',
+			targetName: 'Occupation Type 1: Hamberger Flipper',
+			targetDescription: 'A hamburger flipper is a noble occupation type that has few prerequisites'
+		},
+		propertyType: 'OccupationType',
+		targetNodeType: 'OccupationType',
+		destinationData: {},
+		skip: false
+	});
+
+	assert.equal(merged.OccupationType?.length, 1);
+	if (!merged.OccupationType) return; // Avoid typescript errors
+	const firstOccupationType = merged.OccupationType[0];
+	assert.equal(
+		firstOccupationType.TargetNodeDescription,
+		'A hamburger flipper is a noble occupation type that has few prerequisites'
+	);
+});

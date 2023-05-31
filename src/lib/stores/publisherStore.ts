@@ -53,6 +53,7 @@ export enum AlignmentPropertyTypes {
 	IsPreparationFor = 'IsPreparationFor',
 	IsRecommendedFor = 'IsRecommendedFor',
 	IsRequiredFor = 'IsRequiredFor',
+	OccupationType = 'OccupationType',
 	PreparationFrom = 'PreparationFrom',
 	Recommends = 'Recommends',
 	Requires = 'Requires',
@@ -73,6 +74,7 @@ export enum AlignmentTargetNodeTypes {
 	LearningProgram = 'LearningProgram',
 	LearningOpportunity = 'LearningOpportunity',
 	Occupation = 'Occupation',
+	OccupationType = 'OccupationType',
 	QACredentialOrganization = 'QACredentialOrganization'
 }
 export type AlignmentTargetNodeTypeKey = keyof typeof AlignmentTargetNodeTypes;
@@ -86,6 +88,7 @@ export const nodeTypeOptions = [
 	AlignmentTargetNodeTypes.LearningProgram,
 	AlignmentTargetNodeTypes.LearningOpportunity,
 	AlignmentTargetNodeTypes.Occupation,
+	AlignmentTargetNodeTypes.OccupationType,
 	AlignmentTargetNodeTypes.QACredentialOrganization
 ];
 
@@ -173,6 +176,15 @@ export interface Occupation extends AlignmentObject {
 	Type: 'ceterms:Occupation';
 }
 
+interface OccupationType {
+	Name: string; // "Occupation Name",
+	TargetNode: string; // "http://www.onetonline.org/link/summary/11-1011.00",
+	Description: string; // "Description of occupation.",
+	Framework?: string; // URL of the framework
+	FrameworkName?: string; // Name of the framework
+	CodedNotation?: string; // "11-1011.00",
+}
+
 export interface QualityAssurance extends AlignmentObject {
 	Type: 'ceterms:QACredentialOrganization';
 	Name: string; // "Required Organization Name",
@@ -221,7 +233,8 @@ export const alignmentPropertyTypeDescriptions: { [key: string]: string } = {
 		'This credential is recognized or accepted by one or more third-party organizations.',
 	AccreditedBy: 'This credential is accredited by one or more third-party organizations.',
 	ApprovedBy: 'This credential is approved by one or more third-party organizations.',
-	RegulatedBy: 'This credential is regulated by one or more third-party organizations.'
+	RegulatedBy: 'This credential is regulated by one or more third-party organizations.',
+	OccupationType: 'This credential relates to the specified occupation type.'
 };
 
 export const mergeOccupationAlignment = (
@@ -276,6 +289,31 @@ export const mergeOccupationAlignment = (
 		result[property] = occupationProfile.concat(starterValue ?? []);
 	}
 
+	return result;
+};
+
+export const mergeOccupationTypeAlignment = (
+	credential: CtdlCredential,
+	alignmentConfig: OBAlignmentConfig
+): CtdlCredential => {
+	let result: CtdlCredential = { ...credential };
+	const starterValue: OccupationType[] = (credential.OccupationType as OccupationType[]) ?? [];
+	const newOcc: OccupationType = {
+		Name: alignmentConfig.sourceData?.targetName ?? 'Connected Occupation',
+		TargetNode: alignmentConfig.sourceData?.targetUrl,
+		Description:
+			alignmentConfig.sourceData?.targetDescription ??
+			'An occupation type related to this credential',
+
+		// Add optional data if present
+		...(alignmentConfig.sourceData?.targetFramework
+			? { FrameworkName: alignmentConfig.sourceData?.targetFramework }
+			: null),
+		...(alignmentConfig.sourceData?.targetCode
+			? { CodedNotation: alignmentConfig.sourceData.targetCode }
+			: null)
+	};
+	result.OccupationType = starterValue.concat([newOcc]);
 	return result;
 };
 
@@ -436,6 +474,8 @@ export const mergeSingleAlignment = (
 	switch (ac.targetNodeType) {
 		case 'Occupation':
 			return mergeOccupationAlignment(credential, ac);
+		case 'OccupationType':
+			return mergeOccupationTypeAlignment(credential, ac);
 		case 'QACredentialOrganization':
 			return mergeQAAlignment(credential, ac);
 		case 'Competency':
@@ -633,13 +673,7 @@ export interface CtdlCredential {
 	Requires?: ConditionProfile[]; // Used for Open Badges Criteria and some other alignments.
 
 	// OccupationType alignment
-	OccupationType?: Array<{
-		TargetNodeName: string; // "Occupation Name",
-		TargetNode: string; // "http://www.onetonline.org/link/summary/11-1011.00",
-		TargetNodeDescription: string; // "Description of occupation.",
-		Framework: string; // This term selection is a little strange, but functionality is working as written.
-		CodedNotaion: string; // "11-1011.00",
-	}>;
+	OccupationType?: Array<OccupationType>;
 
 	// Alignments: QualityAssurance
 	// An improvement could be to make these a slightly improved QACredentialOrganization type instead of having a generic ConditionProfile that sometimes represents an organization
@@ -710,6 +744,7 @@ export const nodeTypePropertyDefaultMap = {
 	LearningProgram: RequiresGroup,
 	LearningOpportunity: RequiresGroup,
 	Occupation: ['IsPreparationFor', 'IsRecommendedFor', 'IsRequiredFor'],
+	OccupationType: ['OccupationType'],
 	QACredentialOrganization: ['RecognizedBy', 'AccreditedBy', 'ApprovedBy', 'RegulatedBy']
 };
 
@@ -1132,6 +1167,7 @@ export const filterAlignmentFromCredential = (
 	const conditionProfilePropsToCheck: Array<
 		| 'AdvancedStandingFrom'
 		| 'Corequisite'
+		| 'CoPrerequisite'
 		| 'IsAdvancedStandingFor'
 		| 'IsPreparationFor'
 		| 'IsRecommendedFor'
@@ -1142,6 +1178,7 @@ export const filterAlignmentFromCredential = (
 	> = [
 		'AdvancedStandingFrom',
 		'Corequisite',
+		'CoPrerequisite',
 		'IsAdvancedStandingFor',
 		'IsPreparationFor',
 		'IsRecommendedFor',
