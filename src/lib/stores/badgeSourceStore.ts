@@ -99,7 +99,7 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 	const skillsAlignments =
 		cb.skills?.map((s) => {
 			return {
-				targetUrl: `https://credly.com/skill/${s.vanity_slug}`,
+				targetUrl: `https://credly.com/skills/${s.vanity_slug}`,
 				targetName: s.name,
 				targetDescription:
 					'Credly Skill Alignment. Skill trends, top job titles, and related skills are available.'

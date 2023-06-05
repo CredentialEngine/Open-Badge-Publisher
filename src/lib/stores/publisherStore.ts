@@ -1084,8 +1084,11 @@ const filterAlignmentFromConditionProfile = (
 	let remainingAlignmentsCount = 0;
 	if (Object.hasOwn(cp, 'TargetAssessment')) {
 		const propValue = cp['TargetAssessment'];
-		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
-		newCp['TargetAssessment'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		foundAlignment =
+			propValue?.filter((a) => compareAlignmentUrls(targetUrl, a.SubjectWebpage)) ?? [];
+		newCp['TargetAssessment'] = propValue?.filter(
+			(a) => !compareAlignmentUrls(targetUrl, a.SubjectWebpage)
+		);
 		remainingAlignmentsCount += cp['TargetAssessment']?.length ?? 0;
 
 		if (foundAlignment.length)
@@ -1097,8 +1100,10 @@ const filterAlignmentFromConditionProfile = (
 	}
 	if (Object.hasOwn(cp, 'TargetCompetency')) {
 		const propValue = cp['TargetCompetency'];
-		foundAlignment = propValue?.filter((a) => a.TargetNode === targetUrl) ?? [];
-		newCp['TargetCompetency'] = propValue?.filter((a) => a.TargetNode !== targetUrl);
+		foundAlignment = propValue?.filter((a) => compareAlignmentUrls(targetUrl, a.TargetNode)) ?? [];
+		newCp['TargetCompetency'] = propValue?.filter(
+			(a) => !compareAlignmentUrls(targetUrl, a.TargetNode)
+		);
 		remainingAlignmentsCount += cp['TargetCompetency']?.length ?? 0;
 
 		if (foundAlignment.length)
@@ -1110,8 +1115,11 @@ const filterAlignmentFromConditionProfile = (
 	}
 	if (Object.hasOwn(cp, 'TargetCredential')) {
 		const propValue = cp['TargetCredential'];
-		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
-		newCp['TargetCredential'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		foundAlignment =
+			propValue?.filter((a) => compareAlignmentUrls(targetUrl, a.SubjectWebpage)) ?? [];
+		newCp['TargetCredential'] = propValue?.filter(
+			(a) => !compareAlignmentUrls(targetUrl, a.SubjectWebpage)
+		);
 		remainingAlignmentsCount += cp['TargetCredential']?.length ?? 0;
 
 		if (foundAlignment.length)
@@ -1124,8 +1132,11 @@ const filterAlignmentFromConditionProfile = (
 	}
 	if (Object.hasOwn(cp, 'TargetLearningOpportunity')) {
 		const propValue = cp['TargetLearningOpportunity'];
-		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
-		newCp['TargetLearningOpportunity'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		foundAlignment =
+			propValue?.filter((a) => compareAlignmentUrls(targetUrl, a.SubjectWebpage)) ?? [];
+		newCp['TargetLearningOpportunity'] = propValue?.filter(
+			(a) => !compareAlignmentUrls(targetUrl, a.SubjectWebpage)
+		);
 		remainingAlignmentsCount += cp['TargetLearningOpportunity']?.length ?? 0;
 
 		if (foundAlignment.length)
@@ -1137,8 +1148,11 @@ const filterAlignmentFromConditionProfile = (
 	}
 	if (Object.hasOwn(cp, 'TargetOccupation')) {
 		const propValue = cp['TargetOccupation'];
-		foundAlignment = propValue?.filter((a) => a.SubjectWebpage === targetUrl) ?? [];
-		newCp['TargetOccupation'] = propValue?.filter((a) => a.SubjectWebpage !== targetUrl);
+		foundAlignment =
+			propValue?.filter((a) => compareAlignmentUrls(targetUrl, a.SubjectWebpage)) ?? [];
+		newCp['TargetOccupation'] = propValue?.filter(
+			(a) => !compareAlignmentUrls(targetUrl, a.SubjectWebpage)
+		);
 		remainingAlignmentsCount += cp['TargetOccupation']?.length ?? 0;
 
 		if (foundAlignment.length)
@@ -1156,6 +1170,22 @@ const filterAlignmentFromConditionProfile = (
 	if (remainingAlignmentsCount === 0 && newCp.Name != 'Open Badges Criteria')
 		return { cp: null, ac: newAc };
 	return { cp: newCp, ac: newAc };
+};
+
+const compareAlignmentUrls = (
+	searchUrl: string | undefined,
+	inCredentialUrl: string | undefined
+): boolean => {
+	if (searchUrl === undefined || inCredentialUrl === undefined) return false;
+
+	// Filter outdated Credly alignment URL
+	const credlySkillUrl = /^https?\:\/\/credly\.com\/skills?\/(?<slug>[\w-]+)$/;
+	if (credlySkillUrl.test(searchUrl)) {
+		const match1 = inCredentialUrl.match(credlySkillUrl);
+		const match2 = searchUrl.match(credlySkillUrl);
+		return match1?.groups?.slug === match2?.groups?.slug;
+	}
+	return searchUrl === inCredentialUrl;
 };
 
 export const filterAlignmentFromCredential = (
@@ -1224,13 +1254,13 @@ export const filterAlignmentFromCredential = (
 	qaOrgPropsToCheck.map((prop) => {
 		if (Object.hasOwn(newCredential.Credential, prop)) {
 			const propValue = newCredential.Credential[prop] as QualityAssurance[];
-			const foundAlignment = propValue?.filter(
-				(a) => a.SubjectWebpage === ac.sourceData.targetUrl
+			const foundAlignment = propValue?.filter((a) =>
+				compareAlignmentUrls(ac.sourceData.targetUrl, a.SubjectWebpage)
 			) as QualityAssurance[];
 
 			if (foundAlignment.length) {
 				newCredential.Credential[prop] = propValue?.filter(
-					(a) => a.SubjectWebpage !== ac.sourceData.targetUrl
+					(a) => !compareAlignmentUrls(ac.sourceData.targetUrl, a.SubjectWebpage)
 				) as QualityAssurance[];
 
 				console.log(

@@ -4,6 +4,7 @@ import {
 	credentialDrafts,
 	type ConditionProfile,
 	type Occupation,
+	type OBAlignmentConfig,
 	CtdlCredentialDraft,
 	mergeOccupationAlignment,
 	mergeQAAlignment,
@@ -272,7 +273,57 @@ test('can map occupationtype alignment', () => {
 	if (!merged.OccupationType) return; // Avoid typescript errors
 	const firstOccupationType = merged.OccupationType[0];
 	assert.equal(
-		firstOccupationType.TargetNodeDescription,
+		firstOccupationType.Description,
 		'A hamburger flipper is a noble occupation type that has few prerequisites'
 	);
+});
+
+test('should filter a credly URL from credential despite V1 style storage', () => {
+	const base: CtdlCredentialDraft = {
+		...exampleCredential,
+		obAlignments: {
+			'https://credly.com/skill/example-skill': {
+				sourceData: {
+					targetUrl: 'https://credly.com/skill/example-skill',
+					targetName: 'Example Skill',
+					targetDescription: 'A credly skill.',
+					targetCode: 'example-skill'
+				},
+				propertyType: 'Requires',
+				targetNodeType: 'Competency',
+				destinationData: {},
+				skip: false
+			}
+		}
+	};
+
+	const newStyleAlignment: OBAlignmentConfig = {
+		...base.obAlignments['https://credly.com/skill/example-skill'],
+		sourceData: {
+			...base.obAlignments['https://credly.com/skill/example-skill'].sourceData,
+			targetUrl: 'https://credly.com/skills/example-skill'
+		}
+	};
+
+	const credential = mergeSingleAlignment(
+		base.Credential,
+		base.obAlignments['https://credly.com/skill/example-skill']
+	);
+	assert.equal(credential.Requires?.length, 1);
+	if (!credential.Requires) return; // Avoid typescript errors
+	assert.equal(credential.Requires[0].TargetCompetency?.length, 1); // There is now a competency.
+	assert.equal(credential.Requires[0].Name, 'Open Badges Criteria');
+
+	const filteredCredential = filterAlignmentFromCredential(
+		{
+			Credential: credential,
+			obAlignments: { 'https://credly.com/skills/example-skill': newStyleAlignment },
+			PublishForOrganizationIdentifier: base.PublishForOrganizationIdentifier
+		},
+		newStyleAlignment
+	);
+
+	assert.equal(filteredCredential.Credential.Requires?.length, 1);
+	if (!credential.Requires) return; // Avoid typescript errors
+	assert.equal(credential.Requires[0].TargetCompetency?.length, 0); // The entire list of competencies were removed, despite the slight URL mismatch.
 });
