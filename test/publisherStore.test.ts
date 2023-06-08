@@ -282,9 +282,9 @@ test('should filter a credly URL from credential despite V1 style storage', () =
 	const base: CtdlCredentialDraft = {
 		...exampleCredential,
 		obAlignments: {
-			'https://credly.com/skill/example-skill': {
+			'https://www.credly.com/skill/example-skill': {
 				sourceData: {
-					targetUrl: 'https://credly.com/skill/example-skill',
+					targetUrl: 'https://www.credly.com/skill/example-skill',
 					targetName: 'Example Skill',
 					targetDescription: 'A credly skill.',
 					targetCode: 'example-skill'
@@ -298,16 +298,16 @@ test('should filter a credly URL from credential despite V1 style storage', () =
 	};
 
 	const newStyleAlignment: OBAlignmentConfig = {
-		...base.obAlignments['https://credly.com/skill/example-skill'],
+		...base.obAlignments['https://www.credly.com/skill/example-skill'],
 		sourceData: {
-			...base.obAlignments['https://credly.com/skill/example-skill'].sourceData,
-			targetUrl: 'https://credly.com/skills/example-skill'
+			...base.obAlignments['https://www.credly.com/skill/example-skill'].sourceData,
+			targetUrl: 'https://www.credly.com/skills/example-skill'
 		}
 	};
 
 	const credential = mergeSingleAlignment(
 		base.Credential,
-		base.obAlignments['https://credly.com/skill/example-skill']
+		base.obAlignments['https://www.credly.com/skill/example-skill']
 	);
 	assert.equal(credential.Requires?.length, 1);
 	if (!credential.Requires) return; // Avoid typescript errors
@@ -317,7 +317,7 @@ test('should filter a credly URL from credential despite V1 style storage', () =
 	const filteredCredential = filterAlignmentFromCredential(
 		{
 			Credential: credential,
-			obAlignments: { 'https://credly.com/skills/example-skill': newStyleAlignment },
+			obAlignments: { 'https://www.credly.com/skills/example-skill': newStyleAlignment },
 			PublishForOrganizationIdentifier: base.PublishForOrganizationIdentifier
 		},
 		newStyleAlignment

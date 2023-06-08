@@ -1179,7 +1179,7 @@ const compareAlignmentUrls = (
 	if (searchUrl === undefined || inCredentialUrl === undefined) return false;
 
 	// Filter outdated Credly alignment URL
-	const credlySkillUrl = /^https?\:\/\/credly\.com\/skills?\/(?<slug>[\w-]+)$/;
+	const credlySkillUrl = /^https?\:\/\/(www.)?credly\.com\/skills?\/(?<slug>[\w-]+)$/;
 	if (credlySkillUrl.test(searchUrl)) {
 		const match1 = inCredentialUrl.match(credlySkillUrl);
 		const match2 = searchUrl.match(credlySkillUrl);
