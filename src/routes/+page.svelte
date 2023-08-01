@@ -35,6 +35,9 @@
 	This app can help publish new and updated Open Badges to the Credential Registry. After importing
 	your badges here and pushing them to the Publisher, you can continue in the Publisher to approve
 	final publication to the Registry.
+    <div style="margin: 0 auto; width: 90%;">
+        <a style="font-weight: bold;" href="https://credentialengine.org/badge-publisher-tool/">Badge Publisher Instructions.</a>
+    </div>
 </BodyText>
 
 <section id="publisher-destination-configuration" class="mt-8">
