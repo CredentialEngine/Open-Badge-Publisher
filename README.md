@@ -34,6 +34,17 @@ Prerequisites:
 - Node.js (v16+)
 - NPM
 
+Changing NPM versions
+Use nvm
+- nvm current - show current versions
+  - nvm list
+  - nvm list installed - list currently installed on machine
+  - nvm list available - list all available ( can use nvm install "version"
+- nvm install <version> [arch] : The version can be a specific version, "latest" for the latest current version, or "lts" for the
+                                 most recent LTS version. Optionally specify whether to install the 32 or 64 bit version (defaults
+- to change current version	
+	nvm use 22.2.0
+	
 Create and customize your `.env` environment settings
 
 1. `cp .env.example .env` Copy environment settings example
