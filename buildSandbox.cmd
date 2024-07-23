@@ -1,5 +1,5 @@
-# remember to set npm to current version
-# nvm use 22.2.0
+@echo remember to set npm to current version
+@echo nvm use 22.2.0
 
 D:
 cd D:\Github\Open-Badge-Publisher

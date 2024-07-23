@@ -1,3 +1,6 @@
+@echo remember to set npm to current version
+@echo nvm use 22.2.0
+
 copy .env backup.env
 copy staging.env .env
 RD /S /Q badgePublisher_staging
