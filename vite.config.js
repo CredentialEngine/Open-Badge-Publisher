@@ -4,7 +4,10 @@ import * as path from 'path';
 /** @type {import('vite').UserConfig} */
 const config = {
 	plugins: [sveltekit()],
-	test: {}
+	test: {},
+	build: {
+		minify: false
+    }
 };
 
 export default config;

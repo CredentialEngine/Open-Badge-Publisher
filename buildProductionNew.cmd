@@ -1,3 +1,5 @@
+@echo remember to set npm to current version
+@echo nvm use 22.2.0
 cd D:\Github\Open-Badge-Publisher
 copy .env backup.env
 copy productionNew.env .env
