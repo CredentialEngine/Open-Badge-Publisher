@@ -47,7 +47,10 @@
 		const requestBody = {
 			name: canvasBadge.name,
 			description: canvasBadge.description,
-			alignments: [...canvasBadge.alignments, newAlignment]
+			alignments: [
+				...canvasBadge.alignments.filter((a) => a.targetUrl !== newAlignment.targetUrl),
+				newAlignment
+			]
 		};
 
 		const requestData = {
@@ -159,12 +162,15 @@
 		</thead>
 		<tbody>
 			{#each credentials as credential}
+				{@const canvasBadge = $canvasSelectedIssuerBadges.find(
+					(cb) => cb.openBadgeId == credential.Credential.CredentialId
+				)}
 				<tr class="bg-white border-b">
 					<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 						{credential.Credential.Name}
 					</th>
 					<td class="py-4 px-6">
-						{#if alignmentExistsForCredential(credential)}
+						{#if canvasBadge?.alignments?.find((a) => a.targetUrl == alignmentUrlForCredential(credential.Credential.CTID))}
 							<div class="inline-block"><Check height="16" width="16" /></div>
 							Alignment has been previously added.
 						{:else}
