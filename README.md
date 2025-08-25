@@ -49,6 +49,7 @@ Create and customize your `.env` environment settings
 
 1. `cp .env.example .env` Copy environment settings example
 2. Update `.env` if necessary
+	- for local testing, copy `local.env` to `.env`	
 
 Install the dependencies and then run the application using the vite dev compiler as follows:
 

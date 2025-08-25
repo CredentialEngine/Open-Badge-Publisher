@@ -12,8 +12,8 @@ node_modules
 /Examples/prodPublishError.png
 badgePublisher_*
 /.vs/Open-Badge-Publisher/FileContentIndex
-/.vs/slnx.sqlite
 /.vs/VSWorkspaceState.json
 /full.env
 /backup.env
 /.vs/Open-Badge-Publisher/v17
+/.vs/slnx.sqlite
