@@ -61,7 +61,7 @@ export const canvasRegions: Map<CanvasEnvKey, CanvasEnv> = new Map([
 		'us',
 		{
 			id: 'us',
-			domain: 'https://badgr.com',
+			domain: 'https://badges.parchment.com',
 			apiDomain: 'https://api.badgr.io',
 			name: 'United States'
 		}
@@ -70,7 +70,7 @@ export const canvasRegions: Map<CanvasEnvKey, CanvasEnv> = new Map([
 		'ca',
 		{
 			id: 'ca',
-			domain: 'https://ca.badgr.com',
+			domain: 'https://badges.parchment.ca',
 			apiDomain: 'https://api.ca.badgr.io',
 			name: 'Canada'
 		}
@@ -79,7 +79,7 @@ export const canvasRegions: Map<CanvasEnvKey, CanvasEnv> = new Map([
 		'eu',
 		{
 			id: 'eu',
-			domain: 'https://eu.badgr.com',
+			domain: 'https://badges.parchment.eu',
 			apiDomain: 'https://api.eu.badgr.io',
 			name: 'Europe'
 		}
@@ -88,7 +88,7 @@ export const canvasRegions: Map<CanvasEnvKey, CanvasEnv> = new Map([
 		'au',
 		{
 			id: 'au',
-			domain: 'https://au.badgr.com',
+			domain: 'https://badges.parchment.au',
 			apiDomain: 'https://api.au.badgr.io',
 			name: 'Australia'
 		}
@@ -97,7 +97,7 @@ export const canvasRegions: Map<CanvasEnvKey, CanvasEnv> = new Map([
 		'test',
 		{
 			id: 'test',
-			domain: 'https://test.badgr.com',
+			domain: 'https://test.badges.parchment.com',
 			apiDomain: 'https://api.test.badgr.com',
 			name: 'Test (test.badgr.com)'
 		}
