@@ -61,7 +61,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         'us',
         {
             id: 'us',
-            domain: 'https://badges.parchment.com',
+            domain: 'badges.parchment.com',
             apiDomain: 'https://api.badgr.io',
             name: 'United States'
         }
@@ -70,7 +70,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         'ca',
         {
             id: 'ca',
-            domain: 'https://badges.parchment.ca',
+            domain: 'badges.parchment.ca',
             apiDomain: 'https://api.ca.badgr.io',
             name: 'Canada'
         }
@@ -79,7 +79,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         'eu',
         {
             id: 'eu',
-            domain: 'https://badges.parchment.eu',
+            domain: 'badges.parchment.eu',
             apiDomain: 'https://api.eu.badgr.io',
             name: 'Europe'
         }
@@ -88,7 +88,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         'au',
         {
             id: 'au',
-            domain: 'https://badges.parchment.au',
+            domain: 'badges.parchment.au',
             apiDomain: 'https://api.au.badgr.io',
             name: 'Australia'
         }
@@ -97,7 +97,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         'test',
         {
             id: 'test',
-            domain: 'https://test.badges.parchment.com',
+            domain: 'badges.parchment.com', //test.badges.parchment.com
             apiDomain: 'https://api.test.badgr.com',
             name: 'Test (test.badgr.com)'
         }

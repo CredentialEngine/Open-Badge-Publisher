@@ -92,14 +92,6 @@
 
 				<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 					<RadioCard
-						label="Canvas Credentials"
-						name="sourcetyperadio"
-						groupValue={$badgeSourceType}
-						value="canvas"
-						on:select={(e) => ($badgeSourceType = e.detail.value)}
-						description="Formerly known as Badgr, this badging tool is now part of the Instructure Learning Platform."
-					/>
-					<RadioCard
 						label="Credly"
 						name="sourcetyperadio"
 						groupValue={$badgeSourceType}
@@ -135,14 +127,12 @@
 			<!-- Step 2: Configure Source -->
 		{:else if $badgeSetupStep == 2}
 			<div id="badgesetup-step2">
-				{#if $badgeSourceType == 'canvas'}
-					<CanvasConfig />
+				{#if $badgeSourceType == 'Parchment'}
+					<ParchmentConfig />
 				{:else if $badgeSourceType == 'credly'}
 					<CredlyConfig />
 				{:else if $badgeSourceType == 'json'}
 					<AdvancedBadgeInput />
-				{:else if $badgeSourceType == 'Parchment'}
-					<ParchmentConfig />
 				{/if}
 
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
