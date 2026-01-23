@@ -14,7 +14,10 @@ import {
     PUBLIC_PARCHMENT_TEST_LOGIN_CLIENT_SECRET,
     PUBLIC_PARCHMENT_US_ENABLED,
     PUBLIC_PARCHMENT_US_LOGIN_CLIENT_ID,
-    PUBLIC_PARCHMENT_US_LOGIN_CLIENT_SECRET
+    PUBLIC_PARCHMENT_US_LOGIN_CLIENT_SECRET,
+    PUBLIC_PARCHMENT_SG_ENABLED,
+    PUBLIC_PARCHMENT_SG_LOGIN_CLIENT_ID,
+    PUBLIC_PARCHMENT_SG_LOGIN_CLIENT_SECRET
 } from '$env/static/public';
 
 // Canvas Options
@@ -157,6 +160,11 @@ export const parchmentEnv = (regionKey: ParchmentEnvKey): ParchmentEnv => {
             enabled: PUBLIC_PARCHMENT_US_ENABLED == 'true',
             client_id: PUBLIC_PARCHMENT_US_LOGIN_CLIENT_ID,
             client_secret: PUBLIC_PARCHMENT_US_LOGIN_CLIENT_SECRET
+        },
+        sg: {
+            enabled: PUBLIC_PARCHMENT_SG_ENABLED == 'true',
+            client_id: PUBLIC_PARCHMENT_SG_LOGIN_CLIENT_ID,
+            client_secret: PUBLIC_PARCHMENT_SG_LOGIN_CLIENT_SECRET
         }
     };
     return {
