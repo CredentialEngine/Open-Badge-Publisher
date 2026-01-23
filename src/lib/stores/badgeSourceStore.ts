@@ -10,7 +10,7 @@ import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
 import { writable, derived, get, type Readable } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
-import { type ParchmentBadge, type ParchmentEnvKey, type ParchmentIssuer, parchmentRegions } from '$lib/utils/parchment.js';
+import { badgeclassFromParchmentApiBadge, type ParchmentBadge, type ParchmentEnvKey, type ParchmentIssuer, parchmentRegions } from '$lib/utils/parchment.js';
 
 export enum BadgeSourceTypeOptions {
 	None = '',
@@ -128,6 +128,7 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 export const parchmentAccessToken = writable<string>('');
 export const parchmentAgreeTerms = writable(false);
 export const parchmentSelectedRegion = writable<ParchmentEnvKey | ''>('');
+export const parchmentOrganization = writable<string>('');
 export const parchmentIssuers = writable<ParchmentIssuer[]>();
 export const parchmentSelectedIssuer = writable<ParchmentIssuer | undefined>();
 export const parchmentSelectedIssuerBadges = writable<ParchmentBadge[]>([]);
@@ -194,7 +195,12 @@ export const badgeSetupComplete = derived(
 		credlySelectedIssuer,
 		credlyAgreeTerms,
 		credlyIssuerData,
-		credlyIssuerBadges
+		credlyIssuerBadges,
+		parchmentAccessToken,
+		parchmentAgreeTerms,
+		parchmentSelectedRegion,
+		parchmentSelectedIssuer,
+		parchmentOrganization
 	],
 	([
 		$advancedBadgesFound,
@@ -206,7 +212,12 @@ export const badgeSetupComplete = derived(
 		$credlySelectedIssuer,
 		$credlyAgreeTerms,
 		$credlyIssuerData,
-		$credlyIssuerBadges
+		$credlyIssuerBadges,
+		$parchmentAccessToken,
+		$parchmentAgreeTerms,
+		$parchmentSelectedRegion,
+		$parchmentSelectedIssuer,
+		$parchmentOrganization
 	]) => {
 		if ($badgeSourceType == BadgeSourceTypeOptions['Canvas']) {
 			return (
@@ -221,6 +232,14 @@ export const badgeSetupComplete = derived(
 				!!$credlyAgreeTerms &&
 				!!$credlyIssuerData &&
 				!!$credlyIssuerBadges.length
+			);
+		}else if ($badgeSourceType == BadgeSourceTypeOptions['Parchment']) {
+			return (
+				!!$parchmentAccessToken &&
+				!!$parchmentAgreeTerms &&
+				!!$parchmentSelectedRegion &&
+				!!$parchmentSelectedIssuer &&
+				!!$parchmentOrganization
 			);
 		} else {
 			return !!$advancedBadgesFound.length;
@@ -237,6 +256,7 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 		badgeSourceType,
 		canvasSelectedIssuerBadges,
 		credlyIssuerBadges,
+		parchmentSelectedIssuerBadges,
 		advancedBadgesFound
 	],
 	([
@@ -244,6 +264,7 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 		$badgeSourceType,
 		$canvasSelectedIssuerBadges,
 		$credlyIssuerBadges,
+		$parchmentSelectedIssuerBadges,
 		$advancedBadgesFound
 	]) => {
 		if (!$badgeSetupComplete) {
@@ -255,6 +276,8 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 			return $canvasSelectedIssuerBadges.map(badgeclassFromCanvasApiBadge);
 		} else if (get(badgeSourceType) == BadgeSourceTypeOptions['Credly']) {
 			return $credlyIssuerBadges.map(badgeclassFromCredlyApiBadge);
+		}  else if (get(badgeSourceType) == BadgeSourceTypeOptions['Parchment']) {
+			return $parchmentSelectedIssuerBadges.map(badgeclassFromParchmentApiBadge);
 		} else {
 			return $advancedBadgesFound;
 		}
@@ -275,4 +298,8 @@ export const resetBadgeData = () => {
 	canvasIssuers.set([]);
 	canvasSelectedIssuer.set(undefined);
 	canvasSelectedIssuerBadges.set([]);
+
+	parchmentIssuers.set([]);
+	parchmentSelectedIssuer.set(undefined);
+	parchmentSelectedIssuerBadges.set([]);
 };

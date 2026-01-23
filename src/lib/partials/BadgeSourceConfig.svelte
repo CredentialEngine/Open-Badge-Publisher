@@ -26,6 +26,7 @@
 	} from '$lib/stores/publisherStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import ParchmentConfig from './ParchmentConfig.svelte';
 
 	// panelIsHidden = true when data has been saved and this panel is no longer active.
 	let panelIsHidden = false;
@@ -114,6 +115,14 @@
 						on:select={(e) => ($badgeSourceType = e.detail.value)}
 						description="Paste an array of Open Badges achievements in JSON format. (Advanced)"
 					/>
+					<RadioCard
+						label="Parchment"
+						name="sourcetyperadio"
+						groupValue={$badgeSourceType}
+						value="Parchment"
+						on:select={(e) => ($badgeSourceType = e.detail.value)}
+						description="Parchment"
+					/>
 				</ul>
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 					<NextPrevButton
@@ -132,6 +141,8 @@
 					<CredlyConfig />
 				{:else if $badgeSourceType == 'json'}
 					<AdvancedBadgeInput />
+				{:else if $badgeSourceType == 'Parchment'}
+					<ParchmentConfig />
 				{/if}
 
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
