@@ -50,6 +50,7 @@
 		"jsonld": "^8.1.0",
 		"oidc-client-ts": "^2.2.4",
 		"svelte-fa": "^3.0.3",
-		"svelte-icons-pack": "^2.0.0"
+		"svelte-icons-pack": "^2.0.0",
+		"svelte-persisted-store": "^0.12.0"
 	}
 }
