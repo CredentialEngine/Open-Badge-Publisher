@@ -10,12 +10,14 @@ import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
 import { writable, derived, get, type Readable } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
+import { type ParchmentBadge, type ParchmentEnvKey, type ParchmentIssuer, parchmentRegions } from '$lib/utils/parchment.js';
 
 export enum BadgeSourceTypeOptions {
 	None = '',
 	Canvas = 'canvas',
 	Credly = 'credly',
-	JSON = 'json'
+	JSON = 'json',
+	Parchment = 'parchment'
 }
 
 export const badgeSourceType = writable(BadgeSourceTypeOptions['None']);
@@ -120,6 +122,56 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 			narrative: criteriaComponents
 		}
 	};
+};
+
+// Parchment configuration
+export const parchmentAccessToken = writable<string>('');
+export const parchmentAgreeTerms = writable(false);
+export const parchmentSelectedRegion = writable<ParchmentEnvKey | ''>('');
+export const parchmentIssuers = writable<ParchmentIssuer[]>();
+export const parchmentSelectedIssuer = writable<ParchmentIssuer | undefined>();
+export const parchmentSelectedIssuerBadges = writable<ParchmentBadge[]>([]);
+
+export const fetchParchmentIssuerBadges = async (): Promise<boolean> => {
+	if (!get(parchmentSelectedRegion) || !get(parchmentAgreeTerms) || !get(parchmentAccessToken)) return false;
+
+	const requestData = {
+		URL: `${parchmentRegions.get(get(parchmentSelectedRegion) || 'test')?.apiDomain}/v2/issuers/${
+			get(parchmentSelectedIssuer)?.entityId
+		}/badgeclasses`,
+		Method: 'GET',
+		Body: null,
+		Headers: [
+			{
+				Name: 'Authorization',
+				Value: `Bearer ${get(parchmentAccessToken)}`
+			},
+			{
+				Name: 'Accept',
+				Value: 'application/json'
+			}
+		]
+	};
+
+	const proxyRequestHeaders = new Headers();
+	proxyRequestHeaders.append('Content-Type', 'application/json');
+	if (get(publisherUser).user?.Token)
+		proxyRequestHeaders.append('Authorization', `Bearer ${get(publisherUser).user?.Token}`);
+
+	const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+		method: 'POST',
+		body: JSON.stringify(requestData),
+		headers: proxyRequestHeaders
+	});
+	const proxyResponseData = await proxyResponse.json();
+
+	if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
+		throw new Error('Error fetching badge data from Parchment.');
+
+	const issuerBadgeData = JSON.parse(proxyResponseData.Data?.Body);
+	parchmentSelectedIssuerBadges.set(issuerBadgeData.result);
+
+	return true;
 };
 
 // Advanced JSON setup
