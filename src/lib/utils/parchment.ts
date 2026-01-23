@@ -54,7 +54,7 @@ export interface ParchmentEnv {
     apiDomain?: string | undefined;
     name?: string | undefined;
 }
-export type ParchmentEnvKey = 'us' | 'ca' | 'eu' | 'au' | 'test';
+export type ParchmentEnvKey = 'us' | 'ca' | 'eu' | 'au' | 'sg' | 'test';
 
 export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
     [
@@ -91,6 +91,15 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
             domain: 'badges.parchment.au',
             apiDomain: 'https://api.au.badgr.io',
             name: 'Australia'
+        }
+    ],
+    [
+        'sg',
+        {
+            id: 'sg',
+            domain: 'badges.parchment.sg',
+            apiDomain: 'https://api.sg.badgr.io',
+            name: 'Singapore'
         }
     ],
     [
