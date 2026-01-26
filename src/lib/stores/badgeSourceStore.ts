@@ -7,7 +7,6 @@ import {
 	type CanvasEnvKey
 } from '$lib/utils/canvas.js';
 import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
-import { persisted } from 'svelte-persisted-store';
 import { writable, derived, get, type Readable } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
@@ -21,11 +20,8 @@ export enum BadgeSourceTypeOptions {
 	Parchment = 'parchment'
 }
 
-export const badgeSourceType = persisted<BadgeSourceTypeOptions>(
-    'badge_source_type', 
-    BadgeSourceTypeOptions['None']
-);
-export const badgeSetupStep = persisted<number>('badge_setup_step', 0);
+export const badgeSourceType = writable(BadgeSourceTypeOptions['None']);
+export const badgeSetupStep = writable(0);
 
 // Canvas configuration
 export const canvasAccessToken = writable<string>('');
@@ -129,13 +125,13 @@ const badgeclassFromCredlyApiBadge = (cb: CredlyBadgeBasic): BadgeClassBasic => 
 };
 
 // Parchment configuration
-export const parchmentAccessToken = persisted<string>('parchment_token', '');
-export const parchmentAgreeTerms = persisted<boolean>('parchment_agree', false);
-export const parchmentSelectedRegion = persisted<ParchmentEnvKey | ''>('parchment_region', '');
-export const parchmentOrganization = persisted<string>('parchment_org', '');
-export const parchmentIssuers = persisted<ParchmentIssuer[]>('parchment_issuers', []);
-export const parchmentSelectedIssuer = persisted<ParchmentIssuer | undefined>('parchment_selected_issuer', undefined);
-export const parchmentSelectedIssuerBadges = persisted<ParchmentBadge[]>('parchment_badges', []);
+export const parchmentAccessToken = writable<string>('');
+export const parchmentAgreeTerms = writable(false);
+export const parchmentSelectedRegion = writable<ParchmentEnvKey | ''>('');
+export const parchmentOrganization = writable<string>('');
+export const parchmentIssuers = writable<ParchmentIssuer[]>();
+export const parchmentSelectedIssuer = writable<ParchmentIssuer | undefined>();
+export const parchmentSelectedIssuerBadges = writable<ParchmentBadge[]>([]);
 
 export const fetchParchmentIssuerBadges = async (): Promise<boolean> => {
 	if (!get(parchmentSelectedRegion) || !get(parchmentAgreeTerms) || !get(parchmentAccessToken)) return false;

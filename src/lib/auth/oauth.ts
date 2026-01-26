@@ -136,6 +136,7 @@ const restoreSession = async () => {
 };
 
 export const processLoginResponse = async () => {
+	console.log("Calling restoreStores")
 	// Restore session data from before the redirect to Canvas.
 	restoreStores();
 
@@ -145,6 +146,7 @@ export const processLoginResponse = async () => {
 	// Parchment again.
 	if (get(parchmentAccessToken)) {
 		// Now that we have a user token again, we can reload credentialtypes
+		console.log("Token acquired")
 		restoreSession();
 		refreshCredentialTypes();
 		return; // Session is restored, including Parchment access token, so we're done.
@@ -154,6 +156,7 @@ export const processLoginResponse = async () => {
 	const params = new URLSearchParams(window.location.toString()?.split('?')[1]);
 	const code = params.get('code') ?? '';
 	const state = params.get('state');
+	console.log("Got code", code)
 
 	// Remove these items so that an invalid request for some reason doesn't get sent
 	// to Parchment over and over.

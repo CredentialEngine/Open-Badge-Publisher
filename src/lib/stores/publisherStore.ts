@@ -1,5 +1,4 @@
 import { markdownToTxt } from 'markdown-to-txt';
-import { persisted } from 'svelte-persisted-store';
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import {
@@ -793,32 +792,23 @@ export const getPropertyName = (
 };
 
 // Which user is authenticated, if any
-export const publisherUser = persisted<UserDataStore>('publisher_user_data', {});
+export const publisherUser = writable<UserDataStore>({});
 
 // Which organization is selected, if any
-export const publisherOrganization = persisted<OrganizationDataStore>(
-    'publisher_org_data', 
-    {}
-);
+export const publisherOrganization = writable<OrganizationDataStore>({});
 export const setPublisherSelection = (orgId: string) => {
 	const selectedOrgData = get(publisherUser).user?.Organizations?.find((o) => o.CTID == orgId);
 	publisherOrganization.set({ org: selectedOrgData });
 };
 
 // The CTID of the verification service selected for the current organization
-export const publisherVerificationService = persisted<string>(
-    'publisher_verification_service', 
-    ''
-);
+export const publisherVerificationService = writable<string>('');
 
 // Which credentials already exist within the publisher for the selected org:
-export const publisherCredentials = persisted<PublisherCredentialsDataStore>(
-    'publisher_credentials_data', 
-    {
-        credentials: [],
-        totalResults: 0
-    }
-);
+export const publisherCredentials = writable<PublisherCredentialsDataStore>({
+	credentials: [],
+	totalResults: 0
+});
 export const getOrgCredentialList = async (): Promise<boolean> => {
 	const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Resource/PublisherSearch`;
 	const orgCtid = get(publisherOrganization).org?.CTID;
@@ -951,18 +941,18 @@ export const resetPublisherSelection = () => {
 };
 
 // Details about the API connection to the publisher and configuration
-export const publisherOptions = persisted<PublisherOptions>('publisher_options', {
-    alignmentSettings: {
-        defaultTargetType: AlignmentTargetNodeTypes.DEFAULT,
-        defaultPropertyType: AlignmentPropertyTypes.DEFAULT,
-        defaultCredentialSubtype: 'ceterms:Certification'
-    }
+export const publisherOptions = writable<PublisherOptions>({
+	alignmentSettings: {
+		defaultTargetType: AlignmentTargetNodeTypes.DEFAULT,
+		defaultPropertyType: AlignmentPropertyTypes.DEFAULT,
+		defaultCredentialSubtype: 'ceterms:Certification'
+	}
 });
 
 // Governs which step is displayed
-export const publisherSetupStep = persisted<number>('pub_setup_step', 0);
-export const proofingStep = persisted<number>('proofing_step', 0);
-export const reviewingStep = persisted<number>('reviewing_step', 0);
+export const publisherSetupStep = writable<number>(0);
+export const proofingStep = writable(0);
+export const reviewingStep = writable(0);
 
 export const getUser = async () => {
 	if (!browser || get(publisherUser).user) return null;

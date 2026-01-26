@@ -113,7 +113,7 @@
 						groupValue={$badgeSourceType}
 						value="Parchment"
 						on:select={(e) => ($badgeSourceType = e.detail.value)}
-						description="Parchment"
+						description="Parchment Digital Badges"
 					/>
 				</ul>
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
