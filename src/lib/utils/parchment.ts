@@ -65,7 +65,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'us',
             domain: 'badges.parchment.com',
-            apiDomain: 'https://api.badgr.io',
+            apiDomain: 'https://api.badges.parchment.com',
             name: 'United States'
         }
     ],
@@ -74,7 +74,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'ca',
             domain: 'badges.parchment.ca',
-            apiDomain: 'https://api.ca.badgr.io',
+            apiDomain: 'https://api.ca.badges.parchment.com',
             name: 'Canada'
         }
     ],
@@ -83,7 +83,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'eu',
             domain: 'badges.parchment.eu',
-            apiDomain: 'https://api.eu.badgr.io',
+            apiDomain: 'https://api.eu.badges.parchment.com',
             name: 'Europe'
         }
     ],
@@ -92,7 +92,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'au',
             domain: 'badges.parchment.au',
-            apiDomain: 'https://api.au.badgr.io',
+            apiDomain: 'https://api.au.badges.parchment.com',
             name: 'Australia'
         }
     ],
@@ -101,7 +101,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'sg',
             domain: 'badges.parchment.sg',
-            apiDomain: 'https://api.sg.badgr.io',
+            apiDomain: 'https://api.sg.badges.parchment.com',
             name: 'Singapore'
         }
     ],
@@ -110,7 +110,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'test',
             domain: 'badges.parchment.com', //test.badges.parchment.com
-            apiDomain: 'https://api.test.badgr.com',
+            apiDomain: 'https://api.test.badges.parchment.com',
             name: 'Test (test.badgr.com)'
         }
     ]
