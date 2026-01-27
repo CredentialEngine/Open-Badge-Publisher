@@ -74,7 +74,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'ca',
             domain: 'badges.parchment.ca',
-            apiDomain: 'https://api.ca.badges.parchment.com',
+            apiDomain: 'https://api.badges.parchment.ca',
             name: 'Canada'
         }
     ],
@@ -83,7 +83,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'eu',
             domain: 'badges.parchment.eu',
-            apiDomain: 'https://api.eu.badges.parchment.com',
+            apiDomain: 'https://api.badges.parchment.eu',
             name: 'Europe'
         }
     ],
@@ -92,7 +92,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'au',
             domain: 'badges.parchment.au',
-            apiDomain: 'https://api.au.badges.parchment.com',
+            apiDomain: 'https://api.badges.parchment.au',
             name: 'Australia'
         }
     ],
@@ -101,7 +101,7 @@ export const parchmentRegions: Map<ParchmentEnvKey, ParchmentEnv> = new Map([
         {
             id: 'sg',
             domain: 'badges.parchment.sg',
-            apiDomain: 'https://api.sg.badges.parchment.com',
+            apiDomain: 'https://api.badges.parchment.sg',
             name: 'Singapore'
         }
     ],
