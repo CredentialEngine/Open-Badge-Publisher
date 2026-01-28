@@ -228,6 +228,9 @@
 			stepName="Enter organization name"
 			isActive={!!$parchmentSelectedRegion && $parchmentAgreeTerms && !$parchmentOrganization}
 		/>
+		<BodyText>
+		Enter the organization name used with your Parchment account.
+		</BodyText>
 	</div>
 	<div class="mt-2">
     <div class="py-4 flex flex-col">
