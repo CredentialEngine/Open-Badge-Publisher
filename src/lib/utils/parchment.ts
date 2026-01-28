@@ -20,7 +20,7 @@ import {
     PUBLIC_PARCHMENT_SG_LOGIN_CLIENT_SECRET
 } from '$env/static/public';
 
-// Canvas Options
+// Parchment Options
 export interface ParchmentIssuer {
     entityId: string;
     openBadgeId: string;

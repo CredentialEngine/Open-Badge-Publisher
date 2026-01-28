@@ -16,7 +16,10 @@
 		badgeSetupStep,
 		badgeSetupComplete,
 		checkedBadges,
-		fetchCanvasIssuerBadges
+		fetchCanvasIssuerBadges,
+
+		fetchParchmentIssuerBadges
+
 	} from '$lib/stores/badgeSourceStore.js';
 	import {
 		credentialDrafts,
@@ -33,7 +36,7 @@
 	let modalVisible = false;
 
 	const handleAdvanceToBadgeSelection = () => {
-		if ($badgeSourceType == 'canvas') fetchCanvasIssuerBadges();
+		if ($badgeSourceType == 'parchment') fetchParchmentIssuerBadges();
 		$badgeSetupStep = 3;
 		handleRefocusPanel();
 	};
