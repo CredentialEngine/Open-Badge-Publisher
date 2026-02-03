@@ -137,10 +137,10 @@ const restoreSession = async () => {
 
 export const processLoginResponse = async () => {
 	console.log("Calling restoreStores")
-	// Restore session data from before the redirect to Canvas.
+	// Restore session data from before the redirect to Parchment.
 	restoreStores();
 
-	// In case the user refreshes the page after returning from Canvas,
+	// In case the user refreshes the page after returning from Parchment,
 	// and this function is triggered because `code=` is still in the
 	// querystring, it would be nice to not force them to go sign in with
 	// Parchment again.
