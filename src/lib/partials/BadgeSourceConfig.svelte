@@ -95,6 +95,14 @@
 
 				<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 					<RadioCard
+						label="Parchment Digital Badges"
+						name="sourcetyperadio"
+						groupValue={$badgeSourceType}
+						value="Parchment"
+						on:select={(e) => ($badgeSourceType = e.detail.value)}
+						description="Formerly known as Badgr, this badging tool is now part of the Instructure Learning Platform."
+					/>
+					<RadioCard
 						label="Credly"
 						name="sourcetyperadio"
 						groupValue={$badgeSourceType}
@@ -109,14 +117,6 @@
 						value="json"
 						on:select={(e) => ($badgeSourceType = e.detail.value)}
 						description="Paste an array of Open Badges achievements in JSON format. (Advanced)"
-					/>
-					<RadioCard
-						label="Parchment"
-						name="sourcetyperadio"
-						groupValue={$badgeSourceType}
-						value="Parchment"
-						on:select={(e) => ($badgeSourceType = e.detail.value)}
-						description="Parchment Digital Badges"
 					/>
 				</ul>
 				<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
