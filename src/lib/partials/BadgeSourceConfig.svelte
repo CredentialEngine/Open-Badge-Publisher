@@ -100,7 +100,7 @@
 						groupValue={$badgeSourceType}
 						value="Parchment"
 						on:select={(e) => ($badgeSourceType = e.detail.value)}
-						description="Formerly known as Badgr, this badging tool is now part of the Instructure Learning Platform."
+						description="Formerly known as Canvas, this badging tool is now part of the Instructure Learning Platform."
 					/>
 					<RadioCard
 						label="Credly"
