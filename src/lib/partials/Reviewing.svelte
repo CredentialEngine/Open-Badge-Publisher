@@ -13,6 +13,7 @@
 		proofingStep,
 		reviewingStep
 	} from '$lib/stores/publisherStore.js';
+	import ParchmentAlignments from './ParchmentAlignments.svelte';
 </script>
 
 <Heading><h2>Summary</h2></Heading>
@@ -38,6 +39,8 @@
 	{:else if $reviewingStep == 1}
 		{#if $badgeSourceType == 'canvas'}
 			<CanvasAlignments />
+		{:else if $badgeSourceType == 'parchment'}
+			<ParchmentAlignments />
 		{:else}
 			<ManualAlignments />
 		{/if}

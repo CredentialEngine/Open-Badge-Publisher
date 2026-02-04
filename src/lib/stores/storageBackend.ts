@@ -12,10 +12,13 @@ import {
 	badgeSourceType,
 	canvasSelectedRegion,
 	canvasAgreeTerms,
-	canvasAccessToken
+	canvasAccessToken,
+	parchmentSelectedRegion,
+	parchmentAgreeTerms,
+	parchmentOrganization
 } from '$lib/stores/badgeSourceStore.js';
 
-export const storageBackend = browser ? window?.sessionStorage : null;
+export const storageBackend = browser ? window?.localStorage : null;
 
 export const serializeStores = () => {
 	storageBackend?.setItem('publisherUser', JSON.stringify(get(publisherUser)));
@@ -30,6 +33,9 @@ export const serializeStores = () => {
 	storageBackend?.setItem('badgeSourceType', JSON.stringify(get(badgeSourceType)));
 	storageBackend?.setItem('canvasSelectedRegion', JSON.stringify(get(canvasSelectedRegion)));
 	storageBackend?.setItem('canvasAgreeTerms', JSON.stringify(get(canvasAgreeTerms)));
+	storageBackend?.setItem('parchmentSelectedRegion', JSON.stringify(get(parchmentSelectedRegion)));
+	storageBackend?.setItem('parchmentAgreeTerms', JSON.stringify(get(parchmentAgreeTerms)));
+	storageBackend?.setItem('parchmentOrganization', JSON.stringify(get(parchmentOrganization)));
 
 	const storageTimestamp = JSON.stringify(Date.now());
 	storageBackend?.setItem('storageTimestamp', storageTimestamp);
@@ -75,4 +81,20 @@ export const restoreStores = () => {
 	const canvasAgreeTermsString = storageBackend?.getItem('canvasAgreeTerms');
 	if (canvasAgreeTermsString) canvasAgreeTerms.set(JSON.parse(canvasAgreeTermsString));
 	// storageBackend?.removeItem('canvasAgreeTerms');
+
+	const parchmentSelectedRegionString = storageBackend?.getItem('parchmentSelectedRegion');
+	if (parchmentSelectedRegionString) {
+		parchmentSelectedRegion.set(JSON.parse(parchmentSelectedRegionString))
+	};
+
+	const parchmentAgreeTermsString = storageBackend?.getItem('parchmentAgreeTerms');
+	if (parchmentAgreeTermsString) {
+		parchmentAgreeTerms.set(JSON.parse(parchmentAgreeTermsString))
+	};
+
+	const parchmentOrganizationString = storageBackend?.getItem('parchmentOrganization');
+	if (parchmentOrganizationString) {
+		parchmentOrganization.set(JSON.parse(parchmentOrganizationString))
+	};
+
 };

@@ -35,13 +35,17 @@ import {
 import {
 	badgeSetupStep,
 	canvasAccessToken,
-	canvasSelectedRegion
+	canvasSelectedRegion,
+	parchmentAccessToken,
+	parchmentOrganization,
+	parchmentSelectedRegion
 } from '../stores/badgeSourceStore.js';
 import { canvasEnv } from '../utils/canvas.js';
 import { restoreStores, serializeStores } from '../stores/storageBackend.js';
 import { refreshCredentialTypes } from '../stores/credentialTypesStore.js';
 import { tick } from 'svelte';
 import { error } from '@sveltejs/kit';
+import { parchmentEnv } from '$lib/utils/parchment.js';
 
 const requestByProxy = async (
 	method: string,
@@ -97,9 +101,10 @@ export const initiateLogin = async () => {
 
 	storageBackend?.setItem('pkce_code_verifier', verifier);
 
-	const selectedRegion = get(canvasSelectedRegion) || 'test';
-	const canvasLoginOptions = canvasEnv(selectedRegion);
-	const client_id: string = canvasLoginOptions.client_id || 'CREDENTIALENGINEBADGEPUBLISHER';
+	const selectedRegion = get(parchmentSelectedRegion) || 'test';
+	const parchmentLoginOptions = parchmentEnv(selectedRegion);
+	const selectedParchmentOrganization = get(parchmentOrganization);
+	const client_id: string = parchmentLoginOptions.client_id || 'CREDENTIALENGINEBADGEPUBLISHER';
 
 	const authorizeParams: [string, string][] = [
 		['client_id', client_id],
@@ -110,7 +115,7 @@ export const initiateLogin = async () => {
 		['code_challenge', code_challenge]
 	];
 
-	const authorizeUri = `${canvasLoginOptions.domain}/auth/oauth2/authorize?${new URLSearchParams(
+	const authorizeUri = `https://${selectedParchmentOrganization}.${parchmentLoginOptions.domain}/auth/oauth2/authorize?${new URLSearchParams(
 		authorizeParams
 	).toString()}`;
 	window.location.replace(authorizeUri);
@@ -131,27 +136,28 @@ const restoreSession = async () => {
 };
 
 export const processLoginResponse = async () => {
-	// Restore session data from before the redirect to Canvas.
+	console.log("Calling restoreStores")
+	// Restore session data from before the redirect to Parchment.
 	restoreStores();
 
-	// In case the user refreshes the page after returning from Canvas,
+	// In case the user refreshes the page after returning from Parchment,
 	// and this function is triggered because `code=` is still in the
 	// querystring, it would be nice to not force them to go sign in with
-	// Canvas again.
-	if (get(canvasAccessToken)) {
+	// Parchment again.
+	if (get(parchmentAccessToken)) {
 		// Now that we have a user token again, we can reload credentialtypes
 		restoreSession();
 		refreshCredentialTypes();
-		return; // Session is restored, including Canvas access token, so we're done.
+		return; // Session is restored, including Parchment access token, so we're done.
 	}
 
-	// Normally: handle the first time the user returns from Canvas in a session.
+	// Normally: handle the first time the user returns from Parchment in a session.
 	const params = new URLSearchParams(window.location.toString()?.split('?')[1]);
 	const code = params.get('code') ?? '';
 	const state = params.get('state');
 
 	// Remove these items so that an invalid request for some reason doesn't get sent
-	// to Canvas over and over.
+	// to Parchment over and over.
 	const storageTimestamp = storageBackend?.getItem('storageTimestamp');
 	storageBackend?.removeItem('storageTimestamp');
 
@@ -161,10 +167,10 @@ export const processLoginResponse = async () => {
 	// Now that we have a user token again, we can reload credentialtypes
 	refreshCredentialTypes();
 
-	const selectedRegion = get(canvasSelectedRegion) || 'test';
-	const canvasLoginOptions = canvasEnv(selectedRegion);
-	const client_id: string = canvasLoginOptions.client_id || 'CREDENTIALENGINEBADGEPUBLISHER';
-	const client_secret: string = canvasLoginOptions.client_secret || 'SECRET_NOT_CONFIGURED';
+	const selectedRegion = get(parchmentSelectedRegion) || 'test';
+	const parchmentLoginOptions = parchmentEnv(selectedRegion);
+	const client_id: string = parchmentLoginOptions.client_id || 'CREDENTIALENGINEBADGEPUBLISHER';
+	const client_secret: string = parchmentLoginOptions.client_secret || 'SECRET_NOT_CONFIGURED';
 
 	const tokenParams: [string, string][] = [
 		['grant_type', 'authorization_code'],
@@ -178,7 +184,7 @@ export const processLoginResponse = async () => {
 	if (verifier && code && state == storageTimestamp) {
 		const tokenResponse = await requestByProxy(
 			'POST',
-			`${canvasLoginOptions.apiDomain}/o/token`,
+			`${parchmentLoginOptions.apiDomain}/o/token`,
 			new URLSearchParams(tokenParams).toString(),
 			[
 				{
@@ -198,22 +204,22 @@ export const processLoginResponse = async () => {
 		if (tokenResponse.status !== 200) {
 			throw error(
 				500,
-				'Unable to get access token from Canvas. Status code: ' + tokenResponse.status
+				'Unable to get access token from Parchment. Status code: ' + tokenResponse.status
 			);
 		}
 		const responseBody = JSON.parse(tokenResponse.body ?? '{}');
 
 		if (responseBody.access_token) {
-			storageBackend?.setItem('canvas_access_token', responseBody.access_token);
-			canvasAccessToken.set(responseBody.access_token);
+			storageBackend?.setItem('parchment_access_token', responseBody.access_token);
+			parchmentAccessToken.set(responseBody.access_token);
 			restoreSession();
 		} else {
 			throw error(
 				500,
-				'Unable to get access token from Canvas. Access token not found in Canvas response.'
+				'Unable to get access token from Parchment. Access token not found in Parchment response.'
 			);
 		}
 	} else {
-		throw error(500, 'Unable to get access token from Canvas. Request invalid.');
+		throw error(500, 'Unable to get access token from Parchment. Request invalid.');
 	}
 };

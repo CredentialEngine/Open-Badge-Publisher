@@ -16,7 +16,10 @@
 		badgeSetupStep,
 		badgeSetupComplete,
 		checkedBadges,
-		fetchCanvasIssuerBadges
+		fetchCanvasIssuerBadges,
+
+		fetchParchmentIssuerBadges
+
 	} from '$lib/stores/badgeSourceStore.js';
 	import {
 		credentialDrafts,
@@ -26,13 +29,14 @@
 	} from '$lib/stores/publisherStore.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import ParchmentConfig from './ParchmentConfig.svelte';
 
 	// panelIsHidden = true when data has been saved and this panel is no longer active.
 	let panelIsHidden = false;
 	let modalVisible = false;
 
 	const handleAdvanceToBadgeSelection = () => {
-		if ($badgeSourceType == 'canvas') fetchCanvasIssuerBadges();
+		if ($badgeSourceType == 'parchment') fetchParchmentIssuerBadges();
 		$badgeSetupStep = 3;
 		handleRefocusPanel();
 	};
@@ -91,12 +95,12 @@
 
 				<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
 					<RadioCard
-						label="Canvas Credentials"
+						label="Parchment Digital Badges"
 						name="sourcetyperadio"
 						groupValue={$badgeSourceType}
-						value="canvas"
+						value="Parchment"
 						on:select={(e) => ($badgeSourceType = e.detail.value)}
-						description="Formerly known as Badgr, this badging tool is now part of the Instructure Learning Platform."
+						description="Formerly known as Canvas, this badging tool is now part of the Instructure Learning Platform."
 					/>
 					<RadioCard
 						label="Credly"
@@ -126,8 +130,8 @@
 			<!-- Step 2: Configure Source -->
 		{:else if $badgeSetupStep == 2}
 			<div id="badgesetup-step2">
-				{#if $badgeSourceType == 'canvas'}
-					<CanvasConfig />
+				{#if $badgeSourceType == 'Parchment'}
+					<ParchmentConfig />
 				{:else if $badgeSourceType == 'credly'}
 					<CredlyConfig />
 				{:else if $badgeSourceType == 'json'}
