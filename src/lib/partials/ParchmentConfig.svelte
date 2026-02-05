@@ -416,13 +416,13 @@
 	{/if}
 {/if}
 
-{#if $parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion}
+{#if $parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion && $parchmentOrganization}
 	<div class="mt-8 mb-2">
 		<div class="mt-8 mb-2">
 			<ConfigurationStep
-				stepNumber="5d"
+				stepNumber="5e"
 				stepName="Select Parchment Credentials issuer"
-				isActive={!!($parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion)}
+				isActive={!!($parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion && $parchmentOrganization)}
 			/>
 		</div>
 	</div>
