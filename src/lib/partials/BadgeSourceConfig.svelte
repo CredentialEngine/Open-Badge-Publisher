@@ -36,7 +36,7 @@
 	let modalVisible = false;
 
 	const handleAdvanceToBadgeSelection = () => {
-		if ($badgeSourceType == 'parchment') fetchParchmentIssuerBadges();
+		if ($badgeSourceType == 'Parchment') fetchParchmentIssuerBadges();
 		$badgeSetupStep = 3;
 		handleRefocusPanel();
 	};
