@@ -17,7 +17,7 @@ export enum BadgeSourceTypeOptions {
 	Canvas = 'canvas',
 	Credly = 'credly',
 	JSON = 'json',
-	Parchment = 'Parchment'
+	Parchment = 'parchment'
 }
 
 export const badgeSourceType = writable(BadgeSourceTypeOptions['None']);

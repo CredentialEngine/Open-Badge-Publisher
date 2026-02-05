@@ -36,7 +36,7 @@
 	let modalVisible = false;
 
 	const handleAdvanceToBadgeSelection = () => {
-		if ($badgeSourceType == 'Parchment') fetchParchmentIssuerBadges();
+		if ($badgeSourceType == 'parchment') fetchParchmentIssuerBadges();
 		$badgeSetupStep = 3;
 		handleRefocusPanel();
 	};
@@ -98,7 +98,7 @@
 						label="Parchment Digital Badges"
 						name="sourcetyperadio"
 						groupValue={$badgeSourceType}
-						value="Parchment"
+						value="parchment"
 						on:select={(e) => ($badgeSourceType = e.detail.value)}
 						description="Formerly known as Canvas, this badging tool is now part of the Instructure Learning Platform."
 					/>
@@ -130,7 +130,7 @@
 			<!-- Step 2: Configure Source -->
 		{:else if $badgeSetupStep == 2}
 			<div id="badgesetup-step2">
-				{#if $badgeSourceType == 'Parchment'}
+				{#if $badgeSourceType == 'parchment'}
 					<ParchmentConfig />
 				{:else if $badgeSourceType == 'credly'}
 					<CredlyConfig />
