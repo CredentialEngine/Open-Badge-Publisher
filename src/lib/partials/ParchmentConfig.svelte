@@ -229,7 +229,7 @@
 			isActive={!!$parchmentSelectedRegion && $parchmentAgreeTerms && !$parchmentOrganization}
 		/>
 		<BodyText>
-		Enter the organization name used with your Parchment account.
+		Enter the organization name verbatim as it appears in your Parchment url. For example, for https://credentialengine.badges.parchment.com/, enter credentialengine with no spaces.
 		</BodyText>
 	</div>
 	<div class="mt-2">
