@@ -229,7 +229,7 @@
 			isActive={!!$parchmentSelectedRegion && $parchmentAgreeTerms && !$parchmentOrganization}
 		/>
 		<BodyText>
-		Enter the organization name used with your Parchment account.
+		Enter the organization name verbatim as it appears in your Parchment url. For example, for https://credentialengine.badges.parchment.com/, enter credentialengine with no spaces.
 		</BodyText>
 	</div>
 	<div class="mt-2">
@@ -416,13 +416,13 @@
 	{/if}
 {/if}
 
-{#if $parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion}
+{#if $parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion && $parchmentOrganization}
 	<div class="mt-8 mb-2">
 		<div class="mt-8 mb-2">
 			<ConfigurationStep
-				stepNumber="5d"
+				stepNumber="5e"
 				stepName="Select Parchment Credentials issuer"
-				isActive={!!($parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion)}
+				isActive={!!($parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion && $parchmentOrganization)}
 			/>
 		</div>
 	</div>

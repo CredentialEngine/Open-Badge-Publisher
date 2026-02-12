@@ -188,10 +188,6 @@ export const badgeSetupComplete = derived(
 	[
 		advancedBadgesFound,
 		badgeSourceType,
-		canvasAccessToken,
-		canvasAgreeTerms,
-		canvasSelectedRegion,
-		canvasSelectedIssuer,
 		credlySelectedIssuer,
 		credlyAgreeTerms,
 		credlyIssuerData,
@@ -205,10 +201,6 @@ export const badgeSetupComplete = derived(
 	([
 		$advancedBadgesFound,
 		$badgeSourceType,
-		$canvasAccessToken,
-		$canvasAgreeTerms,
-		$canvasSelectedRegion,
-		$canvasSelectedIssuer,
 		$credlySelectedIssuer,
 		$credlyAgreeTerms,
 		$credlyIssuerData,
@@ -219,14 +211,7 @@ export const badgeSetupComplete = derived(
 		$parchmentSelectedIssuer,
 		$parchmentOrganization
 	]) => {
-		if ($badgeSourceType == BadgeSourceTypeOptions['Canvas']) {
-			return (
-				!!$canvasAccessToken &&
-				!!$canvasAgreeTerms &&
-				!!$canvasSelectedRegion &&
-				!!$canvasSelectedIssuer
-			);
-		} else if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) {
+		if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) {
 			return (
 				!!$credlySelectedIssuer &&
 				!!$credlyAgreeTerms &&
