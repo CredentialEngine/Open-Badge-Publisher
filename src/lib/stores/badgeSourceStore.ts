@@ -11,9 +11,21 @@ import { writable, derived, get, type Readable } from 'svelte/store';
 import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
 import { publisherUser } from '$lib/stores/publisherStore.js';
 import { badgeclassFromParchmentApiBadge, type ParchmentBadge, type ParchmentEnvKey, type ParchmentIssuer, parchmentRegions } from '$lib/utils/parchment.js';
+import {
+	accredibleAuthHeader,
+	accredibleDesignEndpoint,
+	accredibleDesignPreviewEndpoint,
+	accredibleRegions,
+	badgeclassFromAccredibleGroup,
+	badgeDesignIdForGroup,
+	imageUrlFromDesign,
+	type AccredibleEnvKey,
+	type AccredibleGroup
+} from '$lib/utils/accredible.js';
 
 export enum BadgeSourceTypeOptions {
 	None = '',
+	Accredible = 'accredible',
 	Canvas = 'canvas',
 	Credly = 'credly',
 	JSON = 'json',
@@ -175,6 +187,144 @@ export const fetchParchmentIssuerBadges = async (): Promise<boolean> => {
 	return true;
 };
 
+// Accredible configuration
+export const accredibleApiKey = writable<string>('');
+export const accredibleAgreeTerms = writable(false);
+export const accredibleSelectedRegion = writable<AccredibleEnvKey | ''>('');
+export const accredibleGroups = writable<AccredibleGroup[]>([]);
+
+export const fetchAccredibleGroups = async (): Promise<boolean> => {
+	const region = get(accredibleSelectedRegion);
+	const apiKey = get(accredibleApiKey);
+	if (!region || !get(accredibleAgreeTerms) || !apiKey) return false;
+
+	const env = accredibleRegions.get(region);
+	if (!env) return false;
+
+	const proxyRequestHeaders = new Headers();
+	proxyRequestHeaders.append('Content-Type', 'application/json');
+	if (get(publisherUser).user?.Token)
+		proxyRequestHeaders.append('Authorization', `Bearer ${get(publisherUser).user?.Token}`);
+
+	// Accredible's `/v1/issuer/all_groups` endpoint is paginated (page/page_size,
+	// matching Accredible's own export script). We page through until a page
+	// comes back with fewer than page_size results.
+	const pageSize = 50;
+	let page = 1;
+	let allGroups: AccredibleGroup[] = [];
+
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		const requestData = {
+			URL: `${env.apiDomain}/v1/issuer/all_groups?page=${page}&page_size=${pageSize}`,
+			Method: 'GET',
+			Body: null,
+			Headers: [accredibleAuthHeader(apiKey), { Name: 'Accept', Value: 'application/json' }]
+		};
+
+		const proxyResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+			method: 'POST',
+			body: JSON.stringify(requestData),
+			headers: proxyRequestHeaders
+		});
+		const proxyResponseData = await proxyResponse.json();
+
+		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200') {
+			const status = proxyResponseData.Data?.StatusCode ?? proxyResponseData.StatusCode;
+			const detail =
+				proxyResponseData.Data?.Body || proxyResponseData.StatusMessage || 'no response body';
+			const hint =
+				status == 401 || status == 403
+					? ' Check that the API key is correct and matches the selected region.'
+					: '';
+			throw new Error(
+				`Error fetching group data from Accredible (status ${status ?? 'unknown'}).${hint} ` +
+					`Details: ${String(detail).slice(0, 300)}`
+			);
+		}
+
+		const body = JSON.parse(proxyResponseData.Data?.Body);
+		// NOTE: the exact envelope key returned by this endpoint was not confirmed
+		// against Accredible's API reference (unreachable while building this).
+		// Handle a few plausible shapes defensively; adjust once confirmed.
+		const pageGroups: AccredibleGroup[] = body.groups || body.all_groups || (Array.isArray(body) ? body : []);
+
+		allGroups = [...allGroups, ...pageGroups];
+
+		if (pageGroups.length < pageSize) break;
+		page += 1;
+		if (page > 200) break; // safety valve against an unexpected infinite loop
+	}
+
+	// Best-effort: resolve a badge image for each group from its Design.
+	// The group payload carries no image, only design ids; for a badge we use
+	// `badge_design_id` (falling back to the primary/default design). An image
+	// lookup failure is logged and never breaks the overall fetch.
+	const proxyRequest = async (
+		method: string,
+		url: string,
+		body: string | null = null
+	): Promise<any | null> => {
+		const response = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+			method: 'POST',
+			body: JSON.stringify({
+				URL: url,
+				Method: method,
+				Body: body,
+				Headers: [
+					accredibleAuthHeader(apiKey),
+					{ Name: 'Accept', Value: 'application/json' },
+					{ Name: 'Content-Type', Value: 'application/json' }
+				]
+			}),
+			headers: proxyRequestHeaders
+		});
+		const data = await response.json();
+		if (data.Valid && data.Data?.StatusCode == '200') return JSON.parse(data.Data.Body);
+		return null;
+	};
+
+	// The design's rasterized image is a BLANK template (no data merged), so to
+	// match how Accredible renders the badge we POST to the design /preview
+	// endpoint with the group's display name merged in (`group.course_name` /
+	// `group.name`), which returns a rendered `{ link }`. We fall back to the
+	// blank rasterized image only if the merged render fails. Because the merged
+	// image depends on the name, it's per-group; we cache by design+name since
+	// groups can share a design and name.
+	const imageCache = new Map<string, string>();
+	for (const g of allGroups) {
+		if (g.image_url) continue;
+		const designId = badgeDesignIdForGroup(g);
+		if (designId === undefined) continue;
+		const name = g.course_name || g.name || '';
+		const cacheKey = `${designId}|${name}`;
+		if (imageCache.has(cacheKey)) {
+			g.image_url = imageCache.get(cacheKey);
+			continue;
+		}
+		try {
+			// Render the design with the group's name merged in.
+			const previewBody = JSON.stringify({ 'group.course_name': name, 'group.name': name });
+			let img = imageUrlFromDesign(
+				await proxyRequest('POST', accredibleDesignPreviewEndpoint(env, designId), previewBody)
+			);
+			if (!img) {
+				// Fallback: the design's blank rasterized image (no name merged).
+				img = imageUrlFromDesign(await proxyRequest('GET', accredibleDesignEndpoint(env, designId)));
+			}
+			if (img) {
+				imageCache.set(cacheKey, img);
+				g.image_url = img;
+			}
+		} catch (e) {
+			console.warn(`Could not load Accredible design ${designId} for a badge image:`, e);
+		}
+	}
+
+	accredibleGroups.set(allGroups);
+	return true;
+};
+
 // Advanced JSON setup
 export const advancedBadges = writable<Array<BadgeClassBasic | null>>([]);
 export const advancedBadgesFound = derived(
@@ -196,7 +346,11 @@ export const badgeSetupComplete = derived(
 		parchmentAgreeTerms,
 		parchmentSelectedRegion,
 		parchmentSelectedIssuer,
-		parchmentOrganization
+		parchmentOrganization,
+		accredibleApiKey,
+		accredibleAgreeTerms,
+		accredibleSelectedRegion,
+		accredibleGroups
 	],
 	([
 		$advancedBadgesFound,
@@ -209,7 +363,11 @@ export const badgeSetupComplete = derived(
 		$parchmentAgreeTerms,
 		$parchmentSelectedRegion,
 		$parchmentSelectedIssuer,
-		$parchmentOrganization
+		$parchmentOrganization,
+		$accredibleApiKey,
+		$accredibleAgreeTerms,
+		$accredibleSelectedRegion,
+		$accredibleGroups
 	]) => {
 		if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) {
 			return (
@@ -225,6 +383,13 @@ export const badgeSetupComplete = derived(
 				!!$parchmentSelectedRegion &&
 				!!$parchmentSelectedIssuer &&
 				!!$parchmentOrganization
+			);
+		} else if ($badgeSourceType == BadgeSourceTypeOptions['Accredible']) {
+			return (
+				!!$accredibleApiKey &&
+				!!$accredibleAgreeTerms &&
+				!!$accredibleSelectedRegion &&
+				!!$accredibleGroups.length
 			);
 		} else {
 			return !!$advancedBadgesFound.length;
@@ -242,6 +407,8 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 		canvasSelectedIssuerBadges,
 		credlyIssuerBadges,
 		parchmentSelectedIssuerBadges,
+		accredibleGroups,
+		accredibleSelectedRegion,
 		advancedBadgesFound
 	],
 	([
@@ -250,6 +417,8 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 		$canvasSelectedIssuerBadges,
 		$credlyIssuerBadges,
 		$parchmentSelectedIssuerBadges,
+		$accredibleGroups,
+		$accredibleSelectedRegion,
 		$advancedBadgesFound
 	]) => {
 		if (!$badgeSetupComplete) {
@@ -263,6 +432,10 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 			return $credlyIssuerBadges.map(badgeclassFromCredlyApiBadge);
 		}  else if (get(badgeSourceType) == BadgeSourceTypeOptions['Parchment']) {
 			return $parchmentSelectedIssuerBadges.map(badgeclassFromParchmentApiBadge);
+		} else if (get(badgeSourceType) == BadgeSourceTypeOptions['Accredible']) {
+			const env = $accredibleSelectedRegion ? accredibleRegions.get($accredibleSelectedRegion) : undefined;
+			if (!env) return [];
+			return $accredibleGroups.map((g) => badgeclassFromAccredibleGroup(g, env));
 		} else {
 			return $advancedBadgesFound;
 		}
@@ -287,4 +460,7 @@ export const resetBadgeData = () => {
 	parchmentIssuers.set([]);
 	parchmentSelectedIssuer.set(undefined);
 	parchmentSelectedIssuerBadges.set([]);
+
+	// Does not invalidate accredibleApiKey
+	accredibleGroups.set([]);
 };
