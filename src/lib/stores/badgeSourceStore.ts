@@ -14,8 +14,10 @@ import { badgeclassFromParchmentApiBadge, type ParchmentBadge, type ParchmentEnv
 import {
 	accredibleAuthHeader,
 	accredibleDesignEndpoint,
+	accredibleDesignPreviewEndpoint,
 	accredibleRegions,
 	badgeclassFromAccredibleGroup,
+	badgeDesignIdForGroup,
 	imageUrlFromDesign,
 	type AccredibleEnvKey,
 	type AccredibleGroup
@@ -255,46 +257,69 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 	}
 
 	// Best-effort: resolve a badge image for each group from its Design.
-	// The group payload carries no image, only a `design_id`; the Design's
-	// `rasterized_content_url` is a rendered image of the badge. We dedupe by
-	// design_id (groups commonly share designs) to minimize calls, and never
-	// let an image lookup failure break the overall fetch.
-	const designIds = [
-		...new Set(
-			allGroups
-				.map((g) => g.design_id)
-				.filter((id): id is number | string => id !== undefined && id !== null && id !== '')
-		)
-	];
-	const designImageById = new Map<string, string>();
-	for (const designId of designIds) {
+	// The group payload carries no image, only design ids; for a badge we use
+	// `badge_design_id` (falling back to the primary/default design). An image
+	// lookup failure is logged and never breaks the overall fetch.
+	const proxyRequest = async (
+		method: string,
+		url: string,
+		body: string | null = null
+	): Promise<any | null> => {
+		const response = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+			method: 'POST',
+			body: JSON.stringify({
+				URL: url,
+				Method: method,
+				Body: body,
+				Headers: [
+					accredibleAuthHeader(apiKey),
+					{ Name: 'Accept', Value: 'application/json' },
+					{ Name: 'Content-Type', Value: 'application/json' }
+				]
+			}),
+			headers: proxyRequestHeaders
+		});
+		const data = await response.json();
+		if (data.Valid && data.Data?.StatusCode == '200') return JSON.parse(data.Data.Body);
+		return null;
+	};
+
+	// The design's rasterized image is a BLANK template (no data merged), so to
+	// match how Accredible renders the badge we POST to the design /preview
+	// endpoint with the group's display name merged in (`group.course_name` /
+	// `group.name`), which returns a rendered `{ link }`. We fall back to the
+	// blank rasterized image only if the merged render fails. Because the merged
+	// image depends on the name, it's per-group; we cache by design+name since
+	// groups can share a design and name.
+	const imageCache = new Map<string, string>();
+	for (const g of allGroups) {
+		if (g.image_url) continue;
+		const designId = badgeDesignIdForGroup(g);
+		if (designId === undefined) continue;
+		const name = g.course_name || g.name || '';
+		const cacheKey = `${designId}|${name}`;
+		if (imageCache.has(cacheKey)) {
+			g.image_url = imageCache.get(cacheKey);
+			continue;
+		}
 		try {
-			const designRequest = {
-				URL: accredibleDesignEndpoint(env, designId),
-				Method: 'GET',
-				Body: null,
-				Headers: [accredibleAuthHeader(apiKey), { Name: 'Accept', Value: 'application/json' }]
-			};
-			const designResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
-				method: 'POST',
-				body: JSON.stringify(designRequest),
-				headers: proxyRequestHeaders
-			});
-			const designResponseData = await designResponse.json();
-			if (designResponseData.Valid && designResponseData.Data?.StatusCode == '200') {
-				const img = imageUrlFromDesign(JSON.parse(designResponseData.Data.Body));
-				if (img) designImageById.set(String(designId), img);
+			// Render the design with the group's name merged in.
+			const previewBody = JSON.stringify({ 'group.course_name': name, 'group.name': name });
+			let img = imageUrlFromDesign(
+				await proxyRequest('POST', accredibleDesignPreviewEndpoint(env, designId), previewBody)
+			);
+			if (!img) {
+				// Fallback: the design's blank rasterized image (no name merged).
+				img = imageUrlFromDesign(await proxyRequest('GET', accredibleDesignEndpoint(env, designId)));
+			}
+			if (img) {
+				imageCache.set(cacheKey, img);
+				g.image_url = img;
 			}
 		} catch (e) {
 			console.warn(`Could not load Accredible design ${designId} for a badge image:`, e);
 		}
 	}
-	allGroups.forEach((g) => {
-		if (!g.image_url && g.design_id != null) {
-			const img = designImageById.get(String(g.design_id));
-			if (img) g.image_url = img;
-		}
-	});
 
 	accredibleGroups.set(allGroups);
 	return true;

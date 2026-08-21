@@ -87,10 +87,15 @@ export interface AccredibleGroup {
 	// depending on how the group's criteria were configured in Accredible.
 	earning_criteria?: string | AccredibleCriterion[];
 	achievement_type?: string;
-	// Groups render credentials using a reusable Design, referenced by id. The
-	// group payload has no image itself; the badge image comes from the Design
-	// (see fetchAccredibleGroups() / GET /v1/designs/{design_id}).
+	// Groups render credentials using reusable Designs, referenced by id. The
+	// group payload has no image itself; the badge image comes from a Design
+	// (see fetchAccredibleGroups() / GET /v1/designs/{design_id}). A group can
+	// carry several design ids -- for a badge we want `badge_design_id`.
 	design_id?: number | string;
+	badge_design_id?: number | string;
+	certificate_design_id?: number | string;
+	primary_design_id?: number | string;
+	design_name?: string;
 	// Populated by fetchAccredibleGroups() after resolving the Design, so
 	// extractImageFromGroup() below can pick it up. Not returned by Accredible.
 	image_url?: string;
@@ -214,17 +219,39 @@ export interface AccredibleDesign {
 	preview_url?: string;
 }
 
-// Endpoint for a single Design. A group's `design_id` points here; the Design's
-// rasterized image is used as the badge image.
+// The design a group uses for its BADGE image. A group carries several design
+// ids; prefer the badge-specific one, then the group's primary/default design.
+// (certificate_design_id is intentionally last -- it renders a certificate, not
+// a badge.) Returns undefined when the group references no usable design.
+export const badgeDesignIdForGroup = (g: AccredibleGroup): number | string | undefined => {
+	for (const candidate of [
+		g.badge_design_id,
+		g.primary_design_id,
+		g.design_id,
+		g.certificate_design_id
+	]) {
+		if (candidate !== undefined && candidate !== null && candidate !== '') return candidate;
+	}
+	return undefined;
+};
+
+// Endpoint for a single Design. A group's badge design id points here; the
+// Design's rasterized image is used as the badge image.
 export const accredibleDesignEndpoint = (env: AccredibleEnv, designId: string | number) =>
 	`${env.apiDomain}/v1/designs/${designId}`;
 
-// Extract a usable image URL from a design payload, tolerating either a bare
-// design object or one wrapped under a `design` key, and a few field-name
-// variants. Returns '' when nothing usable is present.
+// Endpoint that renders a preview image of a Design and returns `{ link }`.
+// Used as a fallback when the Design object itself has no rasterized image URL.
+export const accredibleDesignPreviewEndpoint = (env: AccredibleEnv, designId: string | number) =>
+	`${env.apiDomain}/v1/designs/${designId}/preview`;
+
+// Extract a usable image URL from a design or design-preview payload, tolerating
+// either a bare object or one wrapped under a `design` key, and a few field-name
+// variants (`rasterized_content_url` from GET design, `link` from the preview
+// endpoint). Returns '' when nothing usable is present.
 export const imageUrlFromDesign = (payload: unknown): string => {
 	const root = (payload ?? {}) as Record<string, any>;
 	const d: Record<string, any> = root.design ?? root;
-	const candidate = d.rasterized_content_url || d.image_url || d.preview_url;
+	const candidate = d.rasterized_content_url || d.image_url || d.preview_url || d.link;
 	return typeof candidate === 'string' ? candidate : '';
 };
