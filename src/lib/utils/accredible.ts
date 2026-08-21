@@ -63,6 +63,18 @@ export interface AccredibleLearningOutcome {
 	targetCode?: string;
 }
 
+// A single earning-criterion entry as returned by Accredible. Sandbox groups
+// return `earning_criteria` as an array of these objects (each `text` is an
+// HTML fragment), NOT as a plain string. Confirmed against a live sandbox
+// probe (see accredible_probe.py output).
+export interface AccredibleCriterion {
+	id?: string;
+	kind?: string; // e.g. "degree", "skill", "completion"
+	text?: string; // HTML fragment describing the criterion
+	required?: boolean;
+	position?: number;
+}
+
 // Raw shape of one entry from Accredible's `/v1/issuer/all_groups` endpoint,
 // limited to the fields Accredible's own export script reads.
 export interface AccredibleGroup {
@@ -71,8 +83,17 @@ export interface AccredibleGroup {
 	course_name?: string;
 	course_description?: string;
 	description?: string;
-	earning_criteria?: string;
+	// May be a plain string OR a structured array of criterion objects,
+	// depending on how the group's criteria were configured in Accredible.
+	earning_criteria?: string | AccredibleCriterion[];
 	achievement_type?: string;
+	// Groups render credentials using a reusable Design, referenced by id. The
+	// group payload has no image itself; the badge image comes from the Design
+	// (see fetchAccredibleGroups() / GET /v1/designs/{design_id}).
+	design_id?: number | string;
+	// Populated by fetchAccredibleGroups() after resolving the Design, so
+	// extractImageFromGroup() below can pick it up. Not returned by Accredible.
+	image_url?: string;
 	learning_outcomes?: Array<string | AccredibleLearningOutcome>;
 	// TODO(confirm with Accredible): if a badge design/image URL is available
 	// directly on the group payload under some other field name (e.g.
@@ -86,6 +107,31 @@ const stripHtml = (html: string): string => {
 		.replace(/<[^>]*>/g, ' ')
 		.replace(/\s+/g, ' ')
 		.trim();
+};
+
+// Normalize Accredible's `earning_criteria` (which may be a plain string or a
+// structured array of criterion objects) into a single narrative string.
+// Downstream code (badgeClassToCtdlApiCredential) runs this through
+// markdownToTxt(), which requires a string -- passing the raw array throws and
+// silently drops the whole credential from the import.
+const narrativeFromEarningCriteria = (
+	earning: string | AccredibleCriterion[] | undefined,
+	fallback: string
+): string => {
+	if (!earning) return fallback;
+	if (typeof earning === 'string') return earning;
+	if (Array.isArray(earning)) {
+		const parts = [...earning]
+			.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+			.map((c) => {
+				const text = stripHtml(c.text || '');
+				if (!text) return '';
+				return c.required === false ? `${text} (optional)` : text;
+			})
+			.filter((t) => t.length > 0);
+		return parts.length ? parts.join('\n\n') : fallback;
+	}
+	return fallback;
 };
 
 // Best-effort attempt to find an already-present image URL on the group
@@ -142,7 +188,10 @@ export const badgeclassFromAccredibleGroup = (
 		achievementType: g.achievement_type || 'Achievement',
 		tags: [],
 		criteria: {
-			narrative: g.earning_criteria || `See ${env.credentialDomain}/group/${g.id} for details.`
+			narrative: narrativeFromEarningCriteria(
+				g.earning_criteria,
+				`See ${env.credentialDomain}/group/${g.id} for details.`
+			)
 		},
 		alignment
 	};
@@ -153,12 +202,29 @@ export const accredibleAuthHeader = (apiKey: string) => ({
 	Value: `Token token=${apiKey}`
 });
 
-// TODO(confirm with Accredible): endpoint for a badge design/credential image,
-// keyed by group id. Accredible's export script does not fetch images at all,
-// so this endpoint path is NOT verified -- it's a placeholder for whichever
-// call Accredible's API reference specifies (possibly a `/v1/credentials`
-// lookup filtered by group, or a dedicated design endpoint). Wire this into
-// fetchAccredibleGroups() in badgeSourceStore.ts once confirmed; until then,
-// image lookup silently falls back to extractImageFromGroup() (usually '').
-export const ACCREDIBLE_GROUP_IMAGE_ENDPOINT_UNCONFIRMED = (env: AccredibleEnv, groupId: string) =>
-	`${env.apiDomain}/v1/issuer/all_groups/${groupId}`; // placeholder -- verify with Accredible
+// A Design object as returned by GET /v1/designs/{design_id}. Only the
+// image-bearing fields are modeled here. `rasterized_content_url` is
+// Accredible's documented "link to generate an image of the design"; the other
+// keys are tolerated as fallbacks in case the account returns a different shape.
+export interface AccredibleDesign {
+	id?: number | string;
+	kind?: string; // 'badge' | 'certificate'
+	rasterized_content_url?: string;
+	image_url?: string;
+	preview_url?: string;
+}
+
+// Endpoint for a single Design. A group's `design_id` points here; the Design's
+// rasterized image is used as the badge image.
+export const accredibleDesignEndpoint = (env: AccredibleEnv, designId: string | number) =>
+	`${env.apiDomain}/v1/designs/${designId}`;
+
+// Extract a usable image URL from a design payload, tolerating either a bare
+// design object or one wrapped under a `design` key, and a few field-name
+// variants. Returns '' when nothing usable is present.
+export const imageUrlFromDesign = (payload: unknown): string => {
+	const root = (payload ?? {}) as Record<string, any>;
+	const d: Record<string, any> = root.design ?? root;
+	const candidate = d.rasterized_content_url || d.image_url || d.preview_url;
+	return typeof candidate === 'string' ? candidate : '';
+};

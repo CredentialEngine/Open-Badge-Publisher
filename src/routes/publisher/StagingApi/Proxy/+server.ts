@@ -7,7 +7,11 @@ const ORIGIN_WHITELIST = [
 	'https://api.eu.badgr.io',
 	'https://api.ca.badgr.io',
 	'https://api.test.badgr.com',
-	'https://www.credly.com'
+	'https://www.credly.com',
+	// Accredible API regions (must match apiDomain values in src/lib/utils/accredible.ts)
+	'https://api.accredible.com',
+	'https://eu.api.accredible.com',
+	'https://sandbox.api.accredible.com'
 ];
 
 export const POST: RequestHandler = async ({ request }) => {

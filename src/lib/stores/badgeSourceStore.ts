@@ -13,8 +13,10 @@ import { publisherUser } from '$lib/stores/publisherStore.js';
 import { badgeclassFromParchmentApiBadge, type ParchmentBadge, type ParchmentEnvKey, type ParchmentIssuer, parchmentRegions } from '$lib/utils/parchment.js';
 import {
 	accredibleAuthHeader,
+	accredibleDesignEndpoint,
 	accredibleRegions,
 	badgeclassFromAccredibleGroup,
+	imageUrlFromDesign,
 	type AccredibleEnvKey,
 	type AccredibleGroup
 } from '$lib/utils/accredible.js';
@@ -225,8 +227,19 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 		});
 		const proxyResponseData = await proxyResponse.json();
 
-		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200')
-			throw new Error('Error fetching group data from Accredible.');
+		if (!proxyResponseData.Valid || proxyResponseData.Data?.StatusCode != '200') {
+			const status = proxyResponseData.Data?.StatusCode ?? proxyResponseData.StatusCode;
+			const detail =
+				proxyResponseData.Data?.Body || proxyResponseData.StatusMessage || 'no response body';
+			const hint =
+				status == 401 || status == 403
+					? ' Check that the API key is correct and matches the selected region.'
+					: '';
+			throw new Error(
+				`Error fetching group data from Accredible (status ${status ?? 'unknown'}).${hint} ` +
+					`Details: ${String(detail).slice(0, 300)}`
+			);
+		}
 
 		const body = JSON.parse(proxyResponseData.Data?.Body);
 		// NOTE: the exact envelope key returned by this endpoint was not confirmed
@@ -240,6 +253,48 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 		page += 1;
 		if (page > 200) break; // safety valve against an unexpected infinite loop
 	}
+
+	// Best-effort: resolve a badge image for each group from its Design.
+	// The group payload carries no image, only a `design_id`; the Design's
+	// `rasterized_content_url` is a rendered image of the badge. We dedupe by
+	// design_id (groups commonly share designs) to minimize calls, and never
+	// let an image lookup failure break the overall fetch.
+	const designIds = [
+		...new Set(
+			allGroups
+				.map((g) => g.design_id)
+				.filter((id): id is number | string => id !== undefined && id !== null && id !== '')
+		)
+	];
+	const designImageById = new Map<string, string>();
+	for (const designId of designIds) {
+		try {
+			const designRequest = {
+				URL: accredibleDesignEndpoint(env, designId),
+				Method: 'GET',
+				Body: null,
+				Headers: [accredibleAuthHeader(apiKey), { Name: 'Accept', Value: 'application/json' }]
+			};
+			const designResponse = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+				method: 'POST',
+				body: JSON.stringify(designRequest),
+				headers: proxyRequestHeaders
+			});
+			const designResponseData = await designResponse.json();
+			if (designResponseData.Valid && designResponseData.Data?.StatusCode == '200') {
+				const img = imageUrlFromDesign(JSON.parse(designResponseData.Data.Body));
+				if (img) designImageById.set(String(designId), img);
+			}
+		} catch (e) {
+			console.warn(`Could not load Accredible design ${designId} for a badge image:`, e);
+		}
+	}
+	allGroups.forEach((g) => {
+		if (!g.image_url && g.design_id != null) {
+			const img = designImageById.get(String(g.design_id));
+			if (img) g.image_url = img;
+		}
+	});
 
 	accredibleGroups.set(allGroups);
 	return true;
