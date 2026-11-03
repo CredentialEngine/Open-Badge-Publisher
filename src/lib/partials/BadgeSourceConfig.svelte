@@ -9,6 +9,7 @@
 	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
 	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
 	import CredlyConfig from '$lib/partials/CredlyConfig.svelte';
+	import AccredibleConfig from '$lib/partials/AccredibleConfig.svelte';
 	import AdvancedBadgeInput from './AdvancedBadgeInput.svelte';
 	import BadgeSelection from '$lib/partials/BadgeSelection.svelte';
 	import {
@@ -111,6 +112,14 @@
 						description="A leading badge platform focused on resume-ready achievements in education, workforce, and professional development."
 					/>
 					<RadioCard
+						label="Accredible"
+						name="sourcetyperadio"
+						groupValue={$badgeSourceType}
+						value="accredible"
+						on:select={(e) => ($badgeSourceType = e.detail.value)}
+						description="A digital credentialing platform for badges, certificates, and diplomas."
+					/>
+					<RadioCard
 						label="JSON"
 						name="sourcetyperadio"
 						groupValue={$badgeSourceType}
@@ -134,6 +143,8 @@
 					<ParchmentConfig />
 				{:else if $badgeSourceType == 'credly'}
 					<CredlyConfig />
+				{:else if $badgeSourceType == 'accredible'}
+					<AccredibleConfig />
 				{:else if $badgeSourceType == 'json'}
 					<AdvancedBadgeInput />
 				{/if}

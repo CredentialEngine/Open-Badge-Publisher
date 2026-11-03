@@ -16,6 +16,8 @@
 		PUBLIC_PUBLISHER_API_BASEURL,
 		PUBLIC_PUBLISHER_API_ENV_LABEL
 	} from '$env/static/public';
+	// Optional, dev-only settings. Read via dynamic env so builds don't break when unset.
+	import { env as publicDynamicEnv } from '$env/dynamic/public';
 	import {
 		getUser,
 		publisherUser,
@@ -68,38 +70,120 @@
 				return;
 			})
 			.then(async (valid) => {
+				// If validation failed, the .catch above resolves to undefined; abort here
+				// so we don't fire a login request (or spin) with invalid input.
+				if (!valid) return;
+
 				userIsLoading = true;
 				const url = `${PUBLIC_UI_API_BASEURL}/StagingApi/Login`;
-				const response = await fetch(url, {
-					method: 'POST',
-					body: JSON.stringify(formData),
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				});
-				const responseData = await response.json();
-				if (!responseData['Valid']) {
-					let errorMessage: string;
+				try {
+					const response = await fetch(url, {
+						method: 'POST',
+						body: JSON.stringify(formData),
+						headers: {
+							'Content-Type': 'application/json'
+						}
+					});
+
+					// The Publisher may respond with a non-JSON body (e.g. an HTML Keycloak
+					// sign-in page) once an environment migrates to interactive OIDC login.
+					// Parsing that as JSON used to throw silently and leave the spinner running
+					// forever, so handle it explicitly with a helpful message.
+					let responseData: any;
 					try {
-						errorMessage = responseData.Messages[0] || responseData.message;
+						responseData = await response.json();
 					} catch {
-						errorMessage = 'Unexpected server error!';
+						setAlert(
+							'error',
+							`The Publisher did not return a valid login response (HTTP ${response.status}). ` +
+								`This environment likely requires interactive sign-in (Keycloak) and no longer ` +
+								`supports email/password login from this app.`,
+							'Authentication error:'
+						);
+						userIsLoading = false;
+						return;
 					}
 
-					setAlert('error', errorMessage, 'Authentication error:');
-					userIsLoading = false;
-					return;
-				}
+					if (!responseData['Valid']) {
+						let errorMessage: string;
+						try {
+							errorMessage = responseData.Messages[0] || responseData.message;
+						} catch {
+							errorMessage = 'Unexpected server error!';
+						}
 
-				// reset form and save user
-				registryEmailAddress = '';
-				registryPassword = '';
-				registryAgreeTerms = false;
-				publisherUser.set({ user: responseData['Data'] });
-				userIsLoading = false;
-				$publisherSetupStep = 2;
-				refreshCredentialTypes();
+						setAlert('error', errorMessage, 'Authentication error:');
+						userIsLoading = false;
+						return;
+					}
+
+					// reset form and save user
+					registryEmailAddress = '';
+					registryPassword = '';
+					registryAgreeTerms = false;
+					publisherUser.set({ user: responseData['Data'] });
+					userIsLoading = false;
+					$publisherSetupStep = 2;
+					refreshCredentialTypes();
+				} catch (e) {
+					setAlert(
+						'error',
+						`Could not reach the Publisher login service: ${String(e)}`,
+						'Authentication error:'
+					);
+					userIsLoading = false;
+				}
 			});
+	};
+
+	// ---------------------------------------------------------------------------
+	// DEV-ONLY: skip Publisher login for local testing.
+	//
+	// The email/password login above only works against Publisher environments
+	// that still support it. Environments on Keycloak/OIDC (e.g. Sandbox) return
+	// an HTML sign-in page instead of a token, which blocks local testing of the
+	// badge-source workflows (Accredible, Canvas, etc.).
+	//
+	// When PUBLIC_DEV_BYPASS_PUBLISHER_LOGIN is "true", we inject a fake publisher
+	// session (user + selected org + placeholder verification service) directly
+	// into the stores and jump straight to the completed state. This lets you
+	// exercise everything up to (but not including) the real "Save to Publisher"
+	// step, whose API calls still require a valid, environment-issued token.
+	//
+	// This is gated on an env flag that ships disabled; it is a no-op in prod.
+	// ---------------------------------------------------------------------------
+	const devBypassEnabled = publicDynamicEnv.PUBLIC_DEV_BYPASS_PUBLISHER_LOGIN === 'true';
+	const devOrgCtid =
+		publicDynamicEnv.PUBLIC_DEV_PUBLISHER_ORG_CTID ||
+		'ce-00000000-0000-0000-0000-000000000000';
+	const devOrgName = publicDynamicEnv.PUBLIC_DEV_PUBLISHER_ORG_NAME || 'Dev Test Organization';
+
+	const devBypassLogin = () => {
+		resetAlert();
+		const fakeOrg = {
+			Id: '0',
+			RowId: '00000000-0000-0000-0000-000000000000',
+			Name: devOrgName,
+			CTID: devOrgCtid,
+			Type: 'Organization'
+		};
+		publisherUser.set({
+			user: {
+				Id: 0,
+				Name: 'Dev Tester',
+				Email: 'dev@example.com',
+				IsSiteStaff: false,
+				Token: 'DEV_FAKE_TOKEN',
+				Organizations: [fakeOrg]
+			}
+		});
+		publisherOrganization.set({ org: fakeOrg });
+		publisherVerificationService.set(devOrgCtid);
+		// Credentials list stays empty; we skip the API-backed preview entirely.
+		panelIsHidden = true;
+		$publisherSetupStep = 4;
+		if ($badgeSetupStep == 0) $badgeSetupStep = 1;
+		refreshCredentialTypes();
 	};
 
 	const publisherUrl = new URL(PUBLIC_PUBLISHER_API_BASEURL);
@@ -270,6 +354,22 @@
 					<div class="mt-8 sm:flex flex-row items-center pb-6 sm:space-x-4">
 						<NextPrevButton on:click={submitRegistryForm} isNext={true} isActive={true} />
 					</div>
+
+					{#if devBypassEnabled}
+						<div class="mt-2 mb-6 border-t border-dashed border-amber-300 pt-4">
+							<BodyText gray={true}>
+								<span class="font-bold text-amber-700">Developer mode:</span> skip Publisher login
+								and inject a fake session (org
+								<span class="font-mono">{devOrgCtid}</span>) so you can test badge-source
+								workflows locally. Saving to the Publisher will still require a real account.
+							</BodyText>
+							<div class="mt-3">
+								<Button buttonType="default" on:click={devBypassLogin}>
+									Skip login (dev)
+								</Button>
+							</div>
+						</div>
+					{/if}
 				{:else if userIsLoading}
 					<div class="my-4 flex flex-col items-center justify-center w-full h-40">
 						<LoadingSpinner />

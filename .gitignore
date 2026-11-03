@@ -15,5 +15,9 @@ badgePublisher_*
 /.vs/VSWorkspaceState.json
 /full.env
 /backup.env
+
+# Regenerable, account-specific output of accredible_probe.py (keep the script,
+# ignore its output). Re-run the probe to recreate it.
+/accredible_achievements_probe.json
 /.vs/Open-Badge-Publisher/v17
 /.vs/slnx.sqlite

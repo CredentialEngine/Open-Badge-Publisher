@@ -75,3 +75,11 @@ application.
 Configure your webserver to route requests to the fallback page `200.html` for requests that don't experience an
 immediate "hit". See [docs](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#apache) example for
 Apache.
+
+### Backend dependency
+
+This is a static build, so SvelteKit server endpoints do not run in production. The `src/routes/publisher/StagingApi/*`
+routes (login, the external-API `Proxy`, credential save, etc.) exist only for local `vite dev`; a deployed instance
+depends on the **Credential Engine Publisher backend** to serve those same `/publisher/StagingApi/*` paths. In
+particular, outbound badge-platform calls go through the backend's `Proxy`, which has its own **origin whitelist** — any
+new badge source's API domains must be added there (not just in the dev `Proxy/+server.ts`).

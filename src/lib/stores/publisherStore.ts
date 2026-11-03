@@ -1330,12 +1330,19 @@ const createCredentialDraftStore = () => {
 		subscribe,
 		importCheckedSourceBadges: () => {
 			const checkedBadgeKeys = get(checkedBadges);
-			set(
-				get(normalizedBadges)
-					.filter((b) => checkedBadgeKeys[b.id] === true)
-					.map((bc) => badgeClassToCtdlApiCredential(bc))
-					.sort((a, b) => a.Credential.Name.localeCompare(b.Credential.Name))
-			);
+			const drafts: CtdlCredentialDraft[] = [];
+			get(normalizedBadges)
+				.filter((b) => checkedBadgeKeys[b.id] === true)
+				.forEach((bc) => {
+					// Convert per-badge so one malformed badge can't abort the whole
+					// import (which would silently leave the drafts list empty).
+					try {
+						drafts.push(badgeClassToCtdlApiCredential(bc));
+					} catch (e) {
+						console.error(`Failed to import badge "${bc.name}" (${bc.id}):`, e);
+					}
+				});
+			set(drafts.sort((a, b) => a.Credential.Name.localeCompare(b.Credential.Name)));
 		},
 		updateCredential: (b: CtdlCredentialDraft) => {
 			update((credentialList) => {
