@@ -5,13 +5,13 @@ import {
 	type ConditionProfile,
 	type Occupation,
 	type OBAlignmentConfig,
-	CtdlCredentialDraft,
+	type CtdlCredentialDraft,
 	mergeOccupationAlignment,
 	mergeQAAlignment,
 	mergeAllAlignments,
 	mergeSingleAlignment,
 	filterAlignmentFromCredential
-} from '../src/lib/stores/publisherStore.js';
+} from './publisherStore.js';
 
 const exampleCredential: CtdlCredentialDraft = {
 	PublishForOrganizationIdentifier: 'abc123',
@@ -135,7 +135,6 @@ test('should reconcile alignments with publisher, dropping requirementless CPs',
 	});
 
 	const credential2 = get(credentialDrafts)[0];
-	const requirements2 = credential.Credential.Requires as ConditionProfile[];
 
 	assert.equal(credential2.Credential.Requires?.length, 2);
 });

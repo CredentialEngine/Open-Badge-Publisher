@@ -2,11 +2,12 @@
 
 ## Overview
 
-This repo is the **Open Badge Publisher** (SvelteKit app) — it imports badges from a badge platform and republishes them to the Credential Engine Registry as CTDL linked data, via CE's Publisher API. Users pick a **badge source**, the app fetches that source's badges, transforms each into an Open Badge *Achievement*, shows a preview, and the user saves them to the Publisher.
+This repo is the **Open Badge Publisher** (SvelteKit app) — it imports badges from a badge platform and republishes them to the Credential Engine Registry as CTDL linked data, via CE's Publisher API. Users pick a **badge source**, the app fetches that source's badges, transforms each into an Open Badge _Achievement_, shows a preview, and the user saves them to the Publisher.
 
 **This change adds Accredible as a new badge source**, alongside the existing Credly and Parchment (formerly Canvas) sources. No prior review of this branch is assumed; everything you need is below.
 
 ### The Accredible flow
+
 1. **`AccredibleConfig.svelte`** collects an Accredible **API key** + **region** (US / EU / Sandbox) and a terms checkbox.
 2. **`fetchAccredibleGroups()`** (`badgeSourceStore.ts`) pages `GET /v1/issuer/all_groups` and resolves a badge image per group. Browser calls can't hit Accredible directly, so every request goes through the app's **server-side proxy** (`StagingApi/Proxy/+server.ts`), which forwards with the `Authorization: Token token=<key>` header. The proxy has an **origin whitelist** — the three Accredible API domains were added to it.
 3. **`badgeclassFromAccredibleGroup()`** (`accredible.ts`) converts each Accredible "group" (a badge template) into the Achievement shape the app's `badgeClassBasicSchema` validates.
@@ -51,13 +52,13 @@ sequenceDiagram
 
 The Accredible API shapes are **verified against the official OpenAPI spec** (`github.com/accredible/api-documentation`, `openapi.json`; the old `docs.accredible.com` no longer resolves). Three decisions came out of that:
 
-1. **Alignments (skills) are read from `skills[]`, not `learning_outcomes`.** Badge Publisher's importer requires a valid `targetUrl` on *every* alignment entry and rejects the whole achievement if one is missing. A group's `learning_outcomes` is an array of **bare strings** (no URL) or `null`, so every alignment built from it is dropped — in a 316-item sample, 255 (81%) lost all skills for exactly this reason. The URL-bearing data lives in the group's **`skills[]`** (each has a public `url`, `name`, `identifier`, `description`) plus a `skill_framework`. `badgeclassFromAccredibleGroup()` now maps those to `targetUrl`/`targetName`/`targetCode`/`targetDescription`/`targetFramework`. Groups with only free-text skills still produce no alignments — correct, not a bug.
+1. **Alignments (skills) are read from `skills[]`, not `learning_outcomes`.** Badge Publisher's importer requires a valid `targetUrl` on _every_ alignment entry and rejects the whole achievement if one is missing. A group's `learning_outcomes` is an array of **bare strings** (no URL) or `null`, so every alignment built from it is dropped — in a 316-item sample, 255 (81%) lost all skills for exactly this reason. The URL-bearing data lives in the group's **`skills[]`** (each has a public `url`, `name`, `identifier`, `description`) plus a `skill_framework`. `badgeclassFromAccredibleGroup()` now maps those to `targetUrl`/`targetName`/`targetCode`/`targetDescription`/`targetFramework`. Groups with only free-text skills still produce no alignments — correct, not a bug.
 
-2. **Fetching `skills[]` is opt-in** (`PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS`, default `"false"`). `skills[]` is returned **only** by the single-group `GET /v1/issuer/groups/{id}` — not the list endpoint — *and* it's a **pay-gated** Accredible feature most badges leave empty. So pulling it costs one extra API call per group for data that's usually absent. It's off by default; `earning_criteria` and `achievement_type` come back on the list regardless, so turning it off loses nothing else.
+2. **Fetching `skills[]` is opt-in** (`PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS`, default `"false"`). `skills[]` is returned **only** by the single-group `GET /v1/issuer/groups/{id}` — not the list endpoint — _and_ it's a **pay-gated** Accredible feature most badges leave empty. So pulling it costs one extra API call per group for data that's usually absent. It's off by default; `earning_criteria` and `achievement_type` come back on the list regardless, so turning it off loses nothing else.
 
-3. **Badge image comes from the design *preview* endpoint.** The spec documents no design-GET response and no `rasterized_content_url`; the only documented image source is `POST /v1/designs/{id}/preview` → `{ "link": ... }` (renders the design with the group's name merged in). That `link` is now the primary image URL, with the design GET kept only as a best-effort fallback. **Confirmed working against the sandbox** — badges render populated, so the name-merge keys are correct; the open question is only URL durability (see "Must verify" #2).
+3. **Badge image comes from the design _preview_ endpoint.** The spec documents no design-GET response and no `rasterized_content_url`; the only documented image source is `POST /v1/designs/{id}/preview` → `{ "link": ... }` (renders the design with the group's name merged in). That `link` is now the primary image URL, with the design GET kept only as a best-effort fallback. **Confirmed working against the sandbox** — badges render populated, so the name-merge keys are correct; the open question is only URL durability (see "Must verify" #2).
 
-Earlier commits on the branch also added: the Accredible source UI and its registration as a selectable source; the proxy whitelist entries; `earning_criteria` normalization (it can be a string *or* a structured array — passing the array straight to `markdownToTxt()` previously threw and silently dropped the credential); and a **dev login bypass** (see Appendix A).
+Earlier commits on the branch also added: the Accredible source UI and its registration as a selectable source; the proxy whitelist entries; `earning_criteria` normalization (it can be a string _or_ a structured array — passing the array straight to `markdownToTxt()` previously threw and silently dropped the credential); and a **dev login bypass** (see Appendix A).
 
 ---
 
@@ -77,15 +78,15 @@ Consequences for integrating this feature:
 
 ## Verified vs. not verified
 
-| | Status |
-|---|---|
-| API auth, region domains, endpoints, response shapes | ✅ verified against `openapi.json` |
-| Code compiles | ✅ `npm run check` adds no new errors (see Build status) |
-| Fetch → transform → **preview** | ✅ manually tested against an Accredible **sandbox** account |
-| Image resolves via design preview & renders populated (not blank) | ✅ confirmed against **sandbox** (the name-merge works) |
-| **Save/publish to a real Publisher** | ❌ never run (see below) |
-| Image URL is durable / non-expiring | ❌ not verified — preview links appear signed/tokenized |
-| `skills[]` populates with usable URLs | ❌ not verified (pay-gated; sandbox account lacks it) |
+|                                                                   | Status                                                       |
+| ----------------------------------------------------------------- | ------------------------------------------------------------ |
+| API auth, region domains, endpoints, response shapes              | ✅ verified against `openapi.json`                           |
+| Code compiles                                                     | ✅ `npm run check` adds no new errors (see Build status)     |
+| Fetch → transform → **preview**                                   | ✅ manually tested against an Accredible **sandbox** account |
+| Image resolves via design preview & renders populated (not blank) | ✅ confirmed against **sandbox** (the name-merge works)      |
+| **Save/publish to a real Publisher**                              | ❌ never run (see below)                                     |
+| Image URL is durable / non-expiring                               | ❌ not verified — preview links appear signed/tokenized      |
+| `skills[]` populates with usable URLs                             | ❌ not verified (pay-gated; sandbox account lacks it)        |
 
 **Why publish is untested:** local Publisher environments use Keycloak/OIDC, which the app's email/password login no longer supports. Local testing used the dev bypass (Appendix A), which injects a fake token — so fetch + preview work, but the real "Save to Publisher" step has never executed end-to-end.
 
@@ -107,17 +108,17 @@ Consequences for integrating this feature:
 
 Files that make up the Accredible feature:
 
-| File | Role |
-|---|---|
-| `src/lib/utils/accredible.ts` | Region table, group→Achievement transform, `skills[]`/`earning_criteria` normalization, design-image resolution, endpoint builders. |
-| `src/lib/partials/AccredibleConfig.svelte` | Source config UI (API key, region, terms). |
-| `src/lib/partials/BadgeSourceConfig.svelte` | Registers Accredible as a selectable source. |
-| `src/lib/stores/badgeSourceStore.ts` | `fetchAccredibleGroups()`: paging, per-group conversion (one bad badge can't wipe the import), image lookup, opt-in skills GET. |
-| `src/lib/stores/publisherStore.ts` | Supporting store changes for the Accredible flow. |
-| `src/lib/partials/PublisherConfig.svelte` | Dev login bypass (Appendix A); clearer error on a non-JSON (Keycloak) login response. |
-| `src/routes/publisher/StagingApi/Proxy/+server.ts` | Accredible API regions added to the proxy origin whitelist (without them every fetch 400s). |
-| `.env.example` / `local.env` | New `PUBLIC_DEV_*` and `PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS` keys (all default off). |
-| `accredible_probe.py` | Standalone verification script (Appendix B). |
+| File                                               | Role                                                                                                                                |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/utils/accredible.ts`                      | Region table, group→Achievement transform, `skills[]`/`earning_criteria` normalization, design-image resolution, endpoint builders. |
+| `src/lib/partials/AccredibleConfig.svelte`         | Source config UI (API key, region, terms).                                                                                          |
+| `src/lib/partials/BadgeSourceConfig.svelte`        | Registers Accredible as a selectable source.                                                                                        |
+| `src/lib/stores/badgeSourceStore.ts`               | `fetchAccredibleGroups()`: paging, per-group conversion (one bad badge can't wipe the import), image lookup, opt-in skills GET.     |
+| `src/lib/stores/publisherStore.ts`                 | Supporting store changes for the Accredible flow.                                                                                   |
+| `src/lib/partials/PublisherConfig.svelte`          | Dev login bypass (Appendix A); clearer error on a non-JSON (Keycloak) login response.                                               |
+| `src/routes/publisher/StagingApi/Proxy/+server.ts` | Accredible API regions added to the proxy origin whitelist (without them every fetch 400s).                                         |
+| `.env.example` / `local.env`                       | New `PUBLIC_DEV_*` and `PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS` keys (all default off).                                               |
+| `accredible_probe.py`                              | Standalone verification script (Appendix B).                                                                                        |
 
 > **Uncommitted at handoff:** `accredible.ts`, `badgeSourceStore.ts`, `.env.example`, `local.env`, `.gitignore`, `README.md`, `HANDOFF.md`, `accredible_probe.py`. (`package-lock.json` shows modified but predates this work — leave it out.) Commit these before review.
 
@@ -140,7 +141,7 @@ python3 accredible_probe.py --api-key YOUR_KEY --env sandbox
 # or: ACCREDIBLE_API_KEY=... python3 accredible_probe.py --env us
 ```
 
-It prints the raw `all_groups` and design payloads and writes a transformed Achievement array to `accredible_achievements_probe.json` (gitignored; regenerable), which can be pasted into the app's **"JSON" source type** as a manual test. The API key is read from `--api-key`/`ACCREDIBLE_API_KEY` only — nothing hardcoded. Note: the probe mirrors the *earlier* transform (reads `learning_outcomes`, no per-group skills GET), so it's for inspecting raw API data, **not** a mirror of the current alignment logic — the in-app fetch is the real test.
+It prints the raw `all_groups` and design payloads and writes a transformed Achievement array to `accredible_achievements_probe.json` (gitignored; regenerable), which can be pasted into the app's **"JSON" source type** as a manual test. The API key is read from `--api-key`/`ACCREDIBLE_API_KEY` only — nothing hardcoded. Note: the probe mirrors the _earlier_ transform (reads `learning_outcomes`, no per-group skills GET), so it's for inspecting raw API data, **not** a mirror of the current alignment logic — the in-app fetch is the real test.
 
 ## Appendix C — Env & secrets
 

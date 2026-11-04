@@ -7,17 +7,17 @@
 		type CtdlCredential,
 		CtdlAlignmentProperty,
 		type CtdlCredentialDraft
-	} from '$lib/stores/publisherStore.js';
+	} from '#lib/stores/publisherStore.js';
 	import * as yup from 'yup';
-	import type { BaseSchema } from 'yup';
+	import type { AnySchema } from 'yup';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		EditStatus
-	} from '$lib/stores/publisherStore.js';
-	import Alert from '$lib/components/Alert.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Button from '$lib/components/Button.svelte';
+	} from '#lib/stores/publisherStore.js';
+	import Alert from '#lib/components/Alert.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Button from '#lib/components/Button.svelte';
 
 	export let credential: CtdlCredentialDraft;
 	export let editStatus: EditStatus;
@@ -44,7 +44,7 @@
 		if (fieldId != 'OTHER') cc[fieldId] = newValue;
 		return cc;
 	};
-	export let validator: BaseSchema = yup.string();
+	export let validator: AnySchema = yup.string();
 
 	const dispatch = createEventDispatcher();
 
@@ -149,13 +149,20 @@
 			{#if helpText}
 				<BodyText><span class="text-xs text-gray-600">{helpText}</span></BodyText>
 			{/if}
+			{#if helpUrl}
+				<a
+					class="text-xs text-midnight underline"
+					href={helpUrl}
+					target="_blank"
+					rel="external noopener noreferrer">Documentation</a
+				>
+			{/if}
 			{#if longText}
 				<textarea
 					id={inputId}
 					rows="7"
 					class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-					bind:value
-				/>
+					bind:value></textarea>
 			{:else}
 				<input
 					id={inputId}

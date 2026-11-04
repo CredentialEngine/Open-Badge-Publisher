@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import Button from '$lib/components/Button.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
 	import { createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -78,7 +78,7 @@
 			</div>
 			<!-- Modal footer -->
 			<div class="flex flex-row justify-end p-6 space-x-2 border-t border-gray-200 rounded-b">
-				{#each actions as action}
+				{#each actions as action (action.label)}
 					<Button buttonType={action.buttonType} on:click={action.onClick}>{action.label}</Button>
 				{/each}
 			</div>

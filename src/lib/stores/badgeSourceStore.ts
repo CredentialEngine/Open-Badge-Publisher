@@ -1,17 +1,22 @@
-import type { BadgeClassBasic, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
+import type { BadgeClassBasic, BadgeClassCTDLExtended } from '#lib/utils/badges.js';
 import {
 	badgeclassFromCanvasApiBadge,
 	canvasRegions,
 	type CanvasBadge,
 	type CanvasIssuer,
 	type CanvasEnvKey
-} from '$lib/utils/canvas.js';
-import type { CredlyBadgeBasic, CredlyIssuerBasic } from '$lib/utils/credly.js';
+} from '#lib/utils/canvas.js';
+import type { CredlyBadgeBasic, CredlyIssuerBasic } from '#lib/utils/credly.js';
 import { writable, derived, get, type Readable } from 'svelte/store';
-import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
-import { env as publicDynamicEnv } from '$env/dynamic/public';
-import { publisherUser } from '$lib/stores/publisherStore.js';
-import { badgeclassFromParchmentApiBadge, type ParchmentBadge, type ParchmentEnvKey, type ParchmentIssuer, parchmentRegions } from '$lib/utils/parchment.js';
+import { PUBLIC_UI_API_BASEURL, PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS } from '$app/env/public';
+import { publisherUser } from '#lib/stores/publisherStore.js';
+import {
+	badgeclassFromParchmentApiBadge,
+	type ParchmentBadge,
+	type ParchmentEnvKey,
+	type ParchmentIssuer,
+	parchmentRegions
+} from '#lib/utils/parchment.js';
 import {
 	accredibleAuthHeader,
 	accredibleDesignEndpoint,
@@ -24,7 +29,7 @@ import {
 	imageUrlFromDesign,
 	type AccredibleEnvKey,
 	type AccredibleGroup
-} from '$lib/utils/accredible.js';
+} from '#lib/utils/accredible.js';
 
 export enum BadgeSourceTypeOptions {
 	None = '',
@@ -149,7 +154,8 @@ export const parchmentSelectedIssuer = writable<ParchmentIssuer | undefined>();
 export const parchmentSelectedIssuerBadges = writable<ParchmentBadge[]>([]);
 
 export const fetchParchmentIssuerBadges = async (): Promise<boolean> => {
-	if (!get(parchmentSelectedRegion) || !get(parchmentAgreeTerms) || !get(parchmentAccessToken)) return false;
+	if (!get(parchmentSelectedRegion) || !get(parchmentAgreeTerms) || !get(parchmentAccessToken))
+		return false;
 
 	const requestData = {
 		URL: `${parchmentRegions.get(get(parchmentSelectedRegion) || 'test')?.apiDomain}/v2/issuers/${
@@ -216,7 +222,6 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 	let page = 1;
 	let allGroups: AccredibleGroup[] = [];
 
-	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const requestData = {
 			URL: `${env.apiDomain}/v1/issuer/all_groups?page=${page}&page_size=${pageSize}`,
@@ -249,7 +254,8 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 		const body = JSON.parse(proxyResponseData.Data?.Body);
 		// Confirmed against openapi.json: the response is { groups: [...], meta }.
 		// The extra fallbacks are harmless defensiveness.
-		const pageGroups: AccredibleGroup[] = body.groups || body.all_groups || (Array.isArray(body) ? body : []);
+		const pageGroups: AccredibleGroup[] =
+			body.groups || body.all_groups || (Array.isArray(body) ? body : []);
 
 		allGroups = [...allGroups, ...pageGroups];
 
@@ -294,7 +300,7 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 	// PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS="true". Note: earning_criteria and
 	// achievement_type already come back on the list endpoint, so skipping this
 	// does NOT lose them.
-	const fetchGroupSkills = publicDynamicEnv.PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS === 'true';
+	const fetchGroupSkills = PUBLIC_ACCREDIBLE_FETCH_GROUP_SKILLS === 'true';
 
 	// Badge image resolution (always on). The design's rasterized image is a BLANK
 	// template, so we POST to the design /preview endpoint with the group's display
@@ -339,7 +345,9 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 			);
 			if (!img) {
 				// Fallback: the design's blank rasterized image (no name merged).
-				img = imageUrlFromDesign(await proxyRequest('GET', accredibleDesignEndpoint(env, designId)));
+				img = imageUrlFromDesign(
+					await proxyRequest('GET', accredibleDesignEndpoint(env, designId))
+				);
 			}
 			if (img) {
 				imageCache.set(cacheKey, img);
@@ -405,7 +413,7 @@ export const badgeSetupComplete = derived(
 				!!$credlyIssuerData &&
 				!!$credlyIssuerBadges.length
 			);
-		}else if ($badgeSourceType == BadgeSourceTypeOptions['Parchment']) {
+		} else if ($badgeSourceType == BadgeSourceTypeOptions['Parchment']) {
 			return (
 				!!$parchmentAccessToken &&
 				!!$parchmentAgreeTerms &&
@@ -423,9 +431,6 @@ export const badgeSetupComplete = derived(
 		} else {
 			return !!$advancedBadgesFound.length;
 		}
-
-		// JSON not implemented
-		return false;
 	}
 );
 
@@ -455,14 +460,16 @@ export const normalizedBadges: Readable<BadgeClassCTDLExtended[]> = derived(
 			return [];
 		}
 
-		if (get(badgeSourceType) == BadgeSourceTypeOptions['Canvas']) {
+		if ($badgeSourceType == BadgeSourceTypeOptions['Canvas']) {
 			return $canvasSelectedIssuerBadges.map(badgeclassFromCanvasApiBadge);
-		} else if (get(badgeSourceType) == BadgeSourceTypeOptions['Credly']) {
+		} else if ($badgeSourceType == BadgeSourceTypeOptions['Credly']) {
 			return $credlyIssuerBadges.map(badgeclassFromCredlyApiBadge);
-		}  else if (get(badgeSourceType) == BadgeSourceTypeOptions['Parchment']) {
+		} else if ($badgeSourceType == BadgeSourceTypeOptions['Parchment']) {
 			return $parchmentSelectedIssuerBadges.map(badgeclassFromParchmentApiBadge);
-		} else if (get(badgeSourceType) == BadgeSourceTypeOptions['Accredible']) {
-			const env = $accredibleSelectedRegion ? accredibleRegions.get($accredibleSelectedRegion) : undefined;
+		} else if ($badgeSourceType == BadgeSourceTypeOptions['Accredible']) {
+			const env = $accredibleSelectedRegion
+				? accredibleRegions.get($accredibleSelectedRegion)
+				: undefined;
 			if (!env) return [];
 			return $accredibleGroups.map((g) => badgeclassFromAccredibleGroup(g, env));
 		} else {

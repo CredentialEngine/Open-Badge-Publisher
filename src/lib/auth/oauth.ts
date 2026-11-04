@@ -1,51 +1,31 @@
 import { get } from 'svelte/store';
-import { browser } from '$app/environment';
-import CryptoJs from 'crypto-js';
-import sha256 from 'crypto-js/sha256.js';
-import Base64 from 'crypto-js/enc-base64.js';
-import Utf8 from 'crypto-js/enc-utf8.js';
+import { browser } from '$app/env';
 
 import { storageBackend } from '../stores/storageBackend.js';
 import {
-	PUBLIC_BASEURL,
-	PUBLIC_CANVAS_AU_ENABLED,
-	PUBLIC_CANVAS_AU_LOGIN_CLIENT_ID,
-	PUBLIC_CANVAS_AU_LOGIN_CLIENT_SECRET,
-	PUBLIC_CANVAS_CA_ENABLED,
-	PUBLIC_CANVAS_CA_LOGIN_CLIENT_ID,
-	PUBLIC_CANVAS_CA_LOGIN_CLIENT_SECRET,
-	PUBLIC_CANVAS_EU_ENABLED,
-	PUBLIC_CANVAS_EU_LOGIN_CLIENT_ID,
-	PUBLIC_CANVAS_EU_LOGIN_CLIENT_SECRET,
-	PUBLIC_CANVAS_TEST_ENABLED,
-	PUBLIC_CANVAS_TEST_LOGIN_CLIENT_ID,
-	PUBLIC_CANVAS_TEST_LOGIN_CLIENT_SECRET,
-	PUBLIC_CANVAS_US_ENABLED,
-	PUBLIC_CANVAS_US_LOGIN_CLIENT_ID,
-	PUBLIC_CANVAS_US_LOGIN_CLIENT_SECRET,
-	PUBLIC_UI_API_BASEURL
-} from '$env/static/public';
+	basicAuthorization,
+	beginOAuthTransaction,
+	consumeOAuthTransaction,
+	pkceChallenge
+} from './oauthTransaction.js';
+import { PUBLIC_BASEURL, PUBLIC_UI_API_BASEURL } from '$app/env/public';
 import {
 	publisherCredentials,
-	publisherOptions,
 	publisherOrganization,
 	publisherSetupStep,
 	publisherVerificationService
 } from '../stores/publisherStore.js';
 import {
 	badgeSetupStep,
-	canvasAccessToken,
-	canvasSelectedRegion,
 	parchmentAccessToken,
 	parchmentOrganization,
 	parchmentSelectedRegion
 } from '../stores/badgeSourceStore.js';
-import { canvasEnv } from '../utils/canvas.js';
 import { restoreStores, serializeStores } from '../stores/storageBackend.js';
 import { refreshCredentialTypes } from '../stores/credentialTypesStore.js';
 import { tick } from 'svelte';
 import { error } from '@sveltejs/kit';
-import { parchmentEnv } from '$lib/utils/parchment.js';
+import { parchmentEnv } from '#lib/utils/parchment.js';
 
 const requestByProxy = async (
 	method: string,
@@ -73,33 +53,15 @@ const requestByProxy = async (
 	};
 };
 
-const generateBasicAuth = (username: string, password: string): string => {
-	return 'Basic ' + window.btoa(username ?? '' + ':' + password ?? '');
-};
-
-const UUID_TEMPLATE = '10000000-1000-4000-8000-100000000000';
-const verifierPart = (): string => {
-	const uuid = UUID_TEMPLATE.replace(/[018]/g, (c) =>
-		(+c ^ (CryptoJs.lib.WordArray.random(1).words[0] & (15 >> (+c / 4)))).toString(16)
-	);
-	return uuid.replace(/-/g, '');
-};
-
 export const initiateLogin = async () => {
 	if (!browser) return;
 
 	console.log('Stashing session data...');
-	const storageTimestamp = serializeStores();
-	console.log(`Session data stashed at: ${storageTimestamp}`);
+	serializeStores();
 
-	const verifier = verifierPart() + verifierPart() + verifierPart();
-	const hashed = sha256(verifier);
-	const code_challenge = Base64.stringify(hashed)
-		.replace(/\+/g, '-')
-		.replace(/\//g, '_')
-		.replace(/=+$/, '');
-
-	storageBackend?.setItem('pkce_code_verifier', verifier);
+	// Use tab-scoped storage so simultaneous logins in different tabs cannot collide.
+	const { state, verifier } = beginOAuthTransaction(window.sessionStorage);
+	const code_challenge = await pkceChallenge(verifier);
 
 	const selectedRegion = get(parchmentSelectedRegion) || 'test';
 	const parchmentLoginOptions = parchmentEnv(selectedRegion);
@@ -109,7 +71,7 @@ export const initiateLogin = async () => {
 	const authorizeParams: [string, string][] = [
 		['client_id', client_id],
 		['redirect_uri', PUBLIC_BASEURL],
-		['state', storageTimestamp],
+		['state', state],
 		['scope', 'rw:issuer'],
 		['code_challenge_method', 'S256'],
 		['code_challenge', code_challenge]
@@ -136,36 +98,23 @@ const restoreSession = async () => {
 };
 
 export const processLoginResponse = async () => {
-	console.log("Calling restoreStores")
-	// Restore session data from before the redirect to Parchment.
-	restoreStores();
+	// Verify the callback BEFORE restoring a session or exchanging its authorization code.
+	const callbackUrl = new URL(window.location.href);
+	const code = callbackUrl.searchParams.get('code') ?? '';
+	const state = callbackUrl.searchParams.get('state');
+	const transaction = consumeOAuthTransaction(window.sessionStorage, state);
 
-	// In case the user refreshes the page after returning from Parchment,
-	// and this function is triggered because `code=` is still in the
-	// querystring, it would be nice to not force them to go sign in with
-	// Parchment again.
-	if (get(parchmentAccessToken)) {
-		// Now that we have a user token again, we can reload credentialtypes
-		restoreSession();
-		refreshCredentialTypes();
-		return; // Session is restored, including Parchment access token, so we're done.
+	// Remove the authorization code from history, including on a failed validation.
+	callbackUrl.searchParams.delete('code');
+	callbackUrl.searchParams.delete('state');
+	window.history.replaceState(window.history.state, '', callbackUrl.toString());
+
+	if (!transaction || !code) {
+		throw error(400, 'Unable to complete Parchment login: invalid or expired OAuth state.');
 	}
 
-	// Normally: handle the first time the user returns from Parchment in a session.
-	const params = new URLSearchParams(window.location.toString()?.split('?')[1]);
-	const code = params.get('code') ?? '';
-	const state = params.get('state');
-
-	// Remove these items so that an invalid request for some reason doesn't get sent
-	// to Parchment over and over.
-	const storageTimestamp = storageBackend?.getItem('storageTimestamp');
-	storageBackend?.removeItem('storageTimestamp');
-
-	const verifier = storageBackend?.getItem('pkce_code_verifier') || '';
-	storageBackend?.removeItem('pkce_code_verifier');
-
-	// Now that we have a user token again, we can reload credentialtypes
-	refreshCredentialTypes();
+	const verifier = transaction.verifier;
+	restoreStores();
 
 	const selectedRegion = get(parchmentSelectedRegion) || 'test';
 	const parchmentLoginOptions = parchmentEnv(selectedRegion);
@@ -181,45 +130,32 @@ export const processLoginResponse = async () => {
 		['code_verifier', verifier]
 	];
 
-	if (verifier && code && state == storageTimestamp) {
-		const tokenResponse = await requestByProxy(
-			'POST',
-			`${parchmentLoginOptions.apiDomain}/o/token`,
-			new URLSearchParams(tokenParams).toString(),
-			[
-				{
-					Name: 'Authorization',
-					Value: generateBasicAuth(client_id, client_secret)
-				},
-				{
-					Name: 'Accept',
-					Value: 'application/json'
-				},
-				{
-					Name: 'Content-Type',
-					Value: 'application/x-www-form-urlencoded'
-				}
-			]
+	const tokenResponse = await requestByProxy(
+		'POST',
+		`${parchmentLoginOptions.apiDomain}/o/token`,
+		new URLSearchParams(tokenParams).toString(),
+		[
+			{ Name: 'Authorization', Value: basicAuthorization(client_id, client_secret) },
+			{ Name: 'Accept', Value: 'application/json' },
+			{ Name: 'Content-Type', Value: 'application/x-www-form-urlencoded' }
+		]
+	);
+	if (tokenResponse.status !== 200) {
+		throw error(
+			500,
+			'Unable to get access token from Parchment. Status code: ' + tokenResponse.status
 		);
-		if (tokenResponse.status !== 200) {
-			throw error(
-				500,
-				'Unable to get access token from Parchment. Status code: ' + tokenResponse.status
-			);
-		}
-		const responseBody = JSON.parse(tokenResponse.body ?? '{}');
-
-		if (responseBody.access_token) {
-			storageBackend?.setItem('parchment_access_token', responseBody.access_token);
-			parchmentAccessToken.set(responseBody.access_token);
-			restoreSession();
-		} else {
-			throw error(
-				500,
-				'Unable to get access token from Parchment. Access token not found in Parchment response.'
-			);
-		}
-	} else {
-		throw error(500, 'Unable to get access token from Parchment. Request invalid.');
 	}
+	const responseBody = JSON.parse(tokenResponse.body ?? '{}');
+	if (!responseBody.access_token) {
+		throw error(
+			500,
+			'Unable to get access token from Parchment. Access token not found in Parchment response.'
+		);
+	}
+
+	storageBackend?.setItem('parchment_access_token', responseBody.access_token);
+	parchmentAccessToken.set(responseBody.access_token);
+	await restoreSession();
+	await refreshCredentialTypes();
 };

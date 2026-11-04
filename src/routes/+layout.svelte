@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { PUBLIC_BASEURL, PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
+	import { PUBLIC_BASEURL, PUBLIC_PUBLISHER_API_BASEURL } from '$app/env/public';
 	import '../app.css';
-	import Button from '$lib/components/Button.svelte';
+	import Button from '#lib/components/Button.svelte';
 
 	let showReturnToPublisher = PUBLIC_BASEURL?.includes('credentialengine.org') || false;
 </script>
 
-<div class="rainbow" />
+<div class="rainbow"></div>
 <div class="bg-gold drop-shadow-md">
 	{#if showReturnToPublisher}
 		<div class="max-w-5xl container mx-auto p-6 md:flex flex-row justify-between">
@@ -19,6 +19,7 @@
 				<a
 					href={PUBLIC_PUBLISHER_API_BASEURL || '#'}
 					class="block text-midnight text-sm underline hover:no-underline md:text-base"
+					rel="external noopener noreferrer"
 				>
 					Exit <span class="md:sr-only">Return to Publisher</span>
 				</a>

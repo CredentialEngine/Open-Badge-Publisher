@@ -6,18 +6,18 @@
 		credlyIssuerBadges,
 		credlyIssuerData,
 		credlySelectedIssuer
-	} from '$lib/stores/badgeSourceStore.js';
-	import { publisherUser } from '$lib/stores/publisherStore.js';
-	import type { CredlyBadgeBasic } from '$lib/utils/credly.js';
+	} from '#lib/stores/badgeSourceStore.js';
+	import { publisherUser } from '#lib/stores/publisherStore.js';
+	import type { CredlyBadgeBasic } from '#lib/utils/credly.js';
 	import { get } from 'svelte/store';
 	import * as yup from 'yup';
-	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
-	import Button from '$lib/components/Button.svelte';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { PUBLIC_UI_API_BASEURL } from '$app/env/public';
+	import Button from '#lib/components/Button.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
 
 	let debounceRefreshIssuer = false;
 	const credlyUrlPattern =
@@ -226,10 +226,10 @@
 	</div>
 	{#await loadIssuerPromise}
 		<div role="status" class="max-w-sm animate-pulse mt-8" transition:fade>
-			<div class="h-2.5 bg-gray-200 rounded-full w-48 mb-4" />
-			<div class="h-2 bg-gray-200 rounded-full max-w-[360px] mb-2.5" />
-			<div class="h-2 bg-gray-200 rounded-full mb-2.5" />
-			<div class="h-2 bg-gray-200 rounded-full max-w-[330px] mb-2.5" />
+			<div class="h-2.5 bg-gray-200 rounded-full w-48 mb-4"></div>
+			<div class="h-2 bg-gray-200 rounded-full max-w-[360px] mb-2.5"></div>
+			<div class="h-2 bg-gray-200 rounded-full mb-2.5"></div>
+			<div class="h-2 bg-gray-200 rounded-full max-w-[330px] mb-2.5"></div>
 			<span class="sr-only">Loading...</span>
 		</div>
 	{:then}
@@ -244,6 +244,7 @@
 						class="font-medium text-blue-600 hover:underline"
 						href={$credlyIssuerData.vanity_url}
 						target="new"
+						rel="external noopener noreferrer"
 					>
 						View details on Credly
 					</a>

@@ -11,6 +11,7 @@
 </div>
 
 <style lang="postcss">
+	@reference "../../app.css";
 	.info {
 		@apply text-blue-700 bg-blue-100;
 	}

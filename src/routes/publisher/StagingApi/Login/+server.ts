@@ -1,4 +1,4 @@
-import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
+import { PUBLIC_PUBLISHER_API_BASEURL } from '$app/env/public';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {

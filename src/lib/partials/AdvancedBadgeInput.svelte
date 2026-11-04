@@ -1,16 +1,16 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import { validateSingleBadge, type BadgeClassBasic } from '$lib/utils/badges.js';
+	import Button from '#lib/components/Button.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import { validateSingleBadge, type BadgeClassBasic } from '#lib/utils/badges.js';
 	import { error } from '@sveltejs/kit';
-	import { advancedBadges, advancedBadgesFound } from '$lib/stores/badgeSourceStore.js';
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import { pluralize } from '$lib/utils/pluralize.js';
+	import { advancedBadges, advancedBadgesFound } from '#lib/stores/badgeSourceStore.js';
+	import abbreviate from '#lib/utils/abbreviate.js';
+	import { pluralize } from '#lib/utils/pluralize.js';
 	import * as yup from 'yup';
 
 	let inputValue = '';
@@ -29,7 +29,7 @@
 			errors = [['JSON Parse Error: Could not parse data as JSON. Edit your entry and try again.']];
 		}
 
-		const validateOne = async (c, i: number) => {
+		const validateOne = async (c: Parameters<typeof validateSingleBadge>[0], i: number) => {
 			console.log('Attempting validating...');
 			console.log(c);
 			try {
@@ -54,7 +54,7 @@
 			value.forEach(async (c, i) => {
 				validateOne(c, i);
 			});
-		} else if (typeof value === 'object') {
+		} else if (typeof value === 'object' && value !== null) {
 			errors = [[]];
 			$advancedBadges = [];
 			validateOne(value, 0);
@@ -89,8 +89,7 @@
 	class:border-red-500={errors.some((e) => e.length)}
 	class:cursor-not-allowed={inputLocked}
 	bind:value={inputValue}
-	disabled={inputLocked}
-/>
+	disabled={inputLocked}></textarea>
 <div class="flex flex-row space-x-2">
 	<Button buttonType="primary" on:click={validate} disabled={inputLocked}>Import</Button>
 	<Button
@@ -103,11 +102,11 @@
 </div>
 
 <div class="my-4">
-	{#each errors as errorsForBadge, i}
+	{#each errors as errorsForBadge, i (i)}
 		{#if errorsForBadge.length}
 			<Alert level="error" heading={errors.length == 1 ? 'Error' : `Errors for badge ${i + 1}`}>
 				<span slot="detail">
-					{#each Object.entries(errorsForBadge) as entry}
+					{#each Object.entries(errorsForBadge) as entry (entry[0])}
 						<br /><span class="font-medium">{entry[0]}:</span> <span>{entry[1]}</span>
 					{/each}
 				</span>
@@ -126,7 +125,7 @@
 
 	<div class="my-4">
 		<ul class="mt-6 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
-			{#each $advancedBadgesFound as b, i}
+			{#each $advancedBadgesFound as b, i (b?.id ?? i)}
 				{#if b}
 					<li class="mb-2 md:md-0 border border-gray-200 p-2">
 						<Heading><h4>{b.name}</h4></Heading>

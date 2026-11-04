@@ -5,18 +5,18 @@
 		PubStatuses,
 		type CtdlApiCredential,
 		type CtdlCredentialDraft
-	} from '$lib/stores/publisherStore.js';
+	} from '#lib/stores/publisherStore.js';
 	import * as yup from 'yup';
-	import type { BaseSchema } from 'yup';
+	import type { AnySchema } from 'yup';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		EditStatus
-	} from '$lib/stores/publisherStore.js';
-	import Alert from '$lib/components/Alert.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
+	} from '#lib/stores/publisherStore.js';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
 
 	export let credential: CtdlCredentialDraft;
 	export let fieldName = '';
@@ -26,7 +26,7 @@
 	export let helpUrl = '';
 	export let editable = false;
 	export let options: Array<{ value: string; name: string }>;
-	export let validator: BaseSchema = yup.string();
+	export let validator: AnySchema = yup.string();
 
 	const dispatch = createEventDispatcher();
 
@@ -66,7 +66,23 @@
 				...credential.Credential
 			}
 		};
-		editedCredential.Credential[fieldId] = value;
+		if (fieldId === 'CredentialStatusType') {
+			const allowedStatuses = [
+				'Active',
+				'Deprecated',
+				'Probationary',
+				'Suspended',
+				'TeachOut'
+			] as const;
+			const status = allowedStatuses.find((candidate) => candidate === value);
+			if (!status) {
+				validationErrorMessage = 'Invalid credential status';
+				return;
+			}
+			editedCredential.Credential.CredentialStatusType = status;
+		} else {
+			editedCredential.Credential.CredentialType = value;
+		}
 		credentialDrafts.updateCredential(editedCredential);
 		isEditing = false;
 	};
@@ -140,6 +156,14 @@
 		<td class="py-4 px-6">
 			{#if helpText}
 				<BodyText><span class="text-xs text-gray-600">{helpText}</span></BodyText>
+			{/if}
+			{#if helpUrl}
+				<a
+					class="text-xs text-midnight underline"
+					href={helpUrl}
+					target="_blank"
+					rel="external noopener noreferrer">Documentation</a
+				>
 			{/if}
 			<select
 				id={inputId}

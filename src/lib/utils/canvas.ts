@@ -1,4 +1,4 @@
-import type { Alignment, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
+import type { Alignment, BadgeClassCTDLExtended } from '#lib/utils/badges.js';
 import {
 	PUBLIC_CANVAS_AU_ENABLED,
 	PUBLIC_CANVAS_AU_LOGIN_CLIENT_ID,
@@ -15,7 +15,7 @@ import {
 	PUBLIC_CANVAS_US_ENABLED,
 	PUBLIC_CANVAS_US_LOGIN_CLIENT_ID,
 	PUBLIC_CANVAS_US_LOGIN_CLIENT_SECRET
-} from '$env/static/public';
+} from '$app/env/public';
 
 // Canvas Options
 export interface CanvasIssuer {

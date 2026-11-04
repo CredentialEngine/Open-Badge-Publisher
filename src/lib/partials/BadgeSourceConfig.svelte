@@ -1,35 +1,32 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
 	import { tick } from 'svelte';
-	import { updated } from '$app/stores';
-	import Button from '$lib/components/Button.svelte';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import Modal from '$lib/components/Modal.svelte';
-	import RadioCard from '$lib/components/RadioCard.svelte';
-	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
-	import CanvasConfig from '$lib/partials/CanvasConfig.svelte';
-	import CredlyConfig from '$lib/partials/CredlyConfig.svelte';
-	import AccredibleConfig from '$lib/partials/AccredibleConfig.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import Modal from '#lib/components/Modal.svelte';
+	import RadioCard from '#lib/components/RadioCard.svelte';
+	import NextPrevButton from '#lib/components/NextPrevButton.svelte';
+	import CanvasConfig from '#lib/partials/CanvasConfig.svelte';
+	import CredlyConfig from '#lib/partials/CredlyConfig.svelte';
+	import AccredibleConfig from '#lib/partials/AccredibleConfig.svelte';
 	import AdvancedBadgeInput from './AdvancedBadgeInput.svelte';
-	import BadgeSelection from '$lib/partials/BadgeSelection.svelte';
+	import BadgeSelection from '#lib/partials/BadgeSelection.svelte';
 	import {
 		badgeSourceType,
 		badgeSetupStep,
 		badgeSetupComplete,
 		checkedBadges,
 		fetchCanvasIssuerBadges,
-
 		fetchParchmentIssuerBadges
-
-	} from '$lib/stores/badgeSourceStore.js';
+	} from '#lib/stores/badgeSourceStore.js';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		publisherSetupStep,
 		proofingStep
-	} from '$lib/stores/publisherStore.js';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
+	} from '#lib/stores/publisherStore.js';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
 	import ParchmentConfig from './ParchmentConfig.svelte';
 
 	// panelIsHidden = true when data has been saved and this panel is no longer active.
@@ -215,7 +212,7 @@
 
 	<Modal
 		visible={modalVisible}
-		id={`badgesourcepanel-warning`}
+		id="badgesourcepanel-warning"
 		on:close={() => {
 			modalVisible = false;
 		}}

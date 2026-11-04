@@ -6,21 +6,21 @@
 		canvasSelectedRegion,
 		canvasIssuers,
 		canvasSelectedIssuer
-	} from '$lib/stores/badgeSourceStore.js';
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import { publisherUser } from '$lib/stores/publisherStore.js';
-	import { canvasEnv, canvasRegions, type CanvasEnv } from '$lib/utils/canvas.js';
-	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import OpenEye from '$lib/icons/eye.svelte';
-	import ClosedEye from '$lib/icons/closed-eye.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import RadioCard from '$lib/components/RadioCard.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import { initiateLogin } from '$lib/auth/oauth.js';
+	} from '#lib/stores/badgeSourceStore.js';
+	import abbreviate from '#lib/utils/abbreviate.js';
+	import { publisherUser } from '#lib/stores/publisherStore.js';
+	import { canvasEnv, canvasRegions, type CanvasEnv } from '#lib/utils/canvas.js';
+	import { PUBLIC_UI_API_BASEURL } from '$app/env/public';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import OpenEye from '#lib/icons/eye.svelte';
+	import ClosedEye from '#lib/icons/closed-eye.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+	import RadioCard from '#lib/components/RadioCard.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import { initiateLogin } from '#lib/auth/oauth.js';
 
 	let canvasAccessTokenHidden = true;
 	let getCanvasIssuers = async (): Promise<boolean> => {
@@ -174,7 +174,7 @@
 	>, choose United States.
 </BodyText>
 <div class="mt-8">
-	{#each [...canvasRegions].filter(([rId, r]) => rId !== 'test' || canvasEnv(rId).enabled) as [regionId, region]}
+	{#each [...canvasRegions].filter(([rId, r]) => rId !== 'test' || canvasEnv(rId).enabled) as [regionId, region] (regionId)}
 		<div class="flex items-center mb-4">
 			<input
 				id={`canvasRegionSelect-${region.id}`}
@@ -430,7 +430,8 @@
 										issuer.entityId
 									}`}
 									target="new"
-									class="text-midnight underline hover:no-underline">{issuer.name}</a
+									class="text-midnight underline hover:no-underline"
+									rel="external noopener noreferrer">{issuer.name}</a
 								>
 							</span></span
 						>

@@ -4,16 +4,16 @@
 	import * as bcp47 from 'bcp-47';
 	import * as yup from 'yup';
 
-	import EditableCredentialRowAlignment from '$lib/components/credential/EditableCredentialRowAlignment.svelte';
-	import EditableCredentialRowSelect from '$lib/components/credential/EditableCredentialRowSelect.svelte';
-	import EditableCredentialRowTags from '$lib/components/credential/EditableCredentialRowTags.svelte';
-	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
+	import EditableCredentialRowAlignment from '#lib/components/credential/EditableCredentialRowAlignment.svelte';
+	import EditableCredentialRowSelect from '#lib/components/credential/EditableCredentialRowSelect.svelte';
+	import EditableCredentialRowTags from '#lib/components/credential/EditableCredentialRowTags.svelte';
+	import EditableCredentialRowText from '#lib/components/credential/EditableCredentialRowText.svelte';
 	import BodyText from '../typography/BodyText.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import Modal from '$lib/components/Modal.svelte';
-	import { EditStatus, type CtdlCredentialDraft } from '$lib/stores/publisherStore.js';
-	import { credentialTypesStore } from '$lib/stores/credentialTypesStore.js';
+	import Button from '#lib/components/Button.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import Modal from '#lib/components/Modal.svelte';
+	import { EditStatus, type CtdlCredentialDraft } from '#lib/stores/publisherStore.js';
+	import { credentialTypesStore } from '#lib/stores/credentialTypesStore.js';
 
 	export let credential: CtdlCredentialDraft;
 	export let handleFinishEditingCredential = (credentialId: string): void => {};
@@ -157,6 +157,7 @@
 						href={credential.Credential.SubjectWebpage}
 						target="new"
 						class="underline hover:no-underline"
+						rel="external noopener noreferrer"
 					>
 						{credential.Credential.SubjectWebpage}
 					</a>

@@ -1,22 +1,22 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import CredentialProofingList from '$lib/partials/CredentialProofingList.svelte';
-	import SaveToPublisher from '$lib/partials/SaveToPublisher.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import NextPrevButton from '#lib/components/NextPrevButton.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import CredentialProofingList from '#lib/partials/CredentialProofingList.svelte';
+	import SaveToPublisher from '#lib/partials/SaveToPublisher.svelte';
 
-	import { PubStatuses } from '$lib/stores/publisherStore.js';
+	import { PubStatuses } from '#lib/stores/publisherStore.js';
 	import {
 		ctdlPublicationResultStore,
 		proofingStep,
 		reviewingStep
-	} from '$lib/stores/publisherStore.js';
-	import { badgeSetupStep } from '$lib/stores/badgeSourceStore.js';
+	} from '#lib/stores/publisherStore.js';
+	import { badgeSetupStep } from '#lib/stores/badgeSourceStore.js';
 
 	let numLoadsPending = 1;
 	let numCredentialsTotal = 10;

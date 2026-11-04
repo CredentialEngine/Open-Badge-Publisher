@@ -6,22 +6,22 @@
 		parchmentSelectedRegion,
 		parchmentIssuers,
 		parchmentSelectedIssuer,
-        parchmentOrganization
-	} from '$lib/stores/badgeSourceStore.js';
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import { publisherUser } from '$lib/stores/publisherStore.js';
-	import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import OpenEye from '$lib/icons/eye.svelte';
-	import ClosedEye from '$lib/icons/closed-eye.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import RadioCard from '$lib/components/RadioCard.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import { initiateLogin } from '$lib/auth/oauth.js';
-	import { type ParchmentEnv, parchmentEnv, parchmentRegions } from '$lib/utils/parchment.js';
+		parchmentOrganization
+	} from '#lib/stores/badgeSourceStore.js';
+	import abbreviate from '#lib/utils/abbreviate.js';
+	import { publisherUser } from '#lib/stores/publisherStore.js';
+	import { PUBLIC_UI_API_BASEURL } from '$app/env/public';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import OpenEye from '#lib/icons/eye.svelte';
+	import ClosedEye from '#lib/icons/closed-eye.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+	import RadioCard from '#lib/components/RadioCard.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import { initiateLogin } from '#lib/auth/oauth.js';
+	import { type ParchmentEnv, parchmentEnv, parchmentRegions } from '#lib/utils/parchment.js';
 
 	let parchmentAccessTokenHidden = true;
 	let getParchmentIssuers = async (): Promise<boolean> => {
@@ -136,7 +136,8 @@
 			parchmentErrorMessage = '';
 			try {
 				const errorData = JSON.parse(proxyResponseData.Data?.Body);
-				parchmentErrorMessage = 'Error fetching Parchment access token. ' + errorData.error_description;
+				parchmentErrorMessage =
+					'Error fetching Parchment access token. ' + errorData.error_description;
 			} catch {
 				parchmentErrorMessage = 'Unknown error.';
 			}
@@ -158,20 +159,24 @@
 
 <BodyText>
 	<a
-		href=""
+		href="https://www.parchment.com/"
 		target="new"
 		class="text-midnight underline hover:no-underline">Parchment</a
 	>
 </BodyText>
 <div class="mt-8 mb-2">
-	<ConfigurationStep stepNumber="5a" stepName="Choose region" isActive={!$parchmentSelectedRegion} />
+	<ConfigurationStep
+		stepNumber="5a"
+		stepName="Choose region"
+		isActive={!$parchmentSelectedRegion}
+	/>
 </div>
 <BodyText>
 	Select the region that matches where your organization's data is held by Parchment Credentials. If
 	you aren't sure, check the domain where you sign into Parchment Credentials.
 </BodyText>
 <div class="mt-8">
-	{#each [...parchmentRegions].filter(([rId, r]) => rId !== 'test' || parchmentEnv(rId).enabled) as [regionId, region]}
+	{#each [...parchmentRegions].filter(([rId, r]) => rId !== 'test' || parchmentEnv(rId).enabled) as [regionId, region] (regionId)}
 		<div class="flex items-center mb-4">
 			<input
 				id={`parchmentRegionSelect-${region.id}`}
@@ -229,26 +234,24 @@
 			isActive={!!$parchmentSelectedRegion && $parchmentAgreeTerms && !$parchmentOrganization}
 		/>
 		<BodyText>
-		Enter the organization name verbatim as it appears in your Parchment url. For example, for https://credentialengine.badges.parchment.com/, enter credentialengine with no spaces.
+			Enter the organization name verbatim as it appears in your Parchment url. For example, for
+			https://credentialengine.badges.parchment.com/, enter credentialengine with no spaces.
 		</BodyText>
 	</div>
 	<div class="mt-2">
-    <div class="py-4 flex flex-col">
-        <label 
-            for="parchmentOrganization" 
-            class="mb-2 text-sm font-medium text-gray-900"
-        >
-            Organization Name
-        </label>
-        <input
-            bind:value={$parchmentOrganization}
-            id="parchmentOrganization"
-            type="text"
-            placeholder="Enter the organization name you use on Parchment"
-            class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-blue-500 focus:border-blue-500"
-        />
-    </div>
-</div>
+		<div class="py-4 flex flex-col">
+			<label for="parchmentOrganization" class="mb-2 text-sm font-medium text-gray-900">
+				Organization Name
+			</label>
+			<input
+				bind:value={$parchmentOrganization}
+				id="parchmentOrganization"
+				type="text"
+				placeholder="Enter the organization name you use on Parchment"
+				class="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-blue-500 focus:border-blue-500"
+			/>
+		</div>
+	</div>
 {/if}
 
 {#if $parchmentSelectedRegion && $parchmentAgreeTerms && $parchmentOrganization}
@@ -257,7 +260,10 @@
 			<ConfigurationStep
 				stepNumber="5d"
 				stepName="Obtain access token"
-				isActive={!!$parchmentSelectedRegion && $parchmentAgreeTerms && $parchmentOrganization && !$parchmentAccessToken}
+				isActive={!!$parchmentSelectedRegion &&
+					$parchmentAgreeTerms &&
+					!!$parchmentOrganization &&
+					!$parchmentAccessToken}
 			/>
 		</div>
 	</div>
@@ -265,8 +271,8 @@
 		<div>
 			{#if currentParchmentEnv?.client_id && currentParchmentEnv?.client_secret}
 				<BodyText>
-					Authenticate with Parchment account to load badges. You will be
-					redirected to Parchment in your selected region to authorize.
+					Authenticate with Parchment account to load badges. You will be redirected to Parchment in
+					your selected region to authorize.
 				</BodyText>
 				{#if !$parchmentAccessToken}
 					<Button
@@ -283,8 +289,8 @@
 				{/if}
 			{:else}
 				<BodyText>
-					Authenticate with Parchment to load badges by entering your email address
-					and password. We do not retain password data, but you may also
+					Authenticate with Parchment to load badges by entering your email address and password. We
+					do not retain password data, but you may also
 					<button
 						class="text-midnight underline hover:no-underline"
 						on:click={() => {
@@ -422,13 +428,19 @@
 			<ConfigurationStep
 				stepNumber="5e"
 				stepName="Select Parchment Credentials issuer"
-				isActive={!!($parchmentAgreeTerms && $parchmentAccessToken && $parchmentSelectedRegion && $parchmentOrganization)}
+				isActive={!!(
+					$parchmentAgreeTerms &&
+					$parchmentAccessToken &&
+					$parchmentSelectedRegion &&
+					$parchmentOrganization
+				)}
 			/>
 		</div>
 	</div>
 	<BodyText>
-		Select which issuer's badges to publish to the Registry. If you have no issuers on your Parchment account, sign into an account that has staff access to the correct issuer, or create
-		a new issuer and badges within your account.
+		Select which issuer's badges to publish to the Registry. If you have no issuers on your
+		Parchment account, sign into an account that has staff access to the correct issuer, or create a
+		new issuer and badges within your account.
 	</BodyText>
 
 	{#await parchmentIssuersPromise}
@@ -456,7 +468,8 @@
 										issuer.entityId
 									}`}
 									target="new"
-									class="text-midnight underline hover:no-underline">{issuer.name}</a
+									class="text-midnight underline hover:no-underline"
+									rel="external noopener noreferrer">{issuer.name}</a
 								>
 							</span></span
 						>

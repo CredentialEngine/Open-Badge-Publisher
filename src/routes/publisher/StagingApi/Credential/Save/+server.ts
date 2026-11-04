@@ -1,14 +1,17 @@
-import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
+import { PUBLIC_PUBLISHER_API_BASEURL } from '$app/env/public';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
+	const authorization = request.headers.get('Authorization');
+	if (!authorization) return new Response('Authorization required', { status: 401 });
+
 	const publisherUrl = `${PUBLIC_PUBLISHER_API_BASEURL}/StagingApi/Credential/Save`;
 	const requestBody = await request.text();
 
 	const publisherResponse = await fetch(publisherUrl, {
 		method: 'POST',
 		headers: {
-			Authorization: request.headers.get('Authorization'),
+			Authorization: authorization,
 			Accept: 'application/json',
 			'Content-Type': 'application/json'
 		},
