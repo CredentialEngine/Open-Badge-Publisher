@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
 
 	import CanvasAlignments from './CanvasAlignments.svelte';
 	import ManualAlignments from './ManualAlignments.svelte';
-	import { badgeSourceType } from '$lib/stores/badgeSourceStore.js';
+	import { badgeSourceType } from '#lib/stores/badgeSourceStore.js';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		proofingStep,
 		reviewingStep
-	} from '$lib/stores/publisherStore.js';
+	} from '#lib/stores/publisherStore.js';
 	import ParchmentAlignments from './ParchmentAlignments.svelte';
 </script>
 

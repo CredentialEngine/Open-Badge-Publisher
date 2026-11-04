@@ -1,18 +1,17 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import Button from '$lib/components/Button.svelte';
-	import Icon from 'svelte-icons-pack/Icon.svelte';
-	import FaSolidExternalLinkAlt from 'svelte-icons-pack/fa/FaSolidExternalLinkAlt.js';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import EditableCredentialDetail from '$lib/components/credential/EditableCredentialDetail.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import TagLink from '$lib/components/TagLink.svelte';
-	import abbreviate from '$lib/utils/abbreviate.js';
+	import Button from '#lib/components/Button.svelte';
+	import ExternalLinkIcon from '#lib/components/icons/ExternalLinkIcon.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import EditableCredentialDetail from '#lib/components/credential/EditableCredentialDetail.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import TagLink from '#lib/components/TagLink.svelte';
+	import abbreviate from '#lib/utils/abbreviate.js';
 	import {
 		credentialTypesStore,
 		prettyNameForCredentialType
-	} from '$lib/stores/credentialTypesStore.js';
+	} from '#lib/stores/credentialTypesStore.js';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
@@ -26,10 +25,10 @@
 		type AlignmentPropertyKey,
 		getPropertyName,
 		nodeTypeOptions
-	} from '$lib/stores/publisherStore.js';
-	import Alert from '$lib/components/Alert.svelte';
-	import Modal from '$lib/components/Modal.svelte';
-	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
+	} from '#lib/stores/publisherStore.js';
+	import Alert from '#lib/components/Alert.svelte';
+	import Modal from '#lib/components/Modal.svelte';
+	import NextPrevButton from '#lib/components/NextPrevButton.svelte';
 
 	export let handleNextStep: () => void;
 	export let handlePreviousStep: () => void;
@@ -239,15 +238,14 @@
 							<Tag>{prettyNameForCredentialType(credential.Credential.CredentialType)}</Tag>
 							<Tag>{credential.Credential.CredentialStatusType}</Tag>
 							<Tag>{credential.Credential.InLanguage.join(', ')}</Tag>
-							<a href={credential.Credential.CredentialId} target="new">
+							<a
+								href={credential.Credential.CredentialId}
+								target="new"
+								rel="external noopener noreferrer"
+							>
 								<TagLink>
 									{abbreviate(credential.Credential.CredentialId, 28)}
-									<Icon
-										src={FaSolidExternalLinkAlt}
-										color="currentColor"
-										className="inline-block"
-										size="0.8em"
-									/>
+									<ExternalLinkIcon />
 								</TagLink>
 							</a>
 						</div>
@@ -287,7 +285,7 @@
 								Edit
 							</Button>
 						{/if}
-						{#each $ctdlPublicationResultStore[credential.Credential.CredentialId]?.messages || [] as message}
+						{#each $ctdlPublicationResultStore[credential.Credential.CredentialId]?.messages || [] as message, messageIndex (messageIndex)}
 							<div class="mt-2">
 								<Alert level="error" {message} />
 							</div>
@@ -306,7 +304,7 @@
 
 <Modal
 	visible={settingsModalOpen}
-	id={`proofingSettingsModal`}
+	id="proofingSettingsModal"
 	on:close={() => {
 		settingsModalOpen = false;
 	}}
@@ -331,10 +329,10 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 				<div>
 					<BodyText>
-						<label for={`nodeTypeSelect-default`}>Resource type</label>
+						<label for="nodeTypeSelect-default">Resource type</label>
 					</BodyText>
 					<select
-						id={`nodeTypeSelect-default`}
+						id="nodeTypeSelect-default"
 						bind:value={defaultNodeType}
 						on:change={() => {
 							handleChangeDefaultNodeType(defaultNodeType);
@@ -350,10 +348,10 @@
 				</div>
 				<div>
 					<BodyText>
-						<label for={`propertyTypeSelect-default`}>Connection type</label>
+						<label for="propertyTypeSelect-default">Connection type</label>
 					</BodyText>
 					<select
-						id={`propertyTypeSelect-default`}
+						id="propertyTypeSelect-default"
 						bind:value={defaultPropertyType}
 						on:change={() => {
 							handleChangeDefaultPropertyType(defaultPropertyType);
@@ -383,12 +381,12 @@
 			{#if defaultNodeType == 'Credential'}
 				<div transition:slide>
 					<BodyText>
-						<label for={`credentialSubtypeSelect-default`}
+						<label for="credentialSubtypeSelect-default"
 							>Select Credential sub-type (required for this resource type)</label
 						>
 					</BodyText>
 					<select
-						id={`credentialSubtypeSelect-default`}
+						id="credentialSubtypeSelect-default"
 						bind:value={defaultCredentialSubtype}
 						on:change={() => {
 							handleChangeDefaultCredentialSubtype(defaultCredentialSubtype);
@@ -409,7 +407,7 @@
 
 <Modal
 	visible={unmappedAlignmentWarnings > 0}
-	id={`unmappedAlignmentsWarningModal`}
+	id="unmappedAlignmentsWarningModal"
 	on:close={() => {
 		unmappedAlignmentWarnings = 0;
 	}}
@@ -441,14 +439,13 @@
 	]}
 >
 	<BodyText
-		>There are still <Tag class="text-red-600 bg-red-200">{unmappedAlignmentWarnings}</Tag> unmapped
-		alignments from your badge data. If you continue, these alignments will be skipped. You may cancel
-		to configure the details of each alignment, or you may set a default that applies to all unmapped
-		alignments.
+		>There are still <Tag class="text-red-600 bg-red-200">{unmappedAlignmentWarnings}</Tag> unmapped alignments
+		from your badge data. If you continue, these alignments will be skipped. You may cancel to configure
+		the details of each alignment, or you may set a default that applies to all unmapped alignments.
 	</BodyText>
 	<BodyText>
 		<strong class="font-bold">What is alignment mapping?</strong> Open Badges only have one type of alignment,
-		but the CTDL can describe many relationships. This interface lets you quickly select the meaning
-		of each alignment among these options.
+		but the CTDL can describe many relationships. This interface lets you quickly select the meaning of
+		each alignment among these options.
 	</BodyText>
 </Modal>

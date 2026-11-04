@@ -1,13 +1,13 @@
 <script lang="ts">
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import Modal from '$lib/components/Modal.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import Modal from '#lib/components/Modal.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+	import NextPrevButton from '#lib/components/NextPrevButton.svelte';
 	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
-	import { pluralize, pluralizeFrom } from '$lib/utils/pluralize.js';
-	import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
+	import { pluralize, pluralizeFrom } from '#lib/utils/pluralize.js';
+	import { PUBLIC_PUBLISHER_API_BASEURL } from '$app/env/public';
 	import {
 		type CtdlApiCredential,
 		type CredentialPublicationStatus,
@@ -19,10 +19,10 @@
 		saveCredential,
 		proofingStep,
 		reviewingStep
-	} from '$lib/stores/publisherStore.js';
+	} from '#lib/stores/publisherStore.js';
 	import CredentialProofingList from './CredentialProofingList.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import Alert from '$lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Alert from '#lib/components/Alert.svelte';
 
 	let modalVisible = false;
 
@@ -132,7 +132,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each $credentialDrafts as draft}
+			{#each $credentialDrafts as draft (draft.Credential.CredentialId)}
 				<tr class="bg-white border-b">
 					<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 						{draft.Credential.Name}
@@ -142,7 +142,7 @@
 						{#if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveInProgress}
 							<LoadingSpinner />
 						{:else if $ctdlPublicationResultStore[draft.Credential.CredentialId]?.publicationStatus == PubStatuses.SaveError}
-							{#each $ctdlPublicationResultStore[draft.Credential.CredentialId]?.messages || [] as message}
+							{#each $ctdlPublicationResultStore[draft.Credential.CredentialId]?.messages || [] as message, messageIndex (messageIndex)}
 								<div class="flex flex-col space-y-2">
 									<Alert {message} level="error" />
 								</div>
@@ -162,6 +162,7 @@
 									}`}
 									class="text-indigo-700"
 									target="new"
+									rel="external noopener noreferrer"
 								>
 									View Credential
 								</a>
@@ -190,7 +191,7 @@
 
 <Modal
 	visible={modalVisible}
-	id={`badgesourcepanel-warning`}
+	id="badgesourcepanel-warning"
 	on:close={() => {
 		modalVisible = false;
 	}}
@@ -222,7 +223,7 @@
 		ready to be saved.
 		<span class="font-bold">{counts.pendingUpdate} {pluralize(counts.pendingUpdate, 'update')}</span
 		>
-		to existing credentials {pluralizeFrom(counts.pendingUpdate, 'are', 'is', 'are')} pending. Would
-		you like to save all pending badges to the Publisher?</BodyText
+		to existing credentials {pluralizeFrom(counts.pendingUpdate, 'are', 'is', 'are')} pending. Would you
+		like to save all pending badges to the Publisher?</BodyText
 	>
 </Modal>

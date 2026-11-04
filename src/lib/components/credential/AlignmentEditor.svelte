@@ -1,8 +1,8 @@
 <script lang="ts">
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import SingleEditableAlignment from '$lib/components/credential/SingleEditableAlignment.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import SingleEditableAlignment from '#lib/components/credential/SingleEditableAlignment.svelte';
 
-	import type { CtdlCredentialDraft } from '$lib/stores/publisherStore.js';
+	import type { CtdlCredentialDraft } from '#lib/stores/publisherStore.js';
 
 	export let credential: CtdlCredentialDraft;
 </script>

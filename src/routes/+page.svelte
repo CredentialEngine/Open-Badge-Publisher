@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { error } from '@sveltejs/kit';
 	import { slide } from 'svelte/transition';
-	import PublisherConfig from '$lib/partials/PublisherConfig.svelte';
-	import BadgeSourceConfig from '$lib/partials/BadgeSourceConfig.svelte';
-	import DataProofing from '$lib/partials/DataProofing.svelte';
-	import Reviewing from '$lib/partials/Reviewing.svelte';
+	import PublisherConfig from '#lib/partials/PublisherConfig.svelte';
+	import BadgeSourceConfig from '#lib/partials/BadgeSourceConfig.svelte';
+	import DataProofing from '#lib/partials/DataProofing.svelte';
+	import Reviewing from '#lib/partials/Reviewing.svelte';
 
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import NextPrevButton from '#lib/components/NextPrevButton.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
 
 	import {
 		PUBLIC_UI_API_BASEURL,
 		PUBLIC_PUBLISHER_API_BASEURL,
 		PUBLIC_PUBLISHER_API_ENV_LABEL
-	} from '$env/static/public';
-	import { publisherOrganization, reviewingStep } from '$lib/stores/publisherStore.js';
-	import { processLoginResponse } from '$lib/auth/oauth.js';
-	import Heading from '$lib/components/typography/Heading.svelte';
+	} from '$app/env/public';
+	import { publisherOrganization, reviewingStep } from '#lib/stores/publisherStore.js';
+	import { processLoginResponse } from '#lib/auth/oauth.js';
+	import Heading from '#lib/components/typography/Heading.svelte';
 	import { onMount } from 'svelte';
 
 	if (!PUBLIC_UI_API_BASEURL || !PUBLIC_PUBLISHER_API_BASEURL || !PUBLIC_PUBLISHER_API_ENV_LABEL)
@@ -35,9 +35,11 @@
 	This app can help publish new and updated Open Badges to the Credential Registry. After importing
 	your badges here and pushing them to the Publisher, you can continue in the Publisher to approve
 	final publication to the Registry.
-    <div style="margin: 0 auto; width: 90%;">
-        <a style="font-weight: bold;" href="https://credentialengine.org/badge-publisher-tool/">Badge Publisher Instructions.</a>
-    </div>
+	<div style="margin: 0 auto; width: 90%;">
+		<a style="font-weight: bold;" href="https://credentialengine.org/badge-publisher-tool/"
+			>Badge Publisher Instructions.</a
+		>
+	</div>
 </BodyText>
 
 <section id="publisher-destination-configuration" class="mt-8">
@@ -72,6 +74,7 @@
 						href={`${PUBLIC_PUBLISHER_API_BASEURL}/summary/organization/${$publisherOrganization.org?.Id}`}
 						target="new"
 						class="mt-4 focus:ring-4 focus:outline-none rounded text-center font-medium px-5 py-2 focus:ring-midnight-600 border border-midnight text-white bg-midnight hover:bg-midnight-700"
+						rel="external noopener noreferrer"
 					>
 						Continue in Publisher
 					</a>

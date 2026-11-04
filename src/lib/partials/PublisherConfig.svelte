@@ -1,23 +1,26 @@
 <script lang="ts">
-	import { updated } from '$app/stores';
 	import { onMount, tick } from 'svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import * as yup from 'yup';
-	import Button from '$lib/components/Button.svelte';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import NextPrevButton from '$lib/components/NextPrevButton.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import Modal from '$lib/components/Modal.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+	import NextPrevButton from '#lib/components/NextPrevButton.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import Modal from '#lib/components/Modal.svelte';
 	import {
 		PUBLIC_UI_API_BASEURL,
 		PUBLIC_PUBLISHER_API_BASEURL,
 		PUBLIC_PUBLISHER_API_ENV_LABEL
-	} from '$env/static/public';
-	// Optional, dev-only settings. Read via dynamic env so builds don't break when unset.
-	import { env as publicDynamicEnv } from '$env/dynamic/public';
+	} from '$app/env/public';
+	// Optional dev-only settings are explicitly declared in src/env.ts.
+	import {
+		PUBLIC_DEV_BYPASS_PUBLISHER_LOGIN,
+		PUBLIC_DEV_PUBLISHER_ORG_CTID,
+		PUBLIC_DEV_PUBLISHER_ORG_NAME
+	} from '$app/env/public';
 	import {
 		getUser,
 		publisherUser,
@@ -30,11 +33,11 @@
 		publisherSetupStep,
 		getOrgCredentialList,
 		getOrgVsp
-	} from '$lib/stores/publisherStore.js';
-	import { badgeSetupStep, resetBadgeData } from '$lib/stores/badgeSourceStore.js';
-	import { pluralize } from '$lib/utils/pluralize.js';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import { refreshCredentialTypes } from '$lib/stores/credentialTypesStore.js';
+	} from '#lib/stores/publisherStore.js';
+	import { badgeSetupStep, resetBadgeData } from '#lib/stores/badgeSourceStore.js';
+	import { pluralize } from '#lib/utils/pluralize.js';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import { refreshCredentialTypes } from '#lib/stores/credentialTypesStore.js';
 
 	let currentMessage = {
 		level: 'info',
@@ -152,11 +155,9 @@
 	//
 	// This is gated on an env flag that ships disabled; it is a no-op in prod.
 	// ---------------------------------------------------------------------------
-	const devBypassEnabled = publicDynamicEnv.PUBLIC_DEV_BYPASS_PUBLISHER_LOGIN === 'true';
-	const devOrgCtid =
-		publicDynamicEnv.PUBLIC_DEV_PUBLISHER_ORG_CTID ||
-		'ce-00000000-0000-0000-0000-000000000000';
-	const devOrgName = publicDynamicEnv.PUBLIC_DEV_PUBLISHER_ORG_NAME || 'Dev Test Organization';
+	const devBypassEnabled = PUBLIC_DEV_BYPASS_PUBLISHER_LOGIN === 'true';
+	const devOrgCtid = PUBLIC_DEV_PUBLISHER_ORG_CTID || 'ce-00000000-0000-0000-0000-000000000000';
+	const devOrgName = PUBLIC_DEV_PUBLISHER_ORG_NAME || 'Dev Test Organization';
 
 	const devBypassLogin = () => {
 		resetAlert();
@@ -290,6 +291,7 @@
 						<a
 							href={PUBLIC_PUBLISHER_API_BASEURL}
 							class="font-medium text-midnight underline hover:no-underline"
+							rel="external noopener noreferrer"
 						>
 							Credential Engine Publisher {PUBLIC_PUBLISHER_API_ENV_LABEL}
 						</a>
@@ -360,13 +362,11 @@
 							<BodyText gray={true}>
 								<span class="font-bold text-amber-700">Developer mode:</span> skip Publisher login
 								and inject a fake session (org
-								<span class="font-mono">{devOrgCtid}</span>) so you can test badge-source
-								workflows locally. Saving to the Publisher will still require a real account.
+								<span class="font-mono">{devOrgCtid}</span>) so you can test badge-source workflows
+								locally. Saving to the Publisher will still require a real account.
 							</BodyText>
 							<div class="mt-3">
-								<Button buttonType="default" on:click={devBypassLogin}>
-									Skip login (dev)
-								</Button>
+								<Button buttonType="default" on:click={devBypassLogin}>Skip login (dev)</Button>
 							</div>
 						</div>
 					{/if}
@@ -423,7 +423,7 @@
 				</BodyText>
 
 				{#if $publisherUser.user?.Organizations?.length}
-					{#each $publisherUser.user?.Organizations.sort( (a, b) => a.Name.localeCompare(b.Name) ) as org}
+					{#each $publisherUser.user?.Organizations.sort( (a, b) => a.Name.localeCompare(b.Name) ) as org (org.CTID)}
 						<div class="flex items-center mb-4">
 							<input
 								id={`orgSelect-${org.CTID}`}
@@ -476,7 +476,8 @@
 						<a
 							href={`${PUBLIC_PUBLISHER_API_BASEURL}/summary/organization/${$publisherOrganization.org?.Id}`}
 							class="text-midnight text-underline hover:no-underline"
-							target="new">organization summary page</a
+							target="new"
+							rel="external noopener noreferrer">organization summary page</a
 						>.
 						{#if $publisherVerificationService}
 							Using verification service {$publisherVerificationService}.
@@ -534,7 +535,7 @@
 
 	<Modal
 		visible={modalVisible}
-		id={`badgesourcepanel-warning`}
+		id="badgesourcepanel-warning"
 		on:close={() => {
 			modalVisible = false;
 		}}

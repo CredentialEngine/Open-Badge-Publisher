@@ -1,0 +1,197 @@
+# Main branch release. Quality checks then Docker build/push then GitOps update.
+# Set the PUBLIC_* values as Azure Pipeline variables (or a variable group).
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - '**'
+
+variables:
+  nodeVersion: '26.x'
+  VersionNumber: $[format('{0:yyyy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, variables['Build.BuildId'])]
+  imageName: 'ce/open-badge-publisher'
+  acrServiceConnection: 'cetestimages.azurecr.io'
+
+jobs:
+  - job: Validate
+    displayName: Scan, lint, test and build application
+    pool:
+      name: ce-managed-pool-ubuntu-latest
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - task: PowerShell@2
+        displayName: Set build number
+        inputs:
+          targetType: inline
+          script: |
+            Write-Host "##vso[build.updatebuildnumber]$(VersionNumber)"
+
+      - bash: |
+          set -euo pipefail
+          # Reject missing/unexpanded pipeline values before they can be embedded in the frontend.
+          for name in PUBLIC_BASEURL PUBLIC_PUBLISHER_API_BASEURL PUBLIC_UI_API_BASEURL; do
+            value="${!name:-}"
+            if [ -z "$value" ] || [[ "$value" == '$('* ]]; then
+              echo "Missing Azure Pipelines variable: $name" >&2
+              exit 1
+            fi
+          done
+        displayName: Validate release public configuration
+        env:
+          PUBLIC_BASEURL: $(PUBLIC_BASEURL)
+          PUBLIC_PUBLISHER_API_BASEURL: $(PUBLIC_PUBLISHER_API_BASEURL)
+          PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
+
+      - bash: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$(Build.SourcesDirectory):/src" \
+            -w /src \
+            semgrep/semgrep semgrep scan \
+              --error \
+              --metrics=off \
+              --config p/secrets \
+              --config p/security-audit \
+              --config p/javascript \
+              --config p/typescript \
+              --config p/nodejs \
+              --config p/dockerfile \
+              --exclude node_modules \
+              --exclude .svelte-kit \
+              src Dockerfile
+        displayName: Semgrep security scan
+
+      - task: UseNode@1
+        displayName: Use Node.js 26
+        inputs:
+          version: $(nodeVersion)
+
+      - task: Npm@1
+        displayName: Clean install
+        inputs:
+          command: ci
+
+      - task: Npm@1
+        displayName: Production dependency audit
+        inputs:
+          command: custom
+          customCommand: audit --audit-level=moderate --omit=dev
+
+      - task: Npm@1
+        displayName: Prettier check
+        inputs:
+          command: custom
+          customCommand: run prettier:check
+
+      - task: Npm@1
+        displayName: ESLint 10
+        inputs:
+          command: custom
+          customCommand: run lint
+
+      - task: Npm@1
+        displayName: Svelte and TypeScript check
+        inputs:
+          command: custom
+          customCommand: run check
+        env:
+          PUBLIC_BASEURL: $(PUBLIC_BASEURL)
+          PUBLIC_PUBLISHER_API_BASEURL: $(PUBLIC_PUBLISHER_API_BASEURL)
+          PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
+          PUBLIC_PUBLISHER_API_ENV_LABEL: $(PUBLIC_PUBLISHER_API_ENV_LABEL)
+
+      - task: Npm@1
+        displayName: Unit tests
+        inputs:
+          command: custom
+          customCommand: run test
+        env:
+          PUBLIC_BASEURL: $(PUBLIC_BASEURL)
+          PUBLIC_PUBLISHER_API_BASEURL: $(PUBLIC_PUBLISHER_API_BASEURL)
+          PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
+
+      - task: Npm@1
+        displayName: Build application
+        inputs:
+          command: custom
+          customCommand: run build
+        env:
+          PUBLIC_BASEURL: $(PUBLIC_BASEURL)
+          PUBLIC_PUBLISHER_API_BASEURL: $(PUBLIC_PUBLISHER_API_BASEURL)
+          PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
+          PUBLIC_PUBLISHER_API_ENV_LABEL: $(PUBLIC_PUBLISHER_API_ENV_LABEL)
+
+  - job: Build_Push
+    displayName: Build and publish one UBI 10 Micro image
+    dependsOn: Validate
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - task: npmAuthenticate@0
+        displayName: Authenticate npm for Docker BuildKit secret
+        inputs:
+          workingFile: $(Build.SourcesDirectory)/.npmrc
+
+      - task: Docker@2
+        displayName: Log in to ACR
+        inputs:
+          command: login
+          containerRegistry: $(acrServiceConnection)
+
+      - task: Docker@2
+        displayName: Build UBI 10 Micro image
+        inputs:
+          command: build
+          Dockerfile: $(Build.SourcesDirectory)/Dockerfile
+          buildContext: $(Build.SourcesDirectory)
+          repository: $(imageName)
+          tags: |
+            $(VersionNumber)
+            latest
+          arguments: >
+            --secret id=npmrc,src=$(Build.SourcesDirectory)/.npmrc
+            --build-arg PUBLIC_BASEURL
+            --build-arg PUBLIC_UI_API_BASEURL
+            --build-arg PUBLIC_PUBLISHER_API_BASEURL
+            --build-arg PUBLIC_PUBLISHER_API_ENV_LABEL
+        env:
+          DOCKER_BUILDKIT: '1'
+          PUBLIC_BASEURL: $(PUBLIC_BASEURL)
+          PUBLIC_PUBLISHER_API_BASEURL: $(PUBLIC_PUBLISHER_API_BASEURL)
+          PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
+          PUBLIC_PUBLISHER_API_ENV_LABEL: $(PUBLIC_PUBLISHER_API_ENV_LABEL)
+
+      - task: Docker@2
+        displayName: Push image to ACR
+        inputs:
+          command: push
+          containerRegistry: $(acrServiceConnection)
+          repository: $(imageName)
+          tags: |
+            $(VersionNumber)
+            latest
+
+      - task: PowerShell@2
+        displayName: Trigger GitOps image tag update
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+            $ErrorActionPreference = 'Stop'
+            if (-not $env:AZURE_DEVOPS_EXT_PAT) { throw 'Enable OAuth token access for the pipeline.' }
+            $env:AZURE_DEVOPS_EXT_PAT | az devops login
+            az pipelines run `
+              --organization 'https://dev.azure.com/Credential-Engine/' `
+              --project 'CredentialEngine' `
+              --name 'Deployment-ImageTag-Update' `
+              --branch main `
+              --parameters imageTag=$(VersionNumber) imageName=$(imageName)

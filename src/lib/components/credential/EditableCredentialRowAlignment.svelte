@@ -6,11 +6,11 @@
 		type CtdlCredentialDraft,
 		type EditStatus,
 		publisherOptions
-	} from '$lib/stores/publisherStore.js';
-	import Button from '$lib/components/Button.svelte';
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import AlignmentEditor from '$lib/components/credential/AlignmentEditor.svelte';
-	import Modal from '$lib/components/Modal.svelte';
+	} from '#lib/stores/publisherStore.js';
+	import Button from '#lib/components/Button.svelte';
+	import abbreviate from '#lib/utils/abbreviate.js';
+	import AlignmentEditor from '#lib/components/credential/AlignmentEditor.svelte';
+	import Modal from '#lib/components/Modal.svelte';
 
 	export let credential: CtdlCredentialDraft;
 	let alignmentEditorModalVisible = false;
@@ -35,7 +35,7 @@
 							<a
 								href={a.sourceData.targetUrl}
 								target="_blank"
-								rel="noreferrer"
+								rel="external noreferrer"
 								class="text-midnight underline hover:no-underline"
 							>
 								{abbreviate(a.sourceData.targetName, 60)}
@@ -51,7 +51,7 @@
 							<a
 								href={a.sourceData.targetUrl}
 								target="_blank"
-								rel="noreferrer"
+								rel="external noreferrer"
 								class="text-midnight underline hover:no-underline"
 							>
 								{abbreviate(a.sourceData.targetName, 60)}
@@ -62,14 +62,16 @@
 							<a
 								href={a.sourceData.targetUrl}
 								target="_blank"
-								rel="noreferrer"
+								rel="external noreferrer"
 								class="text-midnight underline hover:no-underline"
 							>
 								{abbreviate(a.sourceData.targetName, 60)}
 							</a>
 						{/if}
 
-						{#if a.skip} <span class="text-red-600"> (Skipped)</span> {/if}
+						{#if a.skip}
+							<span class="text-red-600"> (Skipped)</span>
+						{/if}
 					</li>
 				{/each}
 			</ul>

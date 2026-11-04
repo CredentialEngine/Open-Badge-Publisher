@@ -6,20 +6,20 @@
 		PubStatuses,
 		type CtdlApiCredential,
 		type CtdlCredentialDraft
-	} from '$lib/stores/publisherStore.js';
+	} from '#lib/stores/publisherStore.js';
 	import * as yup from 'yup';
-	import type { BaseSchema } from 'yup';
+	import type { AnySchema } from 'yup';
 	import {
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		EditStatus
-	} from '$lib/stores/publisherStore.js';
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import Alert from '$lib/components/Alert.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Tag from '$lib/components/Tag.svelte';
-	import Close from '$lib/icons/close.svelte';
+	} from '#lib/stores/publisherStore.js';
+	import abbreviate from '#lib/utils/abbreviate.js';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Tag from '#lib/components/Tag.svelte';
+	import Close from '#lib/icons/close.svelte';
 
 	export let credential: CtdlCredentialDraft;
 	export let editStatus: EditStatus;
@@ -28,7 +28,7 @@
 	export let helpText = '';
 	export let helpUrl = '';
 	export let editable = false;
-	export let validator: BaseSchema = yup.string().required();
+	export let validator: AnySchema = yup.string().required();
 
 	const dispatch = createEventDispatcher();
 
@@ -172,6 +172,14 @@
 			<div class="mb-3">
 				{#if helpText}
 					<BodyText><span class="text-xs text-gray-600">{helpText}</span></BodyText>
+				{/if}
+				{#if helpUrl}
+					<a
+						class="text-xs text-midnight underline"
+						href={helpUrl}
+						target="_blank"
+						rel="external noopener noreferrer">Documentation</a
+					>
 				{/if}
 				<div class="flex flex-wrap flex-row">
 					{#if isValueUpdated}

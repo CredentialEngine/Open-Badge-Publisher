@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
+	import Button from '#lib/components/Button.svelte';
 	export let isActive: boolean = true;
 	export let isNext: boolean = true;
 	export let label: string = '';

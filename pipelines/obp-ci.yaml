@@ -1,0 +1,113 @@
+# PR validation for this repository only. No matrix or multi-app workspaces.
+# On Azure Repos Git, configure main branch Build Validation policy; YAML pr: is ignored.
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - '**'
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  nodeVersion: '26.x'
+  VersionNumber: $[format('{0:yyyy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, variables['Build.BuildId'])]
+  imageName: 'ce/open-badge-publisher'
+  # Test/CI only, never an OAuth secret or production endpoint.
+  PUBLIC_BASEURL: 'http://localhost:8080'
+  PUBLIC_UI_API_BASEURL: '/publisher'
+  PUBLIC_PUBLISHER_API_BASEURL: 'https://sandbox.credentialengine.org/publisher'
+  PUBLIC_PUBLISHER_API_ENV_LABEL: '(CI)'
+
+jobs:
+  - job: Validate_And_Build
+    displayName: Validate app, then build Docker image
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - task: PowerShell@2
+        displayName: Set build number
+        inputs:
+          targetType: inline
+          script: |
+            Write-Host "##vso[build.updatebuildnumber]$(VersionNumber)"
+
+      - bash: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$(Build.SourcesDirectory):/src" \
+            -w /src \
+            semgrep/semgrep semgrep scan \
+              --error \
+              --metrics=off \
+              --config p/secrets \
+              --config p/security-audit \
+              --config p/javascript \
+              --config p/typescript \
+              --config p/nodejs \
+              --config p/dockerfile \
+              --exclude node_modules \
+              --exclude .svelte-kit \
+              src Dockerfile
+        displayName: Semgrep static security scan
+
+      - task: UseNode@1
+        displayName: Use Node.js 26
+        inputs:
+          version: $(nodeVersion)
+
+      - task: Npm@1
+        displayName: Install dependencies
+        inputs:
+          command: ci
+
+      - task: Npm@1
+        displayName: Audit production dependencies
+        inputs:
+          command: custom
+          customCommand: audit --audit-level=moderate --omit=dev
+
+      - task: Npm@1
+        displayName: Prettier check
+        inputs:
+          command: custom
+          customCommand: run prettier:check
+
+      - task: Npm@1
+        displayName: ESLint 10
+        inputs:
+          command: custom
+          customCommand: run lint
+
+      - task: Npm@1
+        displayName: Svelte and TypeScript check
+        inputs:
+          command: custom
+          customCommand: run check
+
+      - task: Npm@1
+        displayName: Unit tests
+        inputs:
+          command: custom
+          customCommand: run test
+
+      - task: Npm@1
+        displayName: Build application
+        inputs:
+          command: custom
+          customCommand: run build
+
+      - task: Docker@2
+        displayName: Build UBI 10 Micro image (no push)
+        inputs:
+          command: build
+          Dockerfile: $(Build.SourcesDirectory)/Dockerfile
+          buildContext: $(Build.SourcesDirectory)
+          repository: $(imageName)
+          tags: |
+            $(VersionNumber)

@@ -1,7 +1,8 @@
 import * as jsonld from 'jsonld';
+import type { JsonLdDocument, ContextDefinition } from 'jsonld';
 import * as yup from 'yup';
-import { OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT } from '$lib/utils/contexts/openbadges_v2.js';
-import { listOf } from '$lib/utils/jsonld.js';
+import { OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT } from '#lib/utils/contexts/openbadges_v2.js';
+import { listOf } from '#lib/utils/jsonld.js';
 
 export interface Alignment {
 	targetName: string;
@@ -62,7 +63,6 @@ const badgeClassBasicSchema = yup.object().shape({
 			} catch {
 				throw new yup.ValidationError('Could not identify Image URI from input.');
 			}
-			return '';
 		})
 		.url(
 			'Image URLs must be fully qualified URLs. Data URIs are not accepted by the Credential Registry at this time.'
@@ -108,10 +108,12 @@ const ob2ToBasic = (b: MaybeABadgeClass): BadgeClassBasic => {
 	let issuer_id: string = '';
 
 	if (typeof b.image === 'string') image_url = b.image;
-	else if (b.image?.hasOwnProperty('id')) image_url = b.image['id'] || '';
+	else if (b.image && Object.prototype.hasOwnProperty.call(b.image, 'id'))
+		image_url = b.image['id'] || '';
 
 	if (typeof b.issuer === 'string') issuer_id = b.issuer;
-	else if (b.issuer?.hasOwnProperty('id')) issuer_id = b.issuer['id'] || '';
+	else if (b.issuer && Object.prototype.hasOwnProperty.call(b.issuer, 'id'))
+		issuer_id = b.issuer['id'] || '';
 
 	return {
 		id: b['id'] || '',
@@ -131,10 +133,12 @@ const ob3ToBasic = (b: MaybeABadgeClass): BadgeClassBasic => {
 	let issuer_id: string = '';
 
 	if (typeof b.image === 'string') image_url = b.image;
-	else if (b.image?.hasOwnProperty('id')) image_url = b.image['id'] || '';
+	else if (b.image && Object.prototype.hasOwnProperty.call(b.image, 'id'))
+		image_url = b.image['id'] || '';
 
 	if (typeof b.issuer === 'string') issuer_id = b.issuer;
-	else if (b.issuer?.hasOwnProperty('id')) issuer_id = b.issuer['id'] || '';
+	else if (b.issuer && Object.prototype.hasOwnProperty.call(b.issuer, 'id'))
+		issuer_id = b.issuer['id'] || '';
 
 	return {
 		id: b['id'] || '',
@@ -153,15 +157,17 @@ const ob3ToBasic = (b: MaybeABadgeClass): BadgeClassBasic => {
 export const validateSingleBadge = async (b: MaybeABadgeClass): Promise<BadgeClassBasic> => {
 	const to_validate = {
 		...b,
-		'@context': OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT
+		'@context': OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT['@context']
 	};
 	let compacted;
 	let validationInput;
 
 	try {
+		// This bundled JSON-LD context contains vocabulary entries the published typings
+		// cannot fully express, so assert the boundary without weakening other types.
 		compacted = (await jsonld.compact(
-			to_validate,
-			OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT
+			to_validate as unknown as JsonLdDocument,
+			OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT as unknown as ContextDefinition
 		)) as MaybeABadgeClass;
 
 		console.log('Compacted, that looks like:');
@@ -179,7 +185,9 @@ export const validateSingleBadge = async (b: MaybeABadgeClass): Promise<BadgeCla
 		console.log('Processed to basic model:');
 		console.log(validationInput);
 	} catch (e) {
-		throw new yup.ValidationError('JSON-LD compaction error: ' + e.message);
+		throw new yup.ValidationError(
+			'JSON-LD compaction error: ' + (e instanceof Error ? e.message : String(e))
+		);
 	}
 	const validationResults = await badgeClassBasicSchema.validate(validationInput, {
 		abortEarly: false

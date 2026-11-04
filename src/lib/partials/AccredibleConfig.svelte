@@ -6,17 +6,17 @@
 		accredibleSelectedRegion,
 		accredibleGroups,
 		fetchAccredibleGroups
-	} from '$lib/stores/badgeSourceStore.js';
-	import { accredibleRegions, type AccredibleEnvKey } from '$lib/utils/accredible.js';
-	import ConfigurationStep from '$lib/components/ConfigurationStep.svelte';
-	import Alert from '$lib/components/Alert.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import RadioCard from '$lib/components/RadioCard.svelte';
-	import OpenEye from '$lib/icons/eye.svelte';
-	import ClosedEye from '$lib/icons/closed-eye.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
+	} from '#lib/stores/badgeSourceStore.js';
+	import { accredibleRegions, type AccredibleEnvKey } from '#lib/utils/accredible.js';
+	import ConfigurationStep from '#lib/components/ConfigurationStep.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import RadioCard from '#lib/components/RadioCard.svelte';
+	import OpenEye from '#lib/icons/eye.svelte';
+	import ClosedEye from '#lib/icons/closed-eye.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
 
 	let accredibleApiKeyHidden = true;
 	let debounceLoadGroups = false;
@@ -49,8 +49,8 @@
 <Heading><h3>Configure Accredible connection</h3></Heading>
 
 <BodyText>
-	You'll need an Accredible API key with issuer access, found in Accredible under Settings &gt;
-	API &amp; Integrations. Use a Sandbox key when testing against a Sandbox account.
+	You'll need an Accredible API key with issuer access, found in Accredible under Settings &gt; API
+	&amp; Integrations. Use a Sandbox key when testing against a Sandbox account.
 </BodyText>
 
 <div class="mt-8 mb-2">
@@ -61,7 +61,7 @@
 	/>
 </div>
 <ul class="mt-4 md:grid gap-6 w-full grid-cols-2 xl:grid-cols-3">
-	{#each [...accredibleRegions.values()] as region}
+	{#each [...accredibleRegions.values()] as region (region.id)}
 		<RadioCard
 			label={region.name}
 			name="accredibleregionradio"
@@ -138,12 +138,16 @@
 
 {#if $accredibleSelectedRegion && $accredibleApiKey && $accredibleAgreeTerms}
 	<div class="mt-8 mb-2" transition:fade>
-		<ConfigurationStep stepNumber="5d" stepName="Load badges" isActive={!$accredibleGroups.length} />
+		<ConfigurationStep
+			stepNumber="5d"
+			stepName="Load badges"
+			isActive={!$accredibleGroups.length}
+		/>
 	</div>
 	{#await loadGroupsPromise}
 		<div role="status" class="max-w-sm animate-pulse mt-8" transition:fade>
-			<div class="h-2.5 bg-gray-200 rounded-full w-48 mb-4" />
-			<div class="h-2 bg-gray-200 rounded-full max-w-[360px] mb-2.5" />
+			<div class="h-2.5 bg-gray-200 rounded-full w-48 mb-4"></div>
+			<div class="h-2 bg-gray-200 rounded-full max-w-[360px] mb-2.5"></div>
 			<span class="sr-only">Loading...</span>
 		</div>
 	{:then}
@@ -154,8 +158,8 @@
 					{$accredibleGroups.length == 1 ? 'badge' : 'badges'} on Accredible.
 				</BodyText>
 				<BodyText gray={true}>
-					Skill/outcome alignments that don't resolve to a URL (framework code) will be omitted
-					from the imported data, since Badge Publisher requires a URL on every alignment entry.
+					Skill/outcome alignments that don't resolve to a URL (framework code) will be omitted from
+					the imported data, since Badge Publisher requires a URL on every alignment entry.
 				</BodyText>
 			</div>
 		{:else}

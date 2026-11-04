@@ -1,5 +1,5 @@
-import { get, readable, writable } from 'svelte/store';
-import { PUBLIC_UI_API_BASEURL } from '$env/static/public';
+import { get, writable } from 'svelte/store';
+import { PUBLIC_UI_API_BASEURL } from '$app/env/public';
 import { publisherUser } from './publisherStore.js';
 
 export interface CredentialType {

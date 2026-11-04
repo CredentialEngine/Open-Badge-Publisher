@@ -1,4 +1,4 @@
-import type { Alignment, BadgeClassCTDLExtended } from '$lib/utils/badges.js';
+import type { Alignment, BadgeClassCTDLExtended } from '#lib/utils/badges.js';
 
 // Accredible Options
 //

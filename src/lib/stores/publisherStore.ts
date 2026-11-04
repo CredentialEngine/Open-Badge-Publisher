@@ -1,16 +1,14 @@
 import { markdownToTxt } from 'markdown-to-txt';
 import { writable, get } from 'svelte/store';
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import {
 	PUBLIC_BASEURL,
 	PUBLIC_UI_API_BASEURL,
-	PUBLIC_PUBLISHER_API_BASEURL,
-	PUBLIC_PUBLISHER_API_ENV_LABEL
-} from '$env/static/public';
-import type { BadgeClassBasic, BadgeClassCTDLExtended, Alignment } from '$lib/utils/badges.js';
-import { normalizedBadges, checkedBadges } from '$lib/stores/badgeSourceStore.js';
-import { haveSameDomain } from '$lib/utils/urls.js';
-import type Condition from 'yup/lib/Condition.js';
+	PUBLIC_PUBLISHER_API_BASEURL
+} from '$app/env/public';
+import type { BadgeClassCTDLExtended, Alignment } from '#lib/utils/badges.js';
+import { normalizedBadges, checkedBadges } from '#lib/stores/badgeSourceStore.js';
+import { haveSameDomain } from '#lib/utils/urls.js';
 
 interface PublisherOrganization {
 	Id: string;
@@ -49,6 +47,7 @@ export enum AlignmentPropertyTypes {
 	DEFAULT = 'DEFAULT',
 	AdvancedStandingFrom = 'AdvancedStandingFrom',
 	Corequisite = 'Corequisite',
+	CoPrerequisite = 'CoPrerequisite',
 	IsAdvancedStandingFor = 'IsAdvancedStandingFor',
 	IsPreparationFor = 'IsPreparationFor',
 	IsRecommendedFor = 'IsRecommendedFor',
@@ -114,9 +113,6 @@ export interface OBAlignmentConfig {
 export interface OBAlignmentMap {
 	[key: string]: OBAlignmentConfig;
 }
-
-// Objects representing alignment targets for types of things that the Credential might align to
-interface BaseAlignmentTarget {}
 
 // ceterms:AssessmentProfile can be referenced as ConditionProfile.TargetAssessment
 export interface AssessmentProfile {
@@ -244,6 +240,8 @@ export const mergeOccupationAlignment = (
 	let result: CtdlCredential = { ...credential };
 
 	const property = getPropertyName(alignmentConfig.targetNodeType, alignmentConfig.propertyType);
+	if (property === 'OccupationType')
+		throw new Error('OccupationType cannot contain condition profiles');
 	const descriptionTerms: { [key: string]: string } = {
 		IsPreparationFor: 'Occupations that this credential prepares learners for',
 		IsRequiredFor: 'Occupations that require this credential',
@@ -332,18 +330,8 @@ export const mergeQAAlignment = (
 
 	const property = OCCUPATION_ALLOWED_PROPERTIES.includes(alignmentConfig.propertyType)
 		? (alignmentConfig.propertyType as
-				| 'AccreditedBy'
-				| 'ApprovedBy'
-				| 'RecognizedBy'
-				| 'RegulatedBy')
+				'AccreditedBy' | 'ApprovedBy' | 'RecognizedBy' | 'RegulatedBy')
 		: 'RecognizedBy';
-
-	const descriptionTerms = {
-		AccreditedBy: 'QA organizations that provide official approval of this credential',
-		ApprovedBy: 'QA Organizations that approved this credential',
-		RecognizedBy: 'QA Organizations that recognize this credential',
-		RegulatedBy: 'QA Organizations that regulate this credential'
-	};
 
 	const qualityAssuranceProfile: ConditionProfile[] = [
 		{
@@ -391,6 +379,8 @@ export const mergeCompetencyAlignment = (
 	let result: CtdlCredential = { ...credential };
 
 	const property = getPropertyName(alignmentConfig.targetNodeType, alignmentConfig.propertyType);
+	if (property === 'OccupationType')
+		throw new Error('OccupationType cannot contain condition profiles');
 	const descriptionTermFor = (property: AlignmentPropertyKey | keyof CtdlCredential) =>
 		alignmentPropertyTypeDescriptions[property] || 'Open Badges Alignment';
 
@@ -487,14 +477,14 @@ export const mergeSingleAlignment = (
 		case 'LearningProgram':
 			property = getPropertyName(ac.targetNodeType, ac.propertyType);
 			targetProperty = connectionTypeForNodeType(ac.targetNodeType) as
-				| 'TargetAssessment'
-				| 'TargetCredential'
-				| 'TargetLearningOpportunity';
+				'TargetAssessment' | 'TargetCredential' | 'TargetLearningOpportunity';
 			break;
 		default:
 			return mergeCompetencyAlignment(credential, ac);
 	}
 
+	if (property === 'OccupationType')
+		throw new Error('OccupationType cannot contain condition profiles');
 	let result: CtdlCredential = { ...credential };
 	const cpName = property == 'Requires' ? 'Open Badges Criteria' : 'Open Badges Alignment';
 
@@ -512,7 +502,7 @@ export const mergeSingleAlignment = (
 	};
 
 	const existingTargetList: AlignmentObject[] = existingCP
-		? (existingCP[targetProperty] as AlignmentObject[]) ?? ([] as AlignmentObject[])
+		? ((existingCP[targetProperty] as AlignmentObject[]) ?? ([] as AlignmentObject[]))
 		: ([] as AlignmentObject[]);
 	const existingMatchingMember =
 		existingTargetList.find(
@@ -542,7 +532,7 @@ export const mergeSingleAlignment = (
 									IdentifierValueCode: ac.sourceData.targetCode || '',
 									IdentifierTypeName: 'TargetCode'
 								}
-						  ]
+							]
 						: [],
 					Type: 'ceterms:AssessmentProfile'
 				} as AssessmentProfile
@@ -562,7 +552,7 @@ export const mergeSingleAlignment = (
 									IdentifierValueCode: ac.sourceData.targetCode || '',
 									IdentifierTypeName: 'TargetCode'
 								}
-						  ]
+							]
 						: [],
 					Type: ac.destinationData?.Type ?? 'ceterms:Certification'
 				} as TargetCredential
@@ -664,6 +654,7 @@ export interface CtdlCredential {
 	// Alignments: Condition profiles with required competencies, assessments, learning opportunities, etc.
 	AdvancedStandingFrom?: ConditionProfile[];
 	Corequisite?: ConditionProfile[];
+	CoPrerequisite?: ConditionProfile[];
 	IsAdvancedStandingFor?: ConditionProfile[];
 	IsPreparationFor?: ConditionProfile[];
 	IsRecommendedFor?: ConditionProfile[];
@@ -1078,7 +1069,7 @@ const filterAlignmentFromConditionProfile = (
 ): FilterData => {
 	let newCp = { ...cp };
 	let newAc: OBAlignmentConfig | null = null;
-	let foundAlignment: Array<any> = [];
+	let foundAlignment: Array<any>;
 	const targetUrl = ac.sourceData.targetUrl;
 
 	let remainingAlignmentsCount = 0;
@@ -1179,7 +1170,7 @@ const compareAlignmentUrls = (
 	if (searchUrl === undefined || inCredentialUrl === undefined) return false;
 
 	// Filter outdated Credly alignment URL
-	const credlySkillUrl = /^https?\:\/\/(www.)?credly\.com\/skills?\/(?<slug>[\w-]+)$/;
+	const credlySkillUrl = /^https?:\/\/(www\.)?credly\.com\/skills?\/(?<slug>[\w-]+)$/;
 	if (credlySkillUrl.test(searchUrl)) {
 		const match1 = inCredentialUrl.match(credlySkillUrl);
 		const match2 = searchUrl.match(credlySkillUrl);
@@ -1223,8 +1214,8 @@ export const filterAlignmentFromCredential = (
 		if (Object.hasOwn(newCredential.Credential, prop)) {
 			const propValue = newCredential.Credential[prop] as Array<any> | undefined;
 			const newCps =
-				propValue?.map(
-					(cp: ConditionProfile): FilterData => filterAlignmentFromConditionProfile(cp, ac, prop)
+				propValue?.map((cp: ConditionProfile): FilterData =>
+					filterAlignmentFromConditionProfile(cp, ac, prop)
 				) ?? [];
 			newCredential.Credential[prop] = newCps
 				.map((c: FilterData) => c.cp)
@@ -1399,14 +1390,14 @@ const createCredentialDraftStore = () => {
 export const credentialDrafts = createCredentialDraftStore();
 
 export enum PubStatuses {
-	'Pending' = 'Pending',
-	'PendingNew' = 'Pending New',
-	'PendingUpdate' = 'Pending Update',
-	'SaveInProgress' = 'Save in Progress',
-	'SaveError' = 'Error',
-	'SaveSuccess' = 'Success',
-	'SourceUpdateInProgress' = 'Source Update in Progress',
-	'SourceUpdated' = 'Source Updated'
+	Pending = 'Pending',
+	PendingNew = 'Pending New',
+	PendingUpdate = 'Pending Update',
+	SaveInProgress = 'Save in Progress',
+	SaveError = 'Error',
+	SaveSuccess = 'Success',
+	SourceUpdateInProgress = 'Source Update in Progress',
+	SourceUpdated = 'Source Updated'
 }
 
 export interface CredentialPublicationStatus {

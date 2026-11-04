@@ -6,6 +6,7 @@
 </div>
 
 <style lang="postcss" global>
+	@reference "../../../app.css";
 	.ce-heading h1 {
 		@apply my-4 text-3xl font-extrabold text-gray-900;
 	}

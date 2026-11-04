@@ -6,19 +6,21 @@
 		badgeSetupComplete,
 		normalizedBadges,
 		checkedBadges
-	} from '$lib/stores/badgeSourceStore.js';
-	import Icon from 'svelte-icons-pack/Icon.svelte';
-	import FaSolidExternalLinkAlt from 'svelte-icons-pack/fa/FaSolidExternalLinkAlt.js';
-	import FaSolidChevronLeft from 'svelte-icons-pack/fa/FaSolidChevronLeft.js';
-	import FaSolidChevronRight from 'svelte-icons-pack/fa/FaSolidChevronRight.js';
-	import FaSolidSortDown from 'svelte-icons-pack/fa/FaSolidSortDown.js';
-	import FaSolidSortUp from 'svelte-icons-pack/fa/FaSolidSortUp.js';
-	import { publisherCredentials, type CtdlCredential } from '$lib/stores/publisherStore.js';
-	import abbreviate from '$lib/utils/abbreviate.js';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import type { BadgeClassCTDLExtended } from '$lib/utils/badges.js';
+	} from '#lib/stores/badgeSourceStore.js';
+	import { Icon } from 'svelte-icons-pack';
+	import ExternalLinkIcon from '#lib/components/icons/ExternalLinkIcon.svelte';
+	import {
+		FaSolidChevronLeft,
+		FaSolidChevronRight,
+		FaSolidSortDown,
+		FaSolidSortUp
+	} from 'svelte-icons-pack/fa';
+	import { publisherCredentials, type CtdlCredential } from '#lib/stores/publisherStore.js';
+	import abbreviate from '#lib/utils/abbreviate.js';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import type { BadgeClassCTDLExtended } from '#lib/utils/badges.js';
 
 	// SORTING CONTROLS
 	let sort: 'nameAsc' | 'nameDesc' | 'dateAsc' | 'dateDesc' = 'nameAsc';
@@ -50,7 +52,7 @@
 					month: '2-digit',
 					day: '2-digit',
 					year: 'numeric'
-			  })
+				})
 			: 'Unknown';
 	};
 
@@ -114,7 +116,7 @@
 							)
 								e.target.checked = !e.target.checked;
 						}}
-						id={'includeBadge-selectAll'}
+						id="includeBadge-selectAll"
 						type="checkbox"
 						value=""
 						aria-labelledby="includeBadge-selectAll-label"
@@ -179,13 +181,13 @@
 						</td>
 					{/if}
 					<td class="py-4 px-6">
-						<a class="text-midnight underline" href={badge.id} target="new">
-							<Icon
-								src={FaSolidExternalLinkAlt}
-								color="currentColor"
-								className="inline-block"
-								size="0.8em"
-							/>
+						<a
+							class="text-midnight underline"
+							href={badge.id}
+							target="new"
+							rel="external noopener noreferrer"
+						>
+							<ExternalLinkIcon />
 						</a>
 					</td>
 				</tr>

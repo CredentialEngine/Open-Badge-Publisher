@@ -1,6 +1,4 @@
-import { PUBLIC_PUBLISHER_API_BASEURL } from '$env/static/public';
 import type { RequestHandler } from './$types';
-import { URL } from 'node:url';
 
 const ORIGIN_WHITELIST = [
 	'https://api.badgr.io',
@@ -41,10 +39,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		);
 
+	const method = requestData.Method.toUpperCase();
 	const externalResponse = await fetch(requestData.URL, {
-		method: requestData.Method,
+		method,
 		headers: Object.fromEntries(requestData.Headers.map((i) => [i.Name, i.Value])),
-		body: requestData.Body
+		// GET/HEAD requests cannot have request bodies, even empty strings.
+		...(['GET', 'HEAD'].includes(method) ? {} : { body: requestData.Body }),
+		// Do not follow redirects to origins outside the allowlist (SSRF bypass).
+		redirect: 'manual'
 	});
 
 	let responseHeaders: Array<{ Name: string; Value: string }> = [];

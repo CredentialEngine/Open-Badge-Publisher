@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 import {
 	publisherUser,
@@ -6,7 +6,7 @@ import {
 	publisherVerificationService,
 	publisherCredentials,
 	publisherOptions
-} from '$lib/stores/publisherStore.js';
+} from '#lib/stores/publisherStore.js';
 import { get } from 'svelte/store';
 import {
 	badgeSourceType,
@@ -16,7 +16,7 @@ import {
 	parchmentSelectedRegion,
 	parchmentAgreeTerms,
 	parchmentOrganization
-} from '$lib/stores/badgeSourceStore.js';
+} from '#lib/stores/badgeSourceStore.js';
 
 export const storageBackend = browser ? window?.localStorage : null;
 
@@ -36,10 +36,6 @@ export const serializeStores = () => {
 	storageBackend?.setItem('parchmentSelectedRegion', JSON.stringify(get(parchmentSelectedRegion)));
 	storageBackend?.setItem('parchmentAgreeTerms', JSON.stringify(get(parchmentAgreeTerms)));
 	storageBackend?.setItem('parchmentOrganization', JSON.stringify(get(parchmentOrganization)));
-
-	const storageTimestamp = JSON.stringify(Date.now());
-	storageBackend?.setItem('storageTimestamp', storageTimestamp);
-	return storageTimestamp;
 };
 
 export const restoreStores = () => {
@@ -84,17 +80,16 @@ export const restoreStores = () => {
 
 	const parchmentSelectedRegionString = storageBackend?.getItem('parchmentSelectedRegion');
 	if (parchmentSelectedRegionString) {
-		parchmentSelectedRegion.set(JSON.parse(parchmentSelectedRegionString))
-	};
+		parchmentSelectedRegion.set(JSON.parse(parchmentSelectedRegionString));
+	}
 
 	const parchmentAgreeTermsString = storageBackend?.getItem('parchmentAgreeTerms');
 	if (parchmentAgreeTermsString) {
-		parchmentAgreeTerms.set(JSON.parse(parchmentAgreeTermsString))
-	};
+		parchmentAgreeTerms.set(JSON.parse(parchmentAgreeTermsString));
+	}
 
 	const parchmentOrganizationString = storageBackend?.getItem('parchmentOrganization');
 	if (parchmentOrganizationString) {
-		parchmentOrganization.set(JSON.parse(parchmentOrganizationString))
-	};
-
+		parchmentOrganization.set(JSON.parse(parchmentOrganizationString));
+	}
 };

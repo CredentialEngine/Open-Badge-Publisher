@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import Alert from '$lib/components/Alert.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import Check from '$lib/icons/check.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import Alert from '#lib/components/Alert.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Check from '#lib/icons/check.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
+	import LoadingSpinner from '#lib/components/LoadingSpinner.svelte';
 	import {
 		canvasSelectedIssuerBadges,
 		canvasSelectedRegion,
 		canvasAccessToken
-	} from '$lib/stores/badgeSourceStore.js';
+	} from '#lib/stores/badgeSourceStore.js';
 	import {
 		publisherUser,
 		alignmentExistsForCredential,
@@ -18,11 +18,12 @@
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		PubStatuses,
-		type CtdlApiCredential
-	} from '$lib/stores/publisherStore.js';
-	import type { Alignment } from '$lib/utils/badges.js';
-	import { canvasRegions } from '$lib/utils/canvas.js';
-	import { PUBLIC_PUBLISHER_API_ENV_LABEL, PUBLIC_UI_API_BASEURL } from '$env/static/public';
+		type CtdlApiCredential,
+		type CtdlCredentialDraft
+	} from '#lib/stores/publisherStore.js';
+	import type { Alignment } from '#lib/utils/badges.js';
+	import { canvasRegions } from '#lib/utils/canvas.js';
+	import { PUBLIC_PUBLISHER_API_ENV_LABEL, PUBLIC_UI_API_BASEURL } from '$app/env/public';
 
 	let saveAllTriggered = false;
 
@@ -102,7 +103,7 @@
 		return true;
 	};
 
-	let credentials: CtdlApiCredential[];
+	let credentials: CtdlCredentialDraft[];
 	let updatePromises: { [key: string]: Promise<boolean> } = {};
 	$: {
 		credentials = $credentialDrafts.filter((c) => {
@@ -161,7 +162,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each credentials as credential}
+			{#each credentials as credential (credential.Credential.CredentialId)}
 				{@const canvasBadge = $canvasSelectedIssuerBadges.find(
 					(cb) => cb.openBadgeId == credential.Credential.CredentialId
 				)}

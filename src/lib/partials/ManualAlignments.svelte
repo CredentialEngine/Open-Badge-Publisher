@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import Check from '$lib/icons/check.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
-	import Heading from '$lib/components/typography/Heading.svelte';
+	import Check from '#lib/icons/check.svelte';
+	import BodyText from '#lib/components/typography/BodyText.svelte';
+	import Heading from '#lib/components/typography/Heading.svelte';
 	import {
 		alignmentExistsForCredential,
 		alignmentUrlForCredential,
 		credentialDrafts,
 		ctdlPublicationResultStore,
 		PubStatuses
-	} from '$lib/stores/publisherStore.js';
-	import { PUBLIC_PUBLISHER_API_ENV_LABEL } from '$env/static/public';
+	} from '#lib/stores/publisherStore.js';
+	import { PUBLIC_PUBLISHER_API_ENV_LABEL } from '$app/env/public';
 
 	let credentials = $credentialDrafts.filter((c) => {
 		const status = $ctdlPublicationResultStore[c.Credential.CredentialId];
@@ -35,7 +35,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each credentials as credential}
+			{#each credentials as credential (credential.Credential.CredentialId)}
 				<tr class="bg-white border-b">
 					<th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">
 						{credential.Credential.Name}
