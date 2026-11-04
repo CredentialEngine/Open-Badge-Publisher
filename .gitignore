@@ -21,3 +21,7 @@ badgePublisher_*
 /accredible_achievements_probe.json
 /.vs/Open-Badge-Publisher/v17
 /.vs/slnx.sqlite
+/.vs/Open-Badge-Publisher.slnx/v18
+/.vs/Open-Badge-Publisher.slnx/FileContentIndex
+*.sqlite-journal
+/.vs/VSWorkspaceState.json
