@@ -24,8 +24,8 @@ variables:
   PUBLIC_PUBLISHER_API_ENV_LABEL: '(CI)'
 
 jobs:
-  - job: Validate_And_Build
-    displayName: Validate app, then build Docker image
+  - job: Build_Test
+    displayName: Build & Test
     steps:
       - checkout: self
         fetchDepth: 1

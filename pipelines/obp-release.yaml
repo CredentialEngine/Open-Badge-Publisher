@@ -14,10 +14,10 @@ variables:
   acrServiceConnection: 'cetestimages.azurecr.io'
 
 jobs:
-  - job: Validate
-    displayName: Scan, lint, test and build application
+  - job: Build_Test
+    displayName: Build & Test
     pool:
-      name: ce-managed-pool-ubuntu-latest
+      vmImage: ubuntu-latest
     steps:
       - checkout: self
         fetchDepth: 1
@@ -124,9 +124,9 @@ jobs:
           PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
           PUBLIC_PUBLISHER_API_ENV_LABEL: $(PUBLIC_PUBLISHER_API_ENV_LABEL)
 
-  - job: Build_Push
+  - job: Docker_Build_Push
     displayName: Build and Push Container image
-    dependsOn: Validate
+    dependsOn: Build_Test
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -134,7 +134,7 @@ jobs:
         fetchDepth: 1
 
       - task: npmAuthenticate@0
-        displayName: Authenticate npm for Docker BuildKit secret
+        displayName: Authenticate npm
         inputs:
           workingFile: $(Build.SourcesDirectory)/.npmrc
 
