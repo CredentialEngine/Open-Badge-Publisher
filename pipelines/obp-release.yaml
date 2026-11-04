@@ -4,9 +4,8 @@ trigger:
   branches:
     include:
       - main
-  paths:
-    include:
-      - '**'
+
+pr: none
 
 variables:
   nodeVersion: '26.x'
