@@ -76,10 +76,10 @@ jobs:
           command: ci
 
       - task: Npm@1
-        displayName: Production dependency audit
+        displayName: Audit
         inputs:
           command: custom
-          customCommand: audit --audit-level=moderate --omit=dev
+          customCommand: audit --audit-level=low --omit=dev
 
       - task: Npm@1
         displayName: Prettier check
@@ -88,7 +88,7 @@ jobs:
           customCommand: run prettier:check
 
       - task: Npm@1
-        displayName: ESLint 10
+        displayName: Lint
         inputs:
           command: custom
           customCommand: run lint
@@ -115,7 +115,7 @@ jobs:
           PUBLIC_UI_API_BASEURL: $(PUBLIC_UI_API_BASEURL)
 
       - task: Npm@1
-        displayName: Build application
+        displayName: Build
         inputs:
           command: custom
           customCommand: run build
@@ -126,7 +126,7 @@ jobs:
           PUBLIC_PUBLISHER_API_ENV_LABEL: $(PUBLIC_PUBLISHER_API_ENV_LABEL)
 
   - job: Build_Push
-    displayName: Build and publish one UBI 10 Micro image
+    displayName: Build and Push Container image
     dependsOn: Validate
     pool:
       vmImage: ubuntu-latest
@@ -146,7 +146,7 @@ jobs:
           containerRegistry: $(acrServiceConnection)
 
       - task: Docker@2
-        displayName: Build UBI 10 Micro image
+        displayName: Build Container Image
         inputs:
           command: build
           Dockerfile: $(Build.SourcesDirectory)/Dockerfile
@@ -177,21 +177,3 @@ jobs:
           tags: |
             $(VersionNumber)
             latest
-
-      - task: PowerShell@2
-        displayName: Trigger GitOps image tag update
-        env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-        inputs:
-          targetType: inline
-          pwsh: true
-          script: |
-            $ErrorActionPreference = 'Stop'
-            if (-not $env:AZURE_DEVOPS_EXT_PAT) { throw 'Enable OAuth token access for the pipeline.' }
-            $env:AZURE_DEVOPS_EXT_PAT | az devops login
-            az pipelines run `
-              --organization 'https://dev.azure.com/Credential-Engine/' `
-              --project 'CredentialEngine' `
-              --name 'Deployment-ImageTag-Update' `
-              --branch main `
-              --parameters imageTag=$(VersionNumber) imageName=$(imageName)

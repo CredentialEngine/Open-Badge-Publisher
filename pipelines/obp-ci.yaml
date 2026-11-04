@@ -67,7 +67,7 @@ jobs:
           command: ci
 
       - task: Npm@1
-        displayName: Audit production dependencies
+        displayName: Audit
         inputs:
           command: custom
           customCommand: audit --audit-level=moderate --omit=dev
@@ -79,7 +79,7 @@ jobs:
           customCommand: run prettier:check
 
       - task: Npm@1
-        displayName: ESLint 10
+        displayName: Lint
         inputs:
           command: custom
           customCommand: run lint
@@ -97,13 +97,13 @@ jobs:
           customCommand: run test
 
       - task: Npm@1
-        displayName: Build application
+        displayName: Build
         inputs:
           command: custom
           customCommand: run build
 
       - task: Docker@2
-        displayName: Build UBI 10 Micro image (no push)
+        displayName: Build Container image
         inputs:
           command: build
           Dockerfile: $(Build.SourcesDirectory)/Dockerfile

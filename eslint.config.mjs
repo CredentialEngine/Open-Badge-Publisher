@@ -51,7 +51,7 @@ export default [
 	},
 
 	// Svelte 5 recommended rules
-	svelte.configs.recommended,
+	...svelte.configs.recommended,
 
 	// TypeScript inside Svelte components
 	{
@@ -69,6 +69,6 @@ export default [
 	},
 
 	// Prettier compatibility
-	svelte.configs.prettier,
+	...svelte.configs.prettier,
 	prettier
 ];
