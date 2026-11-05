@@ -14,6 +14,8 @@
 	import RadioCard from '$lib/components/RadioCard.svelte';
 	import OpenEye from '$lib/icons/eye.svelte';
 	import ClosedEye from '$lib/icons/closed-eye.svelte';
+	import Icon from 'svelte-icons-pack/Icon.svelte';
+	import FaSolidInfoCircle from 'svelte-icons-pack/fa/FaSolidInfoCircle.js';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import Heading from '$lib/components/typography/Heading.svelte';
@@ -74,8 +76,18 @@
 </ul>
 
 {#if $accredibleSelectedRegion}
-	<div class="mt-8 mb-2" transition:fade>
+	<div class="mt-8 mb-2 flex items-center" transition:fade>
 		<ConfigurationStep stepNumber="5b" stepName="Enter API key" isActive={!$accredibleApiKey} />
+		<a
+			href="https://docs.api.accredible.com/"
+			target="_blank"
+			rel="noreferrer"
+			class="-ml-3 md:mt-0 mt-4 text-midnight hover:text-tahiti"
+			title="How to find your Accredible API key"
+			aria-label="How to find your Accredible API key (opens in a new tab)"
+		>
+			<Icon src={FaSolidInfoCircle} className="inline-block" color="currentColor" />
+		</a>
 	</div>
 	<div class="flex items-end flex-col md:flex-row" transition:fade>
 		<div class="flex mb-3 w-full">
