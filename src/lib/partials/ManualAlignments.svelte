@@ -21,9 +21,9 @@
 <Heading><h3>Update badge alignments</h3></Heading>
 
 <BodyText>
-	It is helpful topdate your badges in Credly to add alignments to Credential Finder pages. This
-	helps users better understand the meaning and value of your badges. There is no automated way to
-	update these alignments, but the data to add is presented below.
+	It is helpful to update your badges in your badge platform to add alignments to Credential Finder
+	pages. This helps users better understand the meaning and value of your badges. There is no
+	automated way to update these alignments, but the data to add is presented below.
 </BodyText>
 
 <div class="overflow-x-auto relative rounded-lg" transition:slide>
