@@ -22,6 +22,8 @@ import {
 	badgeDesignIdForGroup,
 	groupFromDetailPayload,
 	imageUrlFromDesign,
+	isAccredibleSignedImageUrl,
+	redirectTargetFromProxyData,
 	type AccredibleEnvKey,
 	type AccredibleGroup
 } from '$lib/utils/accredible.js';
@@ -302,6 +304,34 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 	// image source), falling back to the blank design GET. Cached by design+name
 	// since groups can share a design and name.
 	const imageCache = new Map<string, string>();
+
+	// Swap a long signed render URL for the short S3 URL it redirects to (see
+	// isAccredibleSignedImageUrl). Needs a proxy that honors
+	// `FollowRedirects: false`; if the proxy can't (or the call fails) the
+	// original link is kept and the save-time length check reports it.
+	const resolveSignedImageUrl = async (url: string): Promise<string> => {
+		if (!isAccredibleSignedImageUrl(url)) return url;
+		try {
+			const response = await fetch(`${PUBLIC_UI_API_BASEURL}/StagingApi/Proxy`, {
+				method: 'POST',
+				body: JSON.stringify({
+					URL: url,
+					Method: 'GET',
+					Body: null,
+					Headers: [],
+					FollowRedirects: false
+				}),
+				headers: proxyRequestHeaders
+			});
+			const data = await response.json();
+			const target = data.Valid ? redirectTargetFromProxyData(data.Data, url) : '';
+			if (target) return target;
+		} catch (e) {
+			console.warn('Could not resolve Accredible badge image redirect:', e);
+		}
+		return url;
+	};
+
 	for (const g of allGroups) {
 		// 1. (Opt-in) backfill skills/framework from the single-group GET.
 		if (fetchGroupSkills) {
@@ -342,6 +372,7 @@ export const fetchAccredibleGroups = async (): Promise<boolean> => {
 				img = imageUrlFromDesign(await proxyRequest('GET', accredibleDesignEndpoint(env, designId)));
 			}
 			if (img) {
+				img = await resolveSignedImageUrl(img);
 				imageCache.set(cacheKey, img);
 				g.image_url = img;
 			}

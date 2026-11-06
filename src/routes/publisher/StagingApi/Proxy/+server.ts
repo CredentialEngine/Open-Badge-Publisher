@@ -14,16 +14,27 @@ const ORIGIN_WHITELIST = [
 	'https://sandbox.api.accredible.com'
 ];
 
+// Accredible's signed badge-image render service. Allowed ONLY for
+// `FollowRedirects: false` requests, so the proxy hands back just the redirect
+// target (a short S3 URL), never content from these hosts.
+const isRedirectOnlyOrigin = (url: URL) =>
+	url.protocol === 'https:' &&
+	(url.hostname === 'pdf.ms.credential.net' || url.hostname.endsWith('.pdf.ms.credential.net'));
+
 export const POST: RequestHandler = async ({ request }) => {
 	const requestData: {
 		URL: string;
 		Method: string;
 		Body: string;
 		Headers: Array<{ Name: string; Value: string }>;
+		FollowRedirects?: boolean;
 	} = await request.json();
 
 	const urlData = new URL(requestData.URL);
-	if (!ORIGIN_WHITELIST.includes(urlData.origin))
+	const followRedirects = requestData.FollowRedirects !== false;
+	const allowed =
+		ORIGIN_WHITELIST.includes(urlData.origin) || (!followRedirects && isRedirectOnlyOrigin(urlData));
+	if (!allowed)
 		return new Response(
 			JSON.stringify(
 				{
@@ -44,14 +55,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	const externalResponse = await fetch(requestData.URL, {
 		method: requestData.Method,
 		headers: Object.fromEntries(requestData.Headers.map((i) => [i.Name, i.Value])),
-		body: requestData.Body
+		body: requestData.Body,
+		redirect: followRedirects ? 'follow' : 'manual'
 	});
 
 	let responseHeaders: Array<{ Name: string; Value: string }> = [];
 	externalResponse.headers.forEach((value, key) => {
 		responseHeaders.push({ Name: key, Value: value });
 	});
-	const responseBody = await externalResponse.text();
+	// A redirect-only lookup returns just status + headers (incl. Location).
+	const responseBody = followRedirects ? await externalResponse.text() : '';
 
 	return new Response(
 		JSON.stringify(

@@ -10,6 +10,7 @@
 	import EditableCredentialRowText from '$lib/components/credential/EditableCredentialRowText.svelte';
 	import BodyText from '../typography/BodyText.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { IMAGE_URL_MAX_LENGTH, IMAGE_URL_TOO_LONG_MESSAGE } from '$lib/utils/badges.js';
 	import Heading from '$lib/components/typography/Heading.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import { EditStatus, type CtdlCredentialDraft } from '$lib/stores/publisherStore.js';
@@ -125,7 +126,7 @@
 					editable={true}
 					fieldId="Image"
 					helpText="The URL to an image that is a symbolic representation of the achievement. Data URIs cannot be used in the Registry."
-					validator={yup.string().url()}
+					validator={yup.string().url().max(IMAGE_URL_MAX_LENGTH, IMAGE_URL_TOO_LONG_MESSAGE)}
 					transformer={(c, newValue) => {
 						if (!newValue) return { ...c, Image: undefined };
 						return { ...c, Image: newValue };

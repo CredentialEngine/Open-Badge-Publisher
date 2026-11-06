@@ -341,6 +341,44 @@ export const accredibleDesignPreviewEndpoint = (env: AccredibleEnv, designId: st
 // documented, primary source is the preview endpoint's `link`; the others are
 // tolerated fallbacks in case a given account's design GET returns them.
 // Returns '' when nothing usable is present.
+// The preview `link` is a signed render URL on Accredible's image service
+// (e.g. https://sandbox.pdf.ms.credential.net/design/image?signed-data=...).
+// It embeds the group name (twice, URL-encoded) plus a signature, so it often
+// exceeds the Publisher's 500-char ImageUrl limit. Requesting it renders the
+// PNG to S3 and answers 303 -> a short, name-independent
+// https://s3.amazonaws.com/<bucket>/design/<design>_<signature>.png URL, which
+// is what we want to store instead.
+export const isAccredibleSignedImageUrl = (url: string): boolean => {
+	try {
+		const u = new URL(url);
+		return (
+			u.protocol === 'https:' &&
+			(u.hostname === 'pdf.ms.credential.net' || u.hostname.endsWith('.pdf.ms.credential.net')) &&
+			u.pathname === '/design/image'
+		);
+	} catch {
+		return false;
+	}
+};
+
+// Pull the redirect target out of a proxy response for a signed image URL.
+// Returns '' unless the response was a 3xx carrying an https Location.
+export const redirectTargetFromProxyData = (
+	data: { StatusCode?: number | string; Headers?: Array<{ Name: string; Value: string }> } | undefined,
+	requestUrl: string
+): string => {
+	const status = Number(data?.StatusCode);
+	if (!(status >= 300 && status < 400)) return '';
+	const location = data?.Headers?.find((h) => h.Name.toLowerCase() === 'location')?.Value;
+	if (!location) return '';
+	try {
+		const target = new URL(location, requestUrl);
+		return target.protocol === 'https:' ? target.toString() : '';
+	} catch {
+		return '';
+	}
+};
+
 export const imageUrlFromDesign = (payload: unknown): string => {
 	const root = (payload ?? {}) as Record<string, any>;
 	const d: Record<string, any> = root.design ?? root;
