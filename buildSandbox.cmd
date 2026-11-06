@@ -1,10 +1,12 @@
 @echo remember to set npm to current version
 @echo nvm use 22.2.0
+@echo Install Vite if necessary
 
-D:
-cd D:\Github\Open-Badge-Publisher
+cd /d "%~dp0"
+
 copy .env backup.env
 copy sandbox.env .env
+@echo Remove target folder if present (OK to have an error)
 RD /S /Q badgePublisher_sandbox
 
 pause
@@ -13,7 +15,7 @@ pause
 
 copy backup.env .env
 
-cd D:\Github\Open-Badge-Publisher
+cd /d "%~dp0"
 
 REN ./build ./badgePublisher_sandbox_%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%
 
