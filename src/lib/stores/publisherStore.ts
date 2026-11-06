@@ -8,6 +8,7 @@ import {
 	PUBLIC_PUBLISHER_API_ENV_LABEL
 } from '$env/static/public';
 import type { BadgeClassBasic, BadgeClassCTDLExtended, Alignment } from '$lib/utils/badges.js';
+import { IMAGE_URL_TOO_LONG_MESSAGE, imageUrlTooLong } from '$lib/utils/badges.js';
 import { normalizedBadges, checkedBadges } from '$lib/stores/badgeSourceStore.js';
 import { haveSameDomain } from '$lib/utils/urls.js';
 import type Condition from 'yup/lib/Condition.js';
@@ -1533,6 +1534,17 @@ export const saveCredential = async (credential: CtdlCredentialDraft) => {
 		)
 	)
 		return;
+
+	// Catch an over-long image URL before the Publisher rejects it with a raw
+	// database validation error the user can't act on.
+	if (imageUrlTooLong(credential.Credential.Image)) {
+		ctdlPublicationResultStore.updateCredentialStatus(credential.Credential.CredentialId, {
+			CredentialId: credential.Credential.CredentialId,
+			publicationStatus: PubStatuses.SaveError,
+			messages: [IMAGE_URL_TOO_LONG_MESSAGE]
+		});
+		return;
+	}
 
 	ctdlPublicationResultStore.updateCredentialStatus(credential.Credential.CredentialId, {
 		CredentialId: credential.Credential.CredentialId,
