@@ -3,9 +3,9 @@ import * as yup from 'yup';
 import { OB_V2_V3_EXPERIMENTAL_HYBRID_CONTEXT } from '$lib/utils/contexts/openbadges_v2.js';
 import { listOf } from '$lib/utils/jsonld.js';
 
-// The Publisher API stores a credential's image in a `varchar(500)` ImageUrl
+// The Publisher API stores a credential's image in a `varchar(750)` ImageUrl
 // column; a longer URL fails the save with a raw DbEntityValidationException.
-export const IMAGE_URL_MAX_LENGTH = 500;
+export const IMAGE_URL_MAX_LENGTH = 750;
 export const IMAGE_URL_TOO_LONG_MESSAGE =
 	`This badge's image URL is longer than the Registry allows (${IMAGE_URL_MAX_LENGTH} characters). ` +
 	'Open the image in a new tab and paste the shorter address into the Image field, use an image ' +

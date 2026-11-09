@@ -343,8 +343,8 @@ export const accredibleDesignPreviewEndpoint = (env: AccredibleEnv, designId: st
 // Returns '' when nothing usable is present.
 // The preview `link` is a signed render URL on Accredible's image service
 // (e.g. https://sandbox.pdf.ms.credential.net/design/image?signed-data=...).
-// It embeds the group name (twice, URL-encoded) plus a signature, so it often
-// exceeds the Publisher's 500-char ImageUrl limit. Requesting it renders the
+// It embeds the group name (twice, URL-encoded) plus a signature, so it can
+// exceeds the Publisher's 750-char ImageUrl limit. Requesting it renders the
 // PNG to S3 and answers 303 -> a short, name-independent
 // https://s3.amazonaws.com/<bucket>/design/<design>_<signature>.png URL, which
 // is what we want to store instead.
